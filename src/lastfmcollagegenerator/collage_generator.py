@@ -91,4 +91,4 @@ class CollageGenerator:
         if y_1 == 0:
             y_1 += 600
         draw.rectangle([(x, y_0), (x + 300, y_1)], (0, 0, 0, 123))
-        draw.text((x + 8, y + 240), title, (255, 255, 255))
+        draw.text((x + 8, y + 240), title.encode("utf-8"), (255, 255, 255))
