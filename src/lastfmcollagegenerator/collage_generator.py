@@ -42,7 +42,7 @@ class CollageGenerator:
         covers = self._create_tiles_from_top_albums(top_albums)
         return covers
 
-    def _create_image(self, tiles: List[CollageTile], cols, rows):
+    def _create_image(self, tiles: List[CollageTile], cols, rows) -> Image:
         """
         300px is the height and the width of the covers
         TODO: Maybe is a good idea to always resize the images to 300x300 to ensure the smaller ones fit the tile
