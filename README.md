@@ -29,7 +29,7 @@ from lastfmcollagegenerator.collage_generator import CollageGenerator
 collage_generator = CollageGenerator(lastfm_api_key="YOUR_API_KEY", lastfm_api_secret="YOUR_API_SECRET")
 
 # Returns a PIL Image object
-image = collage_generator.generate_top_albums_collage(user="username", cols=5, rows=5, period="7day")
+image = collage_generator.generate_top_albums_collage(username="username", cols=5, rows=5, period="7day")
 image.save("5x5 collage.png", "png")
 ```
 
