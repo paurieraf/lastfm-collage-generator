@@ -1,3 +1,5 @@
+import os
+
 from dataclasses import dataclass
 from io import BytesIO
 from typing import List, Tuple
@@ -7,6 +9,7 @@ import requests
 from PIL import Image, ImageDraw, ImageFont
 from pylast import User, TopItem, Album
 
+import lastfmcollagegenerator
 from lastfmcollagegenerator.lastfm.client import LastfmClient
 
 
@@ -105,7 +108,11 @@ class CollageGenerator:
         draw.rectangle(((x, y_0), (x + cls.TILE_WIDTH, y_1)), (0, 0, 0, 123))
 
         font_path = cls.FONT_BOLD_PATH if cls.FONT_BOLD else cls.FONT_REGULAR_PATH
-        font = ImageFont.truetype(font_path, cls.FONT_SIZE)
+        font = ImageFont.truetype(
+            f"{os.path.dirname(lastfmcollagegenerator.collage_generator.__file__)}"
+            f"/{font_path}",
+            cls.FONT_SIZE
+        )
 
         title = cls._insert_newline_characters_to_text(font, title)
         draw.text((x + 8, y + 240), title, fill=(255, 255, 255), font=font)
