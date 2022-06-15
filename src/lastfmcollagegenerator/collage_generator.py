@@ -41,8 +41,8 @@ class CollageGenerator:
     MAX_ROWS = 5
     TILE_WIDTH = 300
     TILE_HEIGHT = 300
-    FONT_REGULAR_PATH = "fonts/DejaVuSansMonoforPowerline.ttf"
-    FONT_BOLD_PATH = "fonts/DejaVuSansMonoBoldforPowerline.ttf"
+    FONT_REGULAR_PATH = "fonts/DejaVuSansMono.ttf"
+    FONT_BOLD_PATH = "fonts/DejaVuSansMono-Bold.ttf"
     FONT_SIZE = 16
     FONT_BOLD = False
 
