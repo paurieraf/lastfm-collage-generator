@@ -136,9 +136,10 @@ class CollageGenerator:
             processed_chars.append(c)
             processed_text = "".join(processed_chars)
             temp_w, temp_h = font.getsize(processed_text)
-            if temp_w % 250 == 0:
+            if temp_w >= 275:
                 text_lines.append(processed_text)
                 processed_chars = []
+                processed_text = ""
         text_lines.append(processed_text)  # Add residual characters
         title = "\n".join(text_lines)
         return title
