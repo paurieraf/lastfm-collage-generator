@@ -23,3 +23,21 @@ class LastfmClient:
         """
         top_albums = user.get_top_albums(period=period, limit=limit)
         return top_albums
+
+    @staticmethod
+    def get_top_artists(user: User, limit: int, period: str) -> List[TopItem]:
+        """
+        Returns a list of TopItems with the artists and the play count
+        TODO: It will be necessary to do a custom request because pylast doesn't support page param in this query
+        """
+        top_artists = user.get_top_artists(period=period, limit=limit)
+        return top_artists
+
+    @staticmethod
+    def get_top_tracks(user: User, limit: int, period: str) -> List[TopItem]:
+        """
+        Returns a list of TopItems with the tracks and the play count
+        TODO: It will be necessary to do a custom request because pylast doesn't support page param in this query
+        """
+        top_tracks = user.get_top_tracks(period=period, limit=limit)
+        return top_tracks
