@@ -43,7 +43,7 @@ class CollageGenerator:
     TILE_HEIGHT = 300
     FONT_REGULAR_PATH = "fonts/DejaVuSansMono.ttf"
     FONT_BOLD_PATH = "fonts/DejaVuSansMono-Bold.ttf"
-    FONT_SIZE = 16
+    FONT_SIZE = 15
     FONT_BOLD = False
 
     def __init__(self, lastfm_api_key: str, lastfm_api_secret: str):
@@ -136,7 +136,7 @@ class CollageGenerator:
             processed_chars.append(c)
             processed_text = "".join(processed_chars)
             temp_w, temp_h = font.getsize(processed_text)
-            if temp_w % 275 == 0:
+            if temp_w % 250 == 0:
                 text_lines.append(processed_text)
                 processed_chars = []
         text_lines.append(processed_text)  # Add residual characters
