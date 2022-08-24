@@ -1,3 +1,4 @@
+import concurrent.futures
 import os
 import urllib.parse
 
@@ -57,51 +58,116 @@ class CollageGenerator:
     FONT_BOLD = False
 
     def __init__(self, lastfm_api_key: str, lastfm_api_secret: str):
-        self._path = os.path.dirname(lastfmcollagegenerator.collage_generator.__file__)
+        self._path = os.path.dirname(
+            lastfmcollagegenerator.collage_generator.__file__
+        )
         self.lastfm_client = LastfmClient(lastfm_api_key, lastfm_api_secret)
 
-    def generate(self, entity: str, username: str, cols: int, rows: int, period: str) -> Image:
+    def generate(
+            self,
+            entity: str,
+            username: str,
+            cols: int,
+            rows: int,
+            period: str
+    ) -> Image:
         self._validate_parameters(entity, rows, cols, period)
         if entity == self.ENTITY_ALBUM:
-            return self.generate_top_albums_collage(username, cols, rows, period)
+            return self.generate_top_albums_collage(
+                username, cols, rows, period
+            )
         elif entity == self.ENTITY_ARTIST:
-            return self.generate_top_artists_collage(username, cols, rows, period)
+            return self.generate_top_artists_collage(
+                username, cols, rows, period
+            )
         elif entity == self.ENTITY_TRACK:
-            return self.generate_top_tracks_collage(username, cols, rows, period)
+            return self.generate_top_tracks_collage(
+                username, cols, rows, period
+            )
         else:
             raise ValueError(f"Invalid entity: {entity}")
 
-    def generate_top_albums_collage(self, username: str, cols: int, rows: int, period: str) -> Image:
+    def generate_top_albums_collage(
+            self,
+            username: str,
+            cols: int,
+            rows: int,
+            period: str
+    ) -> Image:
         user = self.lastfm_client.get_user(username)
-        tiles = self._get_tiles_from_top_albums(user, limit=cols * rows, period=period)
+        tiles = self._get_tiles_from_top_albums(
+            user, limit=cols * rows, period=period
+        )
         return self._create_image(tiles, cols, rows)
 
-    def generate_top_artists_collage(self, username: str, cols: int, rows: int, period: str) -> Image:
+    def generate_top_artists_collage(
+            self,
+            username: str,
+            cols: int,
+            rows: int,
+            period: str
+    ) -> Image:
         user = self.lastfm_client.get_user(username)
-        tiles = self._get_tiles_from_top_artists(user, limit=cols * rows, period=period)
+        tiles = self._get_tiles_from_top_artists(
+            user, limit=cols * rows, period=period
+        )
         return self._create_image(tiles, cols, rows)
 
-    def generate_top_tracks_collage(self, username: str, cols: int, rows: int, period: str) -> Image:
+    def generate_top_tracks_collage(
+            self,
+            username: str,
+            cols: int,
+            rows: int,
+            period: str
+    ) -> Image:
         user = self.lastfm_client.get_user(username)
-        tiles = self._get_tiles_from_top_tracks(user, limit=cols * rows, period=period)
+        tiles = self._get_tiles_from_top_tracks(
+            user, limit=cols * rows, period=period
+        )
         return self._create_image(tiles, cols, rows)
 
-    def _get_tiles_from_top_albums(self, user: User, limit: int, period: str) -> List:
+    def _get_tiles_from_top_albums(
+            self,
+            user: User,
+            limit: int,
+            period: str
+    ) -> List:
         top_albums = self.lastfm_client.get_top_albums(user, limit, period)
-        tiles = self._create_tiles_from_top_items(top_albums, entity=self.ENTITY_ALBUM)
+        tiles = self._create_tiles_from_top_items(
+            top_albums, entity=self.ENTITY_ALBUM
+        )
         return tiles
 
-    def _get_tiles_from_top_artists(self, user: User, limit: int, period: str) -> List:
+    def _get_tiles_from_top_artists(
+            self,
+            user: User,
+            limit: int,
+            period: str
+    ) -> List:
         top_artists = self.lastfm_client.get_top_artists(user, limit, period)
-        tiles = self._create_tiles_from_top_items(top_artists, entity=self.ENTITY_ARTIST)
+        tiles = self._create_tiles_from_top_items(
+            top_artists, entity=self.ENTITY_ARTIST
+        )
         return tiles
 
-    def _get_tiles_from_top_tracks(self, user: User, limit: int, period: str) -> List:
+    def _get_tiles_from_top_tracks(
+            self,
+            user: User,
+            limit: int,
+            period: str
+    ) -> List:
         top_tracks = self.lastfm_client.get_top_tracks(user, limit, period)
-        tiles = self._create_tiles_from_top_items(top_tracks, entity=self.ENTITY_TRACK)
+        tiles = self._create_tiles_from_top_items(
+            top_tracks, entity=self.ENTITY_TRACK
+        )
         return tiles
 
-    def _create_image(self, tiles: List[CollageTile], cols: int, rows: int) -> Image:
+    def _create_image(
+            self,
+            tiles: List[CollageTile],
+            cols: int,
+            rows: int
+    ) -> Image:
         """
         300px is the height and the width of the covers
         """
@@ -115,7 +181,11 @@ class CollageGenerator:
         cursor = (0, 0)
         for tile in tiles:
             new_image.paste(Image.open(BytesIO(tile.data)), cursor)
-            self._insert_tile_title(new_image, f"{tile.title}. ({tile.playcount})", cursor)
+            self._insert_tile_title(
+                image=new_image,
+                title=f"{tile.title}. ({tile.playcount})",
+                cursor=cursor
+            )
 
             # move cursor to next tile
             y = cursor[1]
@@ -127,27 +197,53 @@ class CollageGenerator:
         return new_image
 
     @classmethod
-    def _create_tiles_from_top_items(cls, top_items: List[TopItem], entity: str) -> List[CollageTile]:
+    def _create_tiles_from_top_items(
+            cls,
+            top_items: List[TopItem],
+            entity: str
+    ) -> List[CollageTile]:
         tiles: List[CollageTile] = []
-        for top_item in top_items:
-            if entity == cls.ENTITY_ALBUM or entity == cls.ENTITY_TRACK:
-                data = cls._get_album_cover(top_item.item)
-                title = f"{top_item.item.artist} - {top_item.item.title}"
-            elif entity == cls.ENTITY_ARTIST:
-                data = cls._get_artist_image(top_item.item)
-                title = top_item.item.name
-            else:
-                raise ValueError(f"Invalid entity: {entity}")
-
-            tile = CollageTile(
-                data=data,
-                playcount=top_item.weight,
-                title=title
-            )
-            tiles.append(tile)
+        with concurrent.futures.ThreadPoolExecutor() as executor:
+            futures = []
+            for top_item in top_items:
+                future = executor.submit(
+                    cls._create_tile_from_top_item,
+                    top_item,
+                    entity
+                )
+                futures.append(future)
+            for future in concurrent.futures.as_completed(futures):
+                tiles.append(future.result())
+        tiles.sort(key=lambda x: x.playcount, reverse=True)
         return tiles
 
-    def _insert_tile_title(self, image: Image, title: str, cursor: Tuple[int, int]):
+    @classmethod
+    def _create_tile_from_top_item(
+            cls,
+            top_item: TopItem,
+            entity: str
+    ) -> CollageTile:
+        if entity == cls.ENTITY_ALBUM or entity == cls.ENTITY_TRACK:
+            data = cls._get_album_cover(top_item.item)
+            title = f"{top_item.item.artist} - {top_item.item.title}"
+        elif entity == cls.ENTITY_ARTIST:
+            data = cls._get_artist_image(top_item.item)
+            title = top_item.item.name
+        else:
+            raise ValueError(f"Invalid entity: {entity}")
+
+        return CollageTile(
+            data=data,
+            playcount=top_item.weight,
+            title=title
+        )
+
+    def _insert_tile_title(
+            self,
+            image: Image,
+            title: str,
+            cursor: Tuple[int, int]
+    ):
         draw = ImageDraw.Draw(image, "RGBA")
         x = cursor[0]
         y = cursor[1]
@@ -183,16 +279,23 @@ class CollageGenerator:
     @classmethod
     def _get_artist_image(cls, artist: Artist) -> bytes:
         """
-        Last.fm API does not provide artist images. So we scrape it from the website.
+        Last.fm API does not provide artist images.
+        So we scrape it from the website.
         """
-        resp = requests.get("https://www.last.fm/music/{artist}".format(artist=urllib.parse.quote(artist.name)))
+        resp = requests.get("https://www.last.fm/music/{artist}".format(
+            artist=urllib.parse.quote(artist.name)
+        ))
         if resp.status_code == 404:
             raise Exception("Artist not found")
         soup = bs4.BeautifulSoup(resp.content, 'html5lib')
 
         url = None
         if soup.find(class_="header-new-background-image"):
-            url = str(soup.find(class_="header-new-background-image").get("content"))
+            url = str(
+                soup.find(
+                    class_="header-new-background-image"
+                ).get("content")
+            )
         if not url:
             img = cls._generate_blank_tile()
         else:
@@ -230,7 +333,13 @@ class CollageGenerator:
         img = img_bytes.getvalue()
         return img
 
-    def _validate_parameters(self, entity: str, rows: int, cols: int, period: str):
+    def _validate_parameters(
+            self,
+            entity: str,
+            rows: int,
+            cols: int,
+            period: str
+    ):
         if entity not in self.ENTITIES:
             raise ValueError(
                 f"Invalid entity: {entity}. "
