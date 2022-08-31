@@ -214,7 +214,7 @@ class CollageGenerator:
                 futures.append(future)
             for future in concurrent.futures.as_completed(futures):
                 tiles.append(future.result())
-        tiles.sort(key=lambda x: x.playcount, reverse=True)
+        tiles.sort(key=lambda x: int(x.playcount), reverse=True)
         return tiles
 
     @classmethod
