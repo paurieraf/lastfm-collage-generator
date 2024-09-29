@@ -1,5 +1,5 @@
-import abc
 import concurrent.futures
+import logging
 import os
 import urllib.parse
 from dataclasses import dataclass
@@ -14,8 +14,10 @@ from PIL import Image, ImageDraw, ImageFont
 import lastfmcollagegenerator
 from lastfmcollagegenerator.constants import ENTITY_ARTIST, ENTITY_ALBUM, \
     ENTITY_TRACK
+from lastfmcollagegenerator.exceptions import ArtistNotFound
 from lastfmcollagegenerator.lastfm.client import LastfmClient
 
+logger = logging.getLogger(__name__)
 
 @dataclass
 class LastfmConfig:
@@ -226,31 +228,36 @@ class ArtistCollageBuilder(BaseCollageBuilder):
         Last.fm API does not provide artist images.
         So we scrape it from the website.
         """
-        resp = requests.get("https://www.last.fm/music/{artist}".format(
-            artist=urllib.parse.quote(artist.name)
-        ))
-        if resp.status_code == 404:
-            raise Exception("Artist not found")
-        soup = bs4.BeautifulSoup(resp.content, 'html5lib')
+        try:
+            resp = requests.get("https://www.last.fm/music/{artist}".format(
+                artist=urllib.parse.quote(artist.name)
+            ))
+            if resp.status_code == 404:
+                raise ArtistNotFound
+            soup = bs4.BeautifulSoup(resp.content, 'html5lib')
 
-        url = None
-        if soup.find(class_="header-new-background-image"):
-            url = str(
-                soup.find(
-                    class_="header-new-background-image"
-                ).get("content")
-            )
-        if not url:
-            img = cls._generate_blank_tile()
-        else:
-            response = requests.get(url).content
-            img = Image.open(BytesIO(response))
-            img.seek(0)
-            img.thumbnail((cls.TILE_WIDTH, cls.TILE_HEIGHT), Image.ANTIALIAS)
-            img_bytes = BytesIO()
-            img.save(img_bytes, format="png")
-            img = img_bytes.getvalue()
-        return img
+            url = None
+            if soup.find(class_="header-new-background-image"):
+                url = str(
+                    soup.find(
+                        class_="header-new-background-image"
+                    ).get("content")
+                )
+            if not url:
+                raise ArtistNotFound
+            else:
+                response = requests.get(url).content
+                img = Image.open(BytesIO(response))
+                img.seek(0)
+                img.thumbnail((cls.TILE_WIDTH, cls.TILE_HEIGHT), Image.ANTIALIAS)
+                img_bytes = BytesIO()
+                img.save(img_bytes, format="png")
+                img = img_bytes.getvalue()
+            return img
+        except ArtistNotFound as e:
+            logger.exception(e)
+            return cls._generate_blank_tile()
+
 
     def __repr__(self):
         return f"<ArtistCollage [" \
