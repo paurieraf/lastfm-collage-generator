@@ -1,6 +1,32 @@
-[build-system]
-requires = [
-    "setuptools>=42",
-    "wheel"
+[tool.poetry]
+name = "lastfmcollagegenerator"
+version = "0.4.3"
+description = "Python library to build Last.fm collages"
+authors = ["Pau Riera <pau.riera.forteza@gmail.com>"]
+readme = "README.md"
+keywords = ["lastfm", "music", "collage", "album", "cover", "artist", "musicbucket", "musicbucket.net"]
+repository = "https://github.com/paurieraf/lastfm-collage-generator"
+homepage = "https://github.com/paurieraf/lastfm-collage-generator"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent"
 ]
-build-backend = "setuptools.build_meta"
+packages = [
+    { include = "src" }
+]
+
+[tool.poetry.urls]
+"Bug Tracker" = "https://github.com/paurieraf/lastfm-collage-generator/issues"
+
+[tool.poetry.dependencies]
+python = "^3.8"
+requests = "==2.32.3"
+pylast = "==5.3.0"
+Pillow = "==10.4.0"
+beautifulsoup4 = "==4.12.3"
+html5lib = "1.1"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
