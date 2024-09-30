@@ -249,7 +249,7 @@ class ArtistCollageBuilder(BaseCollageBuilder):
                 response = requests.get(url).content
                 img = Image.open(BytesIO(response))
                 img.seek(0)
-                img.thumbnail((cls.TILE_WIDTH, cls.TILE_HEIGHT), Image.ANTIALIAS)
+                img.thumbnail((cls.TILE_WIDTH, cls.TILE_HEIGHT))
                 img_bytes = BytesIO()
                 img.save(img_bytes, format="png")
                 img = img_bytes.getvalue()
