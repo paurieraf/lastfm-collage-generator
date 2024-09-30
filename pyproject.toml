@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "lastfmcollagegenerator"
-version = "0.4.11"
+version = "0.4.12"
 description = "Python library to build Last.fm collages"
 authors = ["Pau Riera <pau.riera.forteza@gmail.com>"]
 readme = "README.md"
