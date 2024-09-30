@@ -9,7 +9,7 @@ from typing import List, Tuple, Union
 import bs4
 import requests
 from pylast import User, TopItem, Album, Artist, Track
-from PIL import Image, ImageDraw, ImageFont
+from PIL import Image, ImageDraw, ImageFont, ImageFile
 
 import lastfmcollagegenerator
 from lastfmcollagegenerator.constants import ENTITY_ARTIST, ENTITY_ALBUM, \
@@ -18,6 +18,7 @@ from lastfmcollagegenerator.exceptions import ArtistNotFound, ArtistImageNotFoun
 from lastfmcollagegenerator.lastfm.client import LastfmClient
 
 logger = logging.getLogger(__name__)
+ImageFile.LOAD_TRUNCATED_IMAGES = True
 
 @dataclass
 class LastfmConfig:
