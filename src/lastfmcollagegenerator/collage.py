@@ -14,7 +14,7 @@ from PIL import Image, ImageDraw, ImageFont
 import lastfmcollagegenerator
 from lastfmcollagegenerator.constants import ENTITY_ARTIST, ENTITY_ALBUM, \
     ENTITY_TRACK
-from lastfmcollagegenerator.exceptions import ArtistNotFound
+from lastfmcollagegenerator.exceptions import ArtistNotFound, ArtistImageNotFound
 from lastfmcollagegenerator.lastfm.client import LastfmClient
 
 logger = logging.getLogger(__name__)
@@ -244,7 +244,7 @@ class ArtistCollageBuilder(BaseCollageBuilder):
                     ).get("content")
                 )
             if not url:
-                raise ArtistNotFound
+                raise ArtistImageNotFound
 
             response = requests.get(url).content
             img = Image.open(BytesIO(response))
@@ -254,8 +254,7 @@ class ArtistCollageBuilder(BaseCollageBuilder):
             img.save(img_bytes, format="png")
             img = img_bytes.getvalue()
             return img
-        except ArtistNotFound as e:
-            logger.exception(e)
+        except (ArtistNotFound, ArtistImageNotFound):
             return cls._generate_blank_tile()
 
 
