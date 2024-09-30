@@ -145,8 +145,8 @@ class BaseCollageBuilder:
         for c in text:
             processed_chars.append(c)
             processed_text = "".join(processed_chars)
-            temp_w, temp_h = font.getsize(processed_text)
-            if temp_w >= 275:
+            font_w = font.getlength(processed_text)
+            if font_w >= 275:
                 text_lines.append(processed_text)
                 processed_chars = []
                 processed_text = ""
@@ -245,14 +245,14 @@ class ArtistCollageBuilder(BaseCollageBuilder):
                 )
             if not url:
                 raise ArtistNotFound
-            else:
-                response = requests.get(url).content
-                img = Image.open(BytesIO(response))
-                img.seek(0)
-                img.thumbnail((cls.TILE_WIDTH, cls.TILE_HEIGHT))
-                img_bytes = BytesIO()
-                img.save(img_bytes, format="png")
-                img = img_bytes.getvalue()
+
+            response = requests.get(url).content
+            img = Image.open(BytesIO(response))
+            img.seek(0)
+            img.thumbnail((cls.TILE_WIDTH, cls.TILE_HEIGHT))
+            img_bytes = BytesIO()
+            img.save(img_bytes, format="png")
+            img = img_bytes.getvalue()
             return img
         except ArtistNotFound as e:
             logger.exception(e)
