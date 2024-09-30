@@ -230,7 +230,7 @@ class ArtistCollageBuilder(BaseCollageBuilder):
         """
         try:
             resp = requests.get("https://www.last.fm/music/{artist}".format(
-                artist=urllib.parse.quote(artist.name)
+                artist=urllib.parse.quote_plus(artist.name)
             ))
             if resp.status_code == 404:
                 raise ArtistNotFound
