@@ -3,7 +3,7 @@
 
 # lastfm-collage-generator
 
-Python library to create Last.fm collages from user's top albums. 
+Python library to create Last.fm collages from user's top items. 
 
 It supports different configurations like the grid size or the period.
 
