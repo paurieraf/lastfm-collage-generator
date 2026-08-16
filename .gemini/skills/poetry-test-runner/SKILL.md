@@ -1,12 +1,12 @@
 ---
 name: poetry-test-runner
 description: >-
-  Execute pytest test suites, generate coverage reports with pytest-cov, run code linters (flake8, black, mypy), and debug test failures using Poetry for the lastfm-collage-generator project. Use when running tests, checking test coverage, or validating code quality.
+  Execute pytest test suites, generate coverage reports with pytest-cov, run code linters (flake8, black, mypy), and debug test failures using uv for the lastfm-collage-generator project. Use when running tests, checking test coverage, or validating code quality.
 ---
 
-# Poetry Test Runner & Quality Assurance Skill
+# Test Runner & Quality Assurance Skill
 
-This skill provides workflow instructions, execution commands, and an automation script for executing tests, measuring code coverage, and running static analysis linters within the Poetry virtual environment.
+This skill provides workflow instructions, execution commands, and an automation script for executing tests, measuring code coverage, and running static analysis linters within the uv environment.
 
 ---
 
@@ -16,62 +16,62 @@ Use the bundled helper script [`scripts/run_tests.py`](./scripts/run_tests.py) t
 
 ```bash
 # Run all unit tests
-poetry run python .gemini/skills/poetry-test-runner/scripts/run_tests.py --unit
+uv run python .gemini/skills/poetry-test-runner/scripts/run_tests.py --unit
 
 # Run unit tests with code coverage reporting
-poetry run python .gemini/skills/poetry-test-runner/scripts/run_tests.py --coverage
+uv run python .gemini/skills/poetry-test-runner/scripts/run_tests.py --coverage
 
 # Run linters (flake8, black --check, mypy)
-poetry run python .gemini/skills/poetry-test-runner/scripts/run_tests.py --lint
+uv run python .gemini/skills/poetry-test-runner/scripts/run_tests.py --lint
 
 # Run complete test suite, coverage check (fail under 90%), and linting
-poetry run python .gemini/skills/poetry-test-runner/scripts/run_tests.py --all
+uv run python .gemini/skills/poetry-test-runner/scripts/run_tests.py --all
 ```
 
 ---
 
-## 2. Standard Poetry & Pytest Workflows
+## 2. Standard uv & Pytest Workflows
 
 ### 2.1 Running Pytest Directly
 
 ```bash
 # Run all tests in the tests/ directory
-poetry run pytest -v tests/
+uv run pytest -v tests/
 
 # Run a specific test module
-poetry run pytest -v tests/test_validation.py
+uv run pytest -v tests/test_validation.py
 
 # Run a specific test function
-poetry run pytest -v tests/test_rendering_engine.py -k "test_title_overlay_coordinates"
+uv run pytest -v tests/test_rendering_engine.py -k "test_title_overlay_coordinates"
 
 # Stop on first failure (-x) and show print/log output (-s)
-poetry run pytest -x -s tests/
+uv run pytest -x -s tests/
 ```
 
 ### 2.2 Measuring Code Coverage with `pytest-cov`
 
 ```bash
 # Run coverage on the lastfmcollagegenerator package
-poetry run pytest --cov=lastfmcollagegenerator --cov-report=term-missing tests/
+uv run pytest --cov=lastfmcollagegenerator --cov-report=term-missing tests/
 
 # Generate an HTML coverage report in htmlcov/
-poetry run pytest --cov=lastfmcollagegenerator --cov-report=html tests/
+uv run pytest --cov=lastfmcollagegenerator --cov-report=html tests/
 
 # Enforce minimum 90% coverage threshold
-poetry run pytest --cov=lastfmcollagegenerator --cov-fail-under=90 tests/
+uv run pytest --cov=lastfmcollagegenerator --cov-fail-under=90 tests/
 ```
 
 ### 2.3 Static Analysis & Linting
 
 ```bash
 # Check code style with flake8
-poetry run flake8 src/ tests/
+uv run flake8 src/ tests/
 
 # Check formatting with black
-poetry run black --check src/ tests/
+uv run black --check src/ tests/
 
 # Run static type checking with mypy
-poetry run mypy src/
+uv run mypy src/
 ```
 
 ---
@@ -82,7 +82,7 @@ When a test fails, follow this diagnostic workflow:
 
 1. **Isolate Failure**: Re-run the specific failing test with verbose output and traceback:
    ```bash
-   poetry run pytest -vv --tb=short tests/test_failing_module.py -k "test_name"
+   uv run pytest -vv --tb=short tests/test_failing_module.py -k "test_name"
    ```
 2. **Inspect Visual/Coordinate Failures**:
    - For image composite tests, inspect coordinate calculations in `src/lastfmcollagegenerator/collage.py`.
@@ -92,4 +92,4 @@ When a test fails, follow this diagnostic workflow:
    - Ensure `pylast.LastFMNetwork` is mocked.
 4. **Fix and Verify**:
    - Apply minimal bug fix to source code.
-   - Re-run `poetry run python .gemini/skills/poetry-test-runner/scripts/run_tests.py --all` to verify resolution without regressions.
+   - Re-run `uv run python .gemini/skills/poetry-test-runner/scripts/run_tests.py --all` to verify resolution without regressions.
