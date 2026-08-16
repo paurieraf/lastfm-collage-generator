@@ -191,12 +191,23 @@ image = generator.generate(
     username="your_lastfm_username",
     cols=3,
     rows=3,
-    period="7day"
+    period="7day",
 )
 
 # 3. Save the resulting composite image to disk
 image.save("my_weekly_collage.png", format="PNG")
 print(f"Collage saved successfully! Canvas size: {image.width}x{image.height}px")
+
+# 4. Or generate directly using dedicated convenience methods
+album_collage = generator.generate_top_albums_collage(
+    username="your_lastfm_username", cols=5, rows=5, period="7day"
+)
+artist_collage = generator.generate_top_artists_collage(
+    username="your_lastfm_username", cols=3, rows=3, period="overall"
+)
+track_collage = generator.generate_top_tracks_collage(
+    username="your_lastfm_username", cols=4, rows=4, period="1month"
+)
 ```
 
 ---

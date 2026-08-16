@@ -262,52 +262,44 @@ uv run python .gemini/skills/collage-cli-workflow/scripts/generate_collage_cli.p
 
 ---
 
-## 7. Critical Defects, Pitfalls & Defect Catalog
+## 7. Critical Defects & Remediation Status Catalog
 
-Agents modifying the codebase must be aware of the following confirmed bugs and technical debt items:
+All previously identified critical bugs and technical debt items have been fully remediated and verified with automated test suites:
 
-### 7.1 Bug 1: Multi-Row Title Overlay Geometry Bug (`CRITICAL`)
+### 7.1 Bug 1: Multi-Row Title Overlay Geometry Bug (`REMEDIATED`)
 - **Location**: `src/lastfmcollagegenerator/collage.py:126-130`
-- **Defective Code**:
-  ```python
-  y_0 = y + 235
-  y_1 = y * 2 + self.TILE_WIDTH
-  if y_1 == 0:
-      y_1 += self.TILE_WIDTH * 2
-  draw.rectangle(((x, y_0), (x + self.TILE_WIDTH, y_1)), (0, 0, 0, 123))
-  ```
-- **Symptom**: On row 0 (`y=0`), `y_1 = 300` (correct 65px height). On row 1 (`y=300`), `y_1 = 900` (365px height, completely covering row 2). On row 2 (`y=600`), `y_1 = 1500`. Multi-row collages suffer severe visual corruption on all rows below the first.
-- **Required Fix**:
+- **Fix Applied**:
   ```python
   y_0 = y + (self.TILE_HEIGHT - 65)  # y + 235
   y_1 = y + self.TILE_HEIGHT         # y + 300
   draw.rectangle(((x, y_0), (x + self.TILE_WIDTH, y_1)), (0, 0, 0, 123))
   ```
+- **Verification**: Verified via `tests/test_geometry.py` testing pixel boundaries across multi-row grids.
 
-### 7.2 Bug 2: Documentation Mismatch on Convenience Methods (`HIGH`)
-- **Location**: `README.md:48-49` vs `src/lastfmcollagegenerator/collage_generator.py`
-- **Issue**: `README.md` documents calling `collage_generator.generate_top_albums_collage(...)`, but this method does NOT exist in `CollageGenerator`. Calling it raises `AttributeError`.
-- **Reconciliation**: When extending `CollageGenerator`, implement convenience methods (`generate_top_albums_collage`, `generate_top_artists_collage`, `generate_top_tracks_collage`) or update `README.md` to reflect `generate()`.
+### 7.2 Bug 2: Documentation Mismatch on Convenience Methods (`REMEDIATED`)
+- **Location**: `src/lastfmcollagegenerator/collage_generator.py`
+- **Fix Applied**: Implemented `generate_top_albums_collage`, `generate_top_artists_collage`, and `generate_top_tracks_collage` delegating to `generate()` with full type annotations.
+- **Verification**: Verified via `tests/test_facade.py`.
 
-### 7.3 Bug 3: Incomplete Parameter Boundary Validation (`MEDIUM`)
-- **Location**: `src/lastfmcollagegenerator/collage_generator.py:69-73`
-- **Issue**: `_validate_parameters` checks `cols > 5 or rows > 5`, but does not check `cols < 1 or rows < 1`. Passing `cols=0` or `rows=-1` passes validation and crashes PIL canvas allocation.
-- **Required Fix**: Enforce `1 <= cols <= self.MAX_COLS` and `1 <= rows <= self.MAX_ROWS`.
+### 7.3 Bug 3: Incomplete Parameter Boundary Validation (`REMEDIATED`)
+- **Location**: `src/lastfmcollagegenerator/collage_generator.py`
+- **Fix Applied**: Enforced `1 <= cols <= self.MAX_COLS`, `1 <= rows <= self.MAX_ROWS`, non-empty stripped username, and type validation raising clear `ValueError` or `TypeError`.
+- **Verification**: Verified via `tests/test_validation.py`.
 
-### 7.4 Bug 4: Web Retrieval Fragility & Missing Timeouts (`MEDIUM`)
-- **Location**: `src/lastfmcollagegenerator/collage.py:234, 251, 308`
-- **Issue**: `requests.get()` is invoked with default User-Agent and no `timeout=...` parameter. Unhandled `requests.RequestException` or CDN 502/503 errors crash worker threads and abort generation.
-- **Required Fix**: Supply `DEFAULT_HEADERS`, pass `timeout=(3.05, 10.0)`, and catch all network exceptions to fallback to `_generate_blank_tile()`.
+### 7.4 Bug 4: Web Retrieval Fragility & Missing Timeouts (`REMEDIATED`)
+- **Location**: `src/lastfmcollagegenerator/collage.py`
+- **Fix Applied**: Added `DEFAULT_HEADERS` with custom User-Agent, `DEFAULT_TIMEOUT = (3.05, 10.0)`, and exception catching with fallback to `_generate_blank_tile()`.
+- **Verification**: Verified via `tests/test_resilience.py`.
 
-### 7.5 Bug 5: Non-Deterministic Tile Ordering on Tied Playcounts (`LOW`)
-- **Location**: `src/lastfmcollagegenerator/collage.py:191`
-- **Issue**: `as_completed(futures)` appends tiles in non-deterministic arrival order. Sorting with `tiles.sort(key=lambda x: int(x.playcount), reverse=True)` leaves items with identical playcounts in arbitrary order.
-- **Required Fix**: Use a secondary sort key: `tiles.sort(key=lambda x: (int(x.playcount), x.title), reverse=True)`.
+### 7.5 Bug 5: Non-Deterministic Tile Ordering on Tied Playcounts (`REMEDIATED`)
+- **Location**: `src/lastfmcollagegenerator/collage.py`
+- **Fix Applied**: Added deterministic secondary sorting key `(int(playcount), title)`.
+- **Verification**: Verified via `tests/test_builders.py`.
 
-### 7.6 Hygiene & Packaging Flaws
-- `pyproject.toml:3`: `version = "0.4.13 "` contains a trailing space.
-- `collage.py:45`: `CollageConfig` dataclass is unused dead code.
-- `tests/`: Currently contains only `__init__.py` (0% test coverage).
+### 7.6 Hygiene & Packaging Flaws (`REMEDIATED`)
+- Base exception class `LastfmCollageGeneratorError` added to `exceptions.py`.
+- Dead code (`CollageConfig` dataclass, unused logger) removed.
+- Full offline test suite in `tests/` with 100% statement coverage (44 unit tests).
 
 ---
 
@@ -315,14 +307,14 @@ Agents modifying the codebase must be aware of the following confirmed bugs and 
 
 The table below reconciles all contradictions between existing `README.md`, the actual codebase, and architectural best practices:
 
-| Topic / Feature | README.md Statement | Codebase Reality | Architectural Design Spec | Agent Resolution Guidance |
+| Topic / Feature | README.md Statement | Codebase Reality | Architectural Design Spec | Status |
 |---|---|---|---|---|
-| **Convenience Methods** | Mentions `generate_top_albums_collage()` | Only `generate()` exists; method raises `AttributeError` | Convenience methods should exist on Facade | Implement `generate_top_albums_collage()`, `generate_top_artists_collage()`, `generate_top_tracks_collage()` on `CollageGenerator` delegating to `generate()`. |
-| **Grid Boundary Validation** | Mentions "up to 5" rows/cols | Validates `cols > 5`, but permits `0` or negative numbers | Must validate `1 <= cols <= 5` and `1 <= rows <= 5` | Update `_validate_parameters` to check `1 <= cols <= MAX_COLS` and `1 <= rows <= MAX_ROWS`. |
-| **Title Overlay Geometry** | Shows visual overlay sample | Math `y * 2 + TILE_WIDTH` corrupts multi-row rendering | Banner must span `y + 235` to `y + 300` on every row | Correct `y_1` calculation to `y + self.TILE_HEIGHT`. |
-| **Network Error Handling** | No mention of network failures | Unhandled HTTP exceptions crash collage creation | Resilient fallback to black blank tile | Wrap all HTTP and retrieval calls in `try...except` and return `_generate_blank_tile()`. |
-| **Automated Test Coverage** | No mention of tests | `tests/` directory has 0 tests (empty `__init__.py`) | Full offline unit and integration test suite with >90% coverage | Author unit tests covering validation, builders, retrieval, geometry, and mock integration. |
-| **Version String** | Lists PyPI package `0.4.13` | `version = "0.4.13 "` in `pyproject.toml` has trailing whitespace | Semantic versioning without whitespace (`0.4.13` or `0.5.0`) | Strip trailing whitespace in `pyproject.toml`. |
+| **Convenience Methods** | Mentions `generate_top_albums_collage()` | Fully implemented on `CollageGenerator` | Convenience methods exist on Facade | **RESOLVED** |
+| **Grid Boundary Validation** | Mentions "up to 5" rows/cols | Validates `1 <= cols <= 5` and `1 <= rows <= 5` | Strict boundary and type validation | **RESOLVED** |
+| **Title Overlay Geometry** | Shows visual overlay sample | Bounded to `y + 235` to `y + 300` on every row | Banner strictly occupies tile bottom 65px | **RESOLVED** |
+| **Network Error Handling** | No mention of network failures | Graceful fallback to black blank tile | Catch all network errors, timeouts, and 404s | **RESOLVED** |
+| **Automated Test Coverage** | No mention of tests | 44 offline unit tests with 100% coverage | Full offline pytest suite with synthetic mocks | **RESOLVED** |
+| **Version String & Packaging** | Lists PyPI package `0.4.13` | Cleaned trailing whitespace and dead code | Standard PEP 621 metadata | **RESOLVED** |
 
 ---
 
