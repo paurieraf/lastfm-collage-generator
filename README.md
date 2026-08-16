@@ -499,6 +499,53 @@ uv run python .gemini/skills/poetry-test-runner/scripts/run_tests.py --all
 
 ---
 
+## 📦 Packaging & Publishing to PyPI
+
+The package is built and published using `uv` with the `hatchling` build backend.
+
+### 1. Build Distribution Artifacts
+
+Always ensure only clean, current release artifacts exist in `dist/` prior to building:
+
+```bash
+# Clean previous build artifacts
+rm -rf dist/
+
+# Build source distribution (.tar.gz) and binary wheel (.whl)
+uv build
+```
+
+### 2. Configure PyPI Authentication
+
+`uv publish` authenticates automatically using the `UV_PUBLISH_TOKEN` environment variable or standard `~/.pypirc` / `~/.netrc` config:
+
+- **Shell profile (`~/.zshrc`)**:
+  ```bash
+  export UV_PUBLISH_TOKEN="pypi-AgEI..."
+  ```
+- **Project `.env`**:
+  ```dotenv
+  UV_PUBLISH_TOKEN=pypi-AgEI...
+  ```
+- **Global `~/.pypirc`**:
+  ```ini
+  [distutils]
+  index-servers = pypi
+
+  [pypi]
+  username = __token__
+  password = pypi-AgEI...
+  ```
+
+### 3. Publish to PyPI
+
+```bash
+# Publish built release to PyPI
+uv publish
+```
+
+---
+
 ## 🔤 Font Handling & Asset Packaging
 
 The library bundles official TrueType fonts directly inside the distribution package at `src/lastfmcollagegenerator/fonts/`:
