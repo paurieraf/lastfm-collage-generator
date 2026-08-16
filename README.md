@@ -5,57 +5,116 @@
 
 Python library to create Last.fm collages from user's top items. 
 
-It supports different configurations like the grid size or the period.
+It supports different configurations like grid size, entity types, and time periods.
 
+---
 
 ## Features
 
-- Choose the number of rows and columns (for now, up to 5)
-- Choose the period to calculate the top (7day, 1month, 3month, 6month, 12month, overall. Default: 7day)
-  
+- Choose entity types: `album`, `artist`, `track`.
+- Choose the number of rows and columns (up to 5x5).
+- Choose the aggregation period: `7day`, `1month`, `3month`, `6month`, `12month`, `overall` (Default: `7day`).
+- Displays dark translucent overlay banners with artist/title and playcount.
+
+---
+
 ## Installation
 
-Install lastfmcollagegenerator with pip
-
+### Using uv
 ```bash
-  pip install lastfmcollagegenerator
+uv add lastfmcollagegenerator
 ```
 
-## Options
-
-Entity values
-```
-"album", "artist", "track"
-```
-Period values
-```
-"7day", "1month", "3month", "6month", "12month", "overall"
+### Using pip
+```bash
+pip install lastfmcollagegenerator
 ```
 
+---
 
-## Usage/Examples
+## Usage / Examples
 
 ```python
 from lastfmcollagegenerator.collage_generator import CollageGenerator
 
-collage_generator = CollageGenerator(lastfm_api_key="YOUR_API_KEY", lastfm_api_secret="YOUR_API_SECRET")
+collage_generator = CollageGenerator(
+    lastfm_api_key="YOUR_API_KEY", 
+    lastfm_api_secret="YOUR_API_SECRET"
+)
 
 # Returns a PIL Image object
-image = collage_generator.generate(entity="album", username="username", cols=5, rows=5, period="7day")
-image.save("5x5 album collage.png", "png")
-
-# Or just call the method directly
-image = collage_generator.generate_top_albums_collage(username="username", cols=5, rows=5, period="7day")
-image.save("5x5 album collage.png", "png")
+image = collage_generator.generate(
+    entity="album", 
+    username="username", 
+    cols=5, 
+    rows=5, 
+    period="7day"
+)
+image.save("5x5_album_collage.png", "png")
 ```
 
-  
+### Options Reference
+
+- **Entity**: `"album"`, `"artist"`, `"track"`
+- **Period**: `"7day"`, `"1month"`, `"3month"`, `"6month"`, `"12month"`, `"overall"`
+- **Grid Dimensions**: `cols` (1–5), `rows` (1–5)
+
+---
+
+## Development
+
+The project uses [uv](https://docs.astral.sh/uv/) for project and package management.
+
+### Prerequisites
+
+Install `uv` (if not already installed):
+```bash
+# macOS / Linux
+curl -LsSf https://astral.sh/uv/install.sh | sh
+
+# Or using Homebrew
+brew install uv
+```
+
+No other external dependencies or global package managers are required—`uv` manages Python versions and virtual environments automatically.
+
+### Setup Environment
+
+Clone the repository and install all dependencies (including dev tools):
+```bash
+uv sync
+```
+
+### Running Tests & Linters
+
+```bash
+# Run unit tests
+uv run pytest tests/
+
+# Run tests with coverage
+uv run pytest --cov=src/lastfmcollagegenerator tests/
+
+# Run linters & type checking
+uv run flake8 src/ tests/
+uv run black --check src/ tests/
+uv run mypy src/
+```
+
+### Building the Package
+
+Build the source distribution (`.tar.gz`) and wheel (`.whl`):
+```bash
+uv build
+```
+
+---
+
 ## License
 
 [MIT](https://choosealicense.com/licenses/mit/)
 
-  
+---
+
 ## Authors
 
 - [@paurieraf](https://www.github.com/paurieraf)
-
