@@ -2,8 +2,8 @@
 """Unified Debug & Development Runner for lastfm-collage-generator.
 
 Provides zero-build, instant execution and debugging for both:
-1. Offline Mock Mode (--mock): 0 network calls, instant synthetic visual rendering for Pillow/layout testing.
-2. Live API Mode (--live): Real Last.fm queries and web scraping using credentials from .env.
+1. Offline Mock Mode (--mock): 0 network calls, instant synthetic visual rendering.
+2. Live API Mode (--live): Real Last.fm queries and web scraping using .env.
 """
 
 import argparse
@@ -26,7 +26,7 @@ from lastfmcollagegenerator.constants import ENTITIES, PERIODS  # noqa: E402
 
 def load_dotenv(env_path: Optional[str] = None) -> Dict[str, str]:
     """Lightweight zero-dependency .env parser.
-    
+
     Reads key-value pairs from a .env file and sets them in os.environ
     if they are not already defined.
     """
@@ -47,7 +47,9 @@ def load_dotenv(env_path: Optional[str] = None) -> Dict[str, str]:
                 key = key.strip()
                 val = val.strip()
                 # Strip wrapping single or double quotes
-                if (val.startswith('"') and val.endswith('"')) or (val.startswith("'") and val.endswith("'")):
+                if (val.startswith('"') and val.endswith('"')) or (
+                    val.startswith("'") and val.endswith("'")
+                ):
                     val = val[1:-1]
                 env_vars[key] = val
                 if key not in os.environ:
@@ -67,7 +69,9 @@ class SyntheticTile:
         self.title = title
 
 
-def generate_synthetic_tiles(count: int, entity: str, tile_width: int = 300, tile_height: int = 300) -> List[SyntheticTile]:
+def generate_synthetic_tiles(
+    count: int, entity: str, tile_width: int = 300, tile_height: int = 300
+) -> List[SyntheticTile]:
     """Generates synthetic colored image tiles for fast offline mock rendering."""
     from PIL import Image, ImageDraw
 
@@ -105,9 +109,19 @@ def generate_synthetic_tiles(count: int, entity: str, tile_width: int = 300, til
         img = Image.new("RGB", (tile_width, tile_height), color=bg_color)
         draw = ImageDraw.Draw(img)
 
-        # Draw decorative geometry
-        draw.rectangle(((15, 15), (tile_width - 15, tile_height - 15)), outline="#FFFFFF", width=3)
-        draw.ellipse(((70, 70), (tile_width - 70, tile_height - 70)), outline="#FFFFFF", width=2)
+        # Draw decorative geometry proportionally
+        margin = max(2, int(tile_width * 0.05))
+        draw.rectangle(
+            ((margin, margin), (tile_width - margin, tile_height - margin)),
+            outline="#FFFFFF",
+            width=max(1, int(tile_width * 0.01)),
+        )
+        inset = max(6, int(tile_width * 0.23))
+        draw.ellipse(
+            ((inset, inset), (tile_width - inset, tile_height - inset)),
+            outline="#FFFFFF",
+            width=max(1, int(tile_width * 0.007)),
+        )
 
         with io.BytesIO() as buf:
             img.save(buf, format="PNG")
@@ -132,22 +146,46 @@ def run_mock_generation(
     rows: int,
     period: str,
     show_playcount: bool = True,
+    tile_size: Optional[int] = None,
 ):
     """Renders a collage using local library builder code with synthetic tiles."""
     from unittest.mock import MagicMock
-    from lastfmcollagegenerator.collage import CollageBuilderConfig, CollageBuilderFactory, CollageTile
+    from lastfmcollagegenerator.collage import (
+        CollageBuilderConfig,
+        CollageBuilderFactory,
+        CollageTile,
+    )
     from lastfmcollagegenerator.lastfm.client import LastfmClient
+
+    if tile_size is None:
+        max_dim = max(cols, rows)
+        if max_dim <= 5:
+            resolved_tile_size = 300
+        elif max_dim <= 10:
+            resolved_tile_size = 150
+        else:
+            resolved_tile_size = 100
+    else:
+        resolved_tile_size = tile_size
 
     config = CollageBuilderConfig(
         cols=cols,
         rows=rows,
         period=period,
         show_playcount=show_playcount,
+        tile_size=resolved_tile_size,
     )
     mock_client = MagicMock(spec=LastfmClient)
-    builder = CollageBuilderFactory(entity=entity, config=config, lastfm_client=mock_client)
-    mock_tiles = generate_synthetic_tiles(cols * rows, entity, builder.TILE_WIDTH, builder.TILE_HEIGHT)
-    collage_tiles = [CollageTile(data=t.data, playcount=t.playcount, title=t.title) for t in mock_tiles]
+    builder = CollageBuilderFactory(
+        entity=entity, config=config, lastfm_client=mock_client
+    )
+    mock_tiles = generate_synthetic_tiles(
+        cols * rows, entity, resolved_tile_size, resolved_tile_size
+    )
+    collage_tiles = [
+        CollageTile(data=t.data, playcount=t.playcount, title=t.title)
+        for t in mock_tiles
+    ]
     return builder._create_image(collage_tiles, cols, rows)
 
 
@@ -160,6 +198,7 @@ def run_live_generation(
     api_key: str,
     api_secret: str,
     show_playcount: bool = True,
+    tile_size: Optional[int] = None,
 ):
     """Renders a live collage by calling the CollageGenerator facade."""
     from lastfmcollagegenerator.collage_generator import CollageGenerator
@@ -174,7 +213,7 @@ def run_live_generation(
         cols=cols,
         rows=rows,
         period=period,
-        show_playcount=show_playcount,
+        tile_size=tile_size,
     )
 
 
@@ -196,7 +235,9 @@ def parse_grid_dimension(grid_str: str) -> Tuple[int, int]:
     """Parses grid dimensions like '3x3', '5x5', '3x5' into (cols, rows)."""
     parts = grid_str.lower().split("x")
     if len(parts) != 2:
-        raise ValueError(f"Invalid grid format '{grid_str}'. Expected format like '3x3' or '4x5'.")
+        raise ValueError(
+            f"Invalid grid format '{grid_str}'. Expected format like '3x3' or '4x5'."
+        )
     return int(parts[0]), int(parts[1])
 
 
@@ -257,21 +298,27 @@ def parse_arguments() -> argparse.Namespace:
         "--cols",
         type=int,
         default=default_cols,
-        help="Grid columns (1 to 5)",
+        help="Grid columns (1 to 20)",
     )
     parser.add_argument(
         "-r",
         "--rows",
         type=int,
         default=default_rows,
-        help="Grid rows (1 to 5)",
+        help="Grid rows (1 to 20)",
     )
     parser.add_argument(
         "-g",
         "--grid",
         type=str,
         default=None,
-        help="Shorthand grid dimension (e.g. 3x3, 5x5, 4x3) overrides -c and -r",
+        help="Shorthand grid dimension (e.g. 3x3, 5x5, 10x10) overrides -c and -r",
+    )
+    parser.add_argument(
+        "--tile-size",
+        type=int,
+        default=None,
+        help="Explicit tile size in px (50-600). Defaults to dynamic auto-scaling.",
     )
     parser.add_argument(
         "-p",
@@ -286,7 +333,7 @@ def parse_arguments() -> argparse.Namespace:
         "--output",
         type=str,
         default=None,
-        help="Custom destination filepath (default: output/debug_<entity>_<cols>x<rows>.png)",
+        help="Custom destination filepath (default: output/debug_<entity>_<grid>.png)",
     )
     parser.add_argument(
         "--open",
@@ -328,8 +375,15 @@ def main() -> int:
             return 1
 
     # Validate grid bounds
-    if not (1 <= args.cols <= 5 and 1 <= args.rows <= 5):
-        print(f"[!] Error: Grid dimensions {args.cols}x{args.rows} out of bounds (allowed: 1x1 to 5x5).", file=sys.stderr)
+    if not (
+        1 <= args.cols <= 20 and 1 <= args.rows <= 20 and args.cols * args.rows <= 400
+    ):
+        print(
+            f"[!] Error: Grid dimensions {args.cols}x{args.rows} "
+            f"({args.cols * args.rows} tiles) out of bounds "
+            f"(allowed: 1x1 to 20x20, max 400 tiles).",
+            file=sys.stderr,
+        )
         return 1
 
     # Determine mode: default to live if credentials exist and --mock not requested
@@ -348,14 +402,21 @@ def main() -> int:
         filename = f"debug_{mode_prefix}_{args.entity}_{args.cols}x{args.rows}.png"
         output_path = os.path.join(out_dir, filename)
 
+    mode_label = (
+        "OFFLINE MOCK (Synthetic Tiles)" if is_mock else "LIVE API (Last.fm & Scraping)"
+    )
     print("=" * 65)
     print(" 🎵 Last.fm Collage Generator - Debug Runner")
     print("=" * 65)
-    print(f" • Mode        : {'OFFLINE MOCK (Synthetic Tiles)' if is_mock else 'LIVE API (Last.fm & Scraping)'}")
+    print(f" • Mode        : {mode_label}")
     print(f" • Username    : {args.username}")
     print(f" • Entity      : {args.entity.upper()}")
-    print(f" • Grid Size   : {args.cols} cols x {args.rows} rows ({args.cols * args.rows} total tiles)")
+    print(
+        f" • Grid Size   : {args.cols} cols x {args.rows} rows "
+        f"({args.cols * args.rows} total tiles)"
+    )
     print(f" • Period      : {args.period}")
+    print(f" • Tile Size   : {args.tile_size if args.tile_size else 'Auto Dynamic'}")
     print(f" • Banner Info : {'Enabled' if not args.no_title else 'Disabled'}")
     print(f" • Output Dest : {output_path}")
     print("-" * 65)
@@ -372,18 +433,22 @@ def main() -> int:
                 rows=args.rows,
                 period=args.period,
                 show_playcount=not args.no_title,
+                tile_size=args.tile_size,
             )
         else:
             if not args.api_key or not args.api_secret:
                 print(
-                    "[!] Error: Last.fm API Key and Secret are required for live mode.\n"
-                    "    Provide them in your .env file or pass --api-key and --api-secret.\n"
+                    "[!] Error: API Key and Secret are required for live mode.\n"
+                    "    Provide them in .env or pass --api-key and --api-secret.\n"
                     "    Alternatively, pass --mock to run in offline mock mode.",
                     file=sys.stderr,
                 )
                 return 1
 
-            print(f"[+] Querying Last.fm API for user '{args.username}' ({args.entity} / {args.period})...")
+            print(
+                f"[+] Querying Last.fm API for '{args.username}' "
+                f"({args.entity} / {args.period})..."
+            )
             image = run_live_generation(
                 entity=args.entity,
                 username=args.username,
@@ -393,6 +458,7 @@ def main() -> int:
                 api_key=args.api_key,
                 api_secret=args.api_secret,
                 show_playcount=not args.no_title,
+                tile_size=args.tile_size,
             )
 
         elapsed = time.perf_counter() - start_time
@@ -420,6 +486,7 @@ def main() -> int:
         elapsed = time.perf_counter() - start_time
         print(f"\n[!] Error occurred after {elapsed:.2f}s: {exc}", file=sys.stderr)
         import traceback
+
         traceback.print_exc()
         return 1
 

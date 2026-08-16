@@ -16,6 +16,14 @@ def test_validation_valid_inputs(generator):
         rows=3,
         period="7day",
     )
+    generator._validate_parameters(
+        entity="album",
+        username="valid_user",
+        cols=20,
+        rows=20,
+        period="overall",
+        tile_size=100,
+    )
 
 
 @pytest.mark.parametrize(
@@ -25,9 +33,9 @@ def test_validation_valid_inputs(generator):
         (-1, 3),
         (3, 0),
         (3, -2),
-        (6, 3),
-        (3, 6),
-        (10, 10),
+        (21, 3),
+        (3, 21),
+        (25, 25),
     ],
 )
 def test_validation_invalid_dimensions(generator, cols, rows):
@@ -37,6 +45,18 @@ def test_validation_invalid_dimensions(generator, cols, rows):
             username="valid_user",
             cols=cols,
             rows=rows,
+            period="overall",
+        )
+
+
+def test_validation_max_tiles_exceeded(generator):
+    generator.MAX_TILES = 50
+    with pytest.raises(ValueError, match="exceeds maximum capacity"):
+        generator._validate_parameters(
+            entity="album",
+            username="valid_user",
+            cols=10,
+            rows=10,
             period="overall",
         )
 
@@ -62,6 +82,59 @@ def test_validation_invalid_dimension_types(generator, cols, rows):
             rows=rows,
             period="overall",
         )
+
+
+@pytest.mark.parametrize(
+    "tile_size",
+    [
+        49,
+        0,
+        -10,
+        601,
+        1000,
+    ],
+)
+def test_validation_invalid_tile_size(generator, tile_size):
+    with pytest.raises(ValueError, match="Invalid tile_size"):
+        generator._validate_parameters(
+            entity="album",
+            username="valid_user",
+            cols=3,
+            rows=3,
+            period="overall",
+            tile_size=tile_size,
+        )
+
+
+@pytest.mark.parametrize(
+    "tile_size",
+    [
+        "300",
+        150.5,
+        [100],
+    ],
+)
+def test_validation_invalid_tile_size_type(generator, tile_size):
+    with pytest.raises(TypeError, match="tile_size must be an integer"):
+        generator._validate_parameters(
+            entity="album",
+            username="valid_user",
+            cols=3,
+            rows=3,
+            period="overall",
+            tile_size=tile_size,
+        )
+
+
+def test_resolve_tile_size(generator):
+    assert generator._resolve_tile_size(3, 3) == 300
+    assert generator._resolve_tile_size(5, 5) == 300
+    assert generator._resolve_tile_size(6, 6) == 150
+    assert generator._resolve_tile_size(10, 10) == 150
+    assert generator._resolve_tile_size(3, 10) == 150
+    assert generator._resolve_tile_size(11, 11) == 100
+    assert generator._resolve_tile_size(20, 20) == 100
+    assert generator._resolve_tile_size(5, 5, tile_size=200) == 200
 
 
 @pytest.mark.parametrize(

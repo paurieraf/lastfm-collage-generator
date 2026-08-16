@@ -78,7 +78,39 @@ def test_generate_top_tracks_collage(mock_client_cls, mock_factory_cls, mock_bui
     assert call_kwargs["config"].cols == 4
     assert call_kwargs["config"].rows == 4
     assert call_kwargs["config"].period == "overall"
+    assert call_kwargs["config"].tile_size == 300
     mock_builder.create.assert_called_once_with("testuser")
+
+
+@patch("lastfmcollagegenerator.collage_generator.CollageBuilderFactory")
+@patch("lastfmcollagegenerator.collage_generator.LastfmClient")
+def test_generate_with_custom_tile_size_and_high_density(
+    mock_client_cls, mock_factory_cls, mock_builder
+):
+    mock_factory_cls.return_value = mock_builder
+    generator = CollageGenerator("mock_key", "mock_secret")
+
+    # High density 10x10 auto downscaled to 150px
+    generator.generate_top_albums_collage(
+        username="testuser",
+        cols=10,
+        rows=10,
+        period="overall",
+    )
+    call_kwargs_10x10 = mock_factory_cls.call_args.kwargs
+    assert call_kwargs_10x10["config"].tile_size == 150
+
+    # Explicit tile_size override (250px)
+    generator.generate(
+        entity=ENTITY_ALBUM,
+        username="testuser",
+        cols=8,
+        rows=8,
+        period="overall",
+        tile_size=250,
+    )
+    call_kwargs_custom = mock_factory_cls.call_args.kwargs
+    assert call_kwargs_custom["config"].tile_size == 250
 
 
 def test_package_exports_and_version():
@@ -86,4 +118,5 @@ def test_package_exports_and_version():
 
     assert hasattr(lastfmcollagegenerator, "CollageGenerator")
     assert hasattr(lastfmcollagegenerator, "__version__")
-    assert lastfmcollagegenerator.__version__ == "0.5.0"
+    assert lastfmcollagegenerator.__version__ == "0.6.0"
+
