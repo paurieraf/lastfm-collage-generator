@@ -151,12 +151,7 @@ class CollageGenerator:
         if type(cols) is not int or type(rows) is not int:
             raise TypeError("Columns and rows must be integers.")
 
-        if (
-            cols < 1
-            or cols > self.MAX_COLS
-            or rows < 1
-            or rows > self.MAX_ROWS
-        ):
+        if cols < 1 or cols > self.MAX_COLS or rows < 1 or rows > self.MAX_ROWS:
             raise ValueError(
                 f"Invalid number of columns or rows: {cols}x{rows}. "
                 f"Allowed bounds are 1 to {self.MAX_COLS} columns "
