@@ -26,7 +26,7 @@ ImageFile.LOAD_TRUNCATED_IMAGES = True
 
 DEFAULT_HEADERS = {
     "User-Agent": (
-        "lastfm-collage-generator/0.5.0 "
+        "lastfm-collage-generator/0.6.0 "
         "(+https://github.com/paurieraf/lastfm-collage-generator)"
     )
 }
@@ -45,6 +45,7 @@ class CollageBuilderConfig:
     rows: int
     period: str
     show_playcount: bool = True
+    tile_size: int = 300
 
 
 @dataclass
@@ -72,6 +73,8 @@ class BaseCollageBuilder:
         self.config = config
         self.lastfm_client = lastfm_client
         self._path = os.path.dirname(lastfmcollagegenerator.collage.__file__)
+        self.tile_width = getattr(self.config, "tile_size", self.TILE_WIDTH)
+        self.tile_height = getattr(self.config, "tile_size", self.TILE_HEIGHT)
 
     def create(self, username: str) -> Image.Image:
         user = self.lastfm_client.get_user(username)
@@ -85,18 +88,24 @@ class BaseCollageBuilder:
     def _create_image(
         self, tiles: List[CollageTile], cols: int, rows: int
     ) -> Image.Image:
-        """300px is the height and the width of the covers."""
-        width = self.TILE_WIDTH
-        height = self.TILE_HEIGHT
+        """Create composite collage canvas."""
+        width = self.tile_width
+        height = self.tile_height
         collage_width = cols * width
         collage_height = rows * height
 
         # create blank image of the full size
         new_image = Image.new("RGB", (collage_width, collage_height))
         cursor = (0, 0)
+        resample_filter = Image.Resampling.LANCZOS
         for tile in tiles:
             with Image.open(BytesIO(tile.data)) as tile_img:
-                new_image.paste(tile_img, cursor)
+                if tile_img.size != (width, height):
+                    resized = tile_img.resize((width, height), resample_filter)
+                    new_image.paste(resized, cursor)
+                    resized.close()
+                else:
+                    new_image.paste(tile_img, cursor)
             title = f"{tile.title}"
             if self.config.show_playcount:
                 title += f". ({tile.playcount})"
@@ -114,21 +123,32 @@ class BaseCollageBuilder:
     def _insert_tile_title(
         self, image: Image.Image, title: str, cursor: Tuple[int, int]
     ):
+        scale = self.tile_width / 300.0
+        banner_height = max(16, int(round(65 * scale)))
+        font_size = max(8, int(round(self.FONT_SIZE * scale)))
+
         draw = ImageDraw.Draw(image, "RGBA")
         x = cursor[0]
         y = cursor[1]
-        y_0 = y + (self.TILE_HEIGHT - 65)
-        y_1 = y + self.TILE_HEIGHT
-        draw.rectangle(((x, y_0), (x + self.TILE_WIDTH, y_1)), (0, 0, 0, 123))
+        y_0 = y + (self.tile_height - banner_height)
+        y_1 = y + self.tile_height
+        draw.rectangle(((x, y_0), (x + self.tile_width, y_1)), (0, 0, 0, 123))
 
         font_path = self.FONT_BOLD_PATH if self.FONT_BOLD else self.FONT_REGULAR_PATH
-        font = ImageFont.truetype(f"{self._path}/{font_path}", self.FONT_SIZE)
+        font = ImageFont.truetype(f"{self._path}/{font_path}", font_size)
 
-        title = self._insert_newline_characters_to_text(font, title)
-        draw.text((x + 8, y + 240), title, fill=(255, 255, 255), font=font)
+        wrap_width = max(40, int(round(275 * scale)))
+        title = self._insert_newline_characters_to_text(
+            font, title, max_width=wrap_width
+        )
+        text_x = x + max(2, int(round(8 * scale)))
+        text_y = y_0 + max(2, int(round(5 * scale)))
+        draw.text((text_x, text_y), title, fill=(255, 255, 255), font=font)
 
     @staticmethod
-    def _insert_newline_characters_to_text(font: Any, text: str) -> str:
+    def _insert_newline_characters_to_text(
+        font: Any, text: str, max_width: int = 275
+    ) -> str:
         processed_chars = []
         processed_text = ""
         text_lines = []
@@ -136,7 +156,7 @@ class BaseCollageBuilder:
             processed_chars.append(c)
             processed_text = "".join(processed_chars)
             font_w = font.getlength(processed_text)
-            if font_w >= 275:
+            if font_w >= max_width:
                 text_lines.append(processed_text)
                 processed_chars = []
                 processed_text = ""
@@ -145,8 +165,8 @@ class BaseCollageBuilder:
         return title
 
     @classmethod
-    def _generate_blank_tile(cls) -> bytes:
-        with Image.new("RGB", (cls.TILE_WIDTH, cls.TILE_HEIGHT)) as img:
+    def _generate_blank_tile(cls, width: int = 300, height: int = 300) -> bytes:
+        with Image.new("RGB", (width, height)) as img:
             with BytesIO() as img_bytes:
                 img.save(img_bytes, format="png")
                 return img_bytes.getvalue()

@@ -158,3 +158,23 @@ def test_track_collage_builder_create(mock_lastfm_client):
         img = builder.create("testuser")
         assert isinstance(img, Image.Image)
         assert img.size == (300, 600)
+
+
+def test_builder_resizes_non_standard_tile_images():
+    config = CollageBuilderConfig(cols=1, rows=1, period="overall", tile_size=150)
+    builder = BaseCollageBuilder(config, MagicMock())
+
+    # 500x500 source image bytes
+    oversized_bytes = SyntheticImageFactory.create_image_bytes(500, 500)
+    tiles = [CollageTile(data=oversized_bytes, playcount=42, title="Big Image")]
+
+    img = builder._create_image(tiles, cols=1, rows=1)
+    assert img.size == (150, 150)
+
+
+def test_generate_blank_tile_custom_dimensions():
+    blank_bytes = BaseCollageBuilder._generate_blank_tile(120, 120)
+    with Image.open(BytesIO(blank_bytes)) as img:
+        assert img.size == (120, 120)
+        assert img.mode == "RGB"
+        assert img.getpixel((0, 0)) == (0, 0, 0)

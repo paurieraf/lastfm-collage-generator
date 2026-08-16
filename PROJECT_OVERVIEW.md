@@ -193,21 +193,30 @@ class CollageConfig:
 
 ```python
 class CollageGenerator:
-    MAX_COLS: int = 5
-    MAX_ROWS: int = 5
+    MAX_COLS: int = 20
+    MAX_ROWS: int = 20
+    MAX_TILES: int = 400
+    MIN_TILE_SIZE: int = 50
+    MAX_TILE_SIZE: int = 600
 
     def __init__(self, lastfm_api_key: str, lastfm_api_secret: str) -> None: ...
-    def generate(self, entity: str, username: str, cols: int, rows: int, period: str) -> PIL.Image.Image: ...
-    def _get_collage_builder(self, entity: str, cols: int, rows: int, period: str) -> BaseCollageBuilder: ...
-    def _validate_parameters(self, entity: str, cols: int, rows: int, period: str) -> None: ...
+    def generate(self, entity: str, username: str, cols: int, rows: int, period: str = "overall", tile_size: Optional[int] = None) -> PIL.Image.Image: ...
+    def generate_top_albums_collage(self, username: str, cols: int = 5, rows: int = 5, period: str = "overall", tile_size: Optional[int] = None) -> PIL.Image.Image: ...
+    def generate_top_artists_collage(self, username: str, cols: int = 5, rows: int = 5, period: str = "overall", tile_size: Optional[int] = None) -> PIL.Image.Image: ...
+    def generate_top_tracks_collage(self, username: str, cols: int = 5, rows: int = 5, period: str = "overall", tile_size: Optional[int] = None) -> PIL.Image.Image: ...
+    def _resolve_tile_size(self, cols: int, rows: int, tile_size: Optional[int] = None) -> int: ...
+    def _get_collage_builder(self, entity: str, cols: int, rows: int, period: str, tile_size: int = 300) -> BaseCollageBuilder: ...
+    def _validate_parameters(self, entity: str, username: str, cols: int, rows: int, period: str, tile_size: Optional[int] = None) -> None: ...
 ```
 
 - **Responsibilities**:
   - Encapsulates Last.fm API credentials in `self.lastfm_config`.
   - Enforces domain constraints in `_validate_parameters()`:
     - `entity` must exist in `ENTITIES` (`"album"`, `"artist"`, `"track"`).
-    - `cols <= 5` and `rows <= 5`.
+    - `1 <= cols <= 20` and `1 <= rows <= 20` with `cols * rows <= 400`.
+    - `50 <= tile_size <= 600` when `tile_size` is specified.
     - `period` must exist in `PERIODS` (`"7day"`, `"1month"`, `"3month"`, `"6month"`, `"12month"`, `"overall"`).
+  - Automatically computes dynamic resolution scaling ($300\text{px} \to 150\text{px} \to 100\text{px}$) to optimize canvas memory for high-density grids.
   - Instantiates `LastfmClient` and invokes `CollageBuilderFactory`.
   - Executes `collage_builder.create(username)` and returns the resulting `PIL.Image.Image`.
 

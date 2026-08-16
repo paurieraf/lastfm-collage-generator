@@ -37,38 +37,44 @@
 
 ## 📐 Grid Dimensions & Geometry Reference
 
-Every collage is dynamically assembled from individual `300 x 300` pixel raster tiles:
+The library supports arbitrary square and rectangular grids from **$1 \times 1$ up to $20 \times 20$** (up to 400 tiles), with **dynamic resolution auto-scaling** and configurable tile sizes:
 
-| Grid Size | Total Tiles | Dimensions (Width x Height) | Aspect Ratio | Megapixels | Typical Use Case |
-|---|---|---|---|---|---|
-| **`1x1`** | 1 tile | **300 x 300 px** | 1:1 Square | 0.09 MP | Single item avatar / badge |
-| **`2x2`** | 4 tiles | **600 x 600 px** | 1:1 Square | 0.36 MP | Compact widget / blog embed |
-| **`3x3`** | 9 tiles | **900 x 900 px** | 1:1 Square | 0.81 MP | Standard social media card (#LastFmFriday, Instagram) |
-| **`4x4`** | 16 tiles | **1200 x 1200 px** | 1:1 Square | 1.44 MP | Monthly scrobble recap poster |
-| **`5x5`** | 25 tiles | **1500 x 1500 px** | 1:1 Square | 2.25 MP | High-density yearly / all-time overview |
-| **`3x4`** | 12 tiles | **900 x 1200 px** | 3:4 Portrait | 1.08 MP | Mobile wallpaper / Instagram Story |
-| **`4x3`** | 12 tiles | **1200 x 900 px** | 4:3 Landscape | 1.08 MP | Tablet wallpaper / forum signature |
-| **`5x3`** | 15 tiles | **1500 x 900 px** | 5:3 Landscape | 1.35 MP | Desktop banner / Twitter header |
+| Grid Size | Total Tiles | Default Tile Resolution | Canvas Dimensions | Aspect Ratio | Megapixels | Typical Use Case |
+|---|---|---|---|---|---|---|
+| **`1x1`** | 1 tile | 300 x 300 px | **300 x 300 px** | 1:1 Square | 0.09 MP | Single item avatar / badge |
+| **`3x3`** | 9 tiles | 300 x 300 px | **900 x 900 px** | 1:1 Square | 0.81 MP | Standard social media card (#LastFmFriday, Instagram) |
+| **`5x5`** | 25 tiles | 300 x 300 px | **1500 x 1500 px** | 1:1 Square | 2.25 MP | Classic weekly / monthly listening card |
+| **`8x8`** | 64 tiles | 150 x 150 px *(Auto)* | **1200 x 1200 px** | 1:1 Square | 1.44 MP | Detailed monthly recap poster |
+| **`10x10`** | 100 tiles | 150 x 150 px *(Auto)* | **1500 x 1500 px** | 1:1 Square | 2.25 MP | High-density 100-album annual overview |
+| **`20x20`** | 400 tiles | 100 x 100 px *(Auto)* | **2000 x 2000 px** | 1:1 Square | 4.00 MP | Comprehensive mega-recap poster |
+| **`3x10`** | 30 tiles | 150 x 150 px *(Auto)* | **450 x 1500 px** | 3:10 Portrait | 0.68 MP | Mobile sidebar / Story banner |
+| **`12x6`** | 72 tiles | 100 x 100 px *(Auto)* | **1200 x 600 px** | 2:1 Landscape | 0.72 MP | Ultra-wide desktop banner |
 
-### Tile Layout Anatomy (300 x 300 px)
+### Dynamic Resolution Auto-Scaling Tiers
 
-Each tile within the collage follows exact pixel geometry:
+To keep memory footprint safe and execution fast without sacrificing visual detail:
+- **Standard Density ($\le 5 \times 5$)**: Defaults to **300x300 px** per tile.
+- **Medium Density ($6 \times 6$ to $10 \times 10$)**: Automatically scales to **150x150 px** per tile.
+- **High Density ($> 10 \times 10$, up to $20 \times 20$)**: Automatically scales to **100x100 px** per tile.
+- **Custom Resolution**: Explicitly supply `tile_size` (between 50 and 600 px) to override automatic scaling.
+
+### Proportional Tile Layout Anatomy
+
+Overlay typography and dark translucent banners automatically scale proportionally with tile size:
 
 ```
 (x, y) ┌──────────────────────────────────────────────────────────────┐
        │                                                              │
-       │                                                              │
        │                   Tile Cover Artwork                         │
        │                 (Downloaded or Retrieved)                      │
-       │                     (300 x 300 px)                           │
+       │                   (S x S px, e.g. 300px)                     │
        │                                                              │
-       │                                                              │
-y+235  ├──────────────────────────────────────────────────────────────┤ ◄── Banner Top (y + 235)
-       │ Translucent Dark Banner: RGBA(0, 0, 0, 123) (Height: 65px)  │
-y+240  │ Monospace Typography: DejaVuSansMono.ttf (15px regular/bold) │ ◄── Text Origin (x + 8, y + 240)
+y+h_0  ├──────────────────────────────────────────────────────────────┤ ◄── Banner Top: y + (S - h_banner)
+       │ Translucent Dark Banner: RGBA(0, 0, 0, 123)                  │
+y+y_t  │ Monospace Typography: DejaVuSansMono.ttf (Proportional Font) │ ◄── Text Origin: x + pad_x, y_0 + pad_y
        │ "Artist Name - Album / Track Title. (42 scrobbles)"          │
-(x+300,│                                                              │
- y+300)└──────────────────────────────────────────────────────────────┘ ◄── Tile Bottom (y + 300)
+(x+S,  │                                                              │
+  y+S) └──────────────────────────────────────────────────────────────┘ ◄── Tile Bottom (y + S)
 ```
 
 ---
@@ -240,7 +246,8 @@ def generate(
     username: str,
     cols: int,
     rows: int,
-    period: str
+    period: str = "overall",
+    tile_size: Optional[int] = None
 ) -> PIL.Image.Image
 ```
 
@@ -252,15 +259,17 @@ Generates a composite image collage for the specified entity and time horizon.
 |---|---|---|---|---|
 | **`entity`** | `str` | `"album"`, `"artist"`, `"track"` | *Required* | Type of Last.fm listening entity to composite. |
 | **`username`** | `str` | Any valid Last.fm username string | *Required* | The target Last.fm user account. |
-| **`cols`** | `int` | `1 <= cols <= 5` | *Required* | Number of horizontal grid columns. |
-| **`rows`** | `int` | `1 <= rows <= 5` | *Required* | Number of vertical grid rows. |
-| **`period`** | `str` | `"7day"`, `"1month"`, `"3month"`, `"6month"`, `"12month"`, `"overall"` | *Required* | Scrobble aggregation time window. |
+| **`cols`** | `int` | `1 <= cols <= 20` | *Required* | Number of horizontal grid columns. |
+| **`rows`** | `int` | `1 <= rows <= 20` | *Required* | Number of vertical grid rows (max 400 total tiles). |
+| **`period`** | `str` | `"7day"`, `"1month"`, `"3month"`, `"6month"`, `"12month"`, `"overall"` | `"overall"` | Scrobble aggregation time window. |
+| **`tile_size`** | `Optional[int]` | `50 <= tile_size <= 600` | `None` *(Auto)* | Explicit tile dimension in px. If `None`, dynamically auto-scaled. |
 
 **Returns**:
-- `PIL.Image.Image`: An allocated Pillow 24-bit RGB raster canvas with dimensions `(cols * 300, rows * 300)` pixels.
+- `PIL.Image.Image`: An allocated Pillow 24-bit RGB raster canvas with dimensions `(cols * tile_size, rows * tile_size)` pixels.
 
 **Exceptions Raised**:
-- `ValueError`: If `entity` is not in `ENTITIES`, `period` is not in `PERIODS`, or `cols`/`rows` are outside `1..5`.
+- `ValueError`: If `entity` is not in `ENTITIES`, `period` is not in `PERIODS`, `cols`/`rows` are outside `1..20`, total tiles exceed 400, or `tile_size` is outside `50..600`.
+- `TypeError`: If `cols`, `rows`, or `tile_size` are not integers.
 - `pylast.WSError`: If Last.fm API authentication fails or the requested username does not exist.
 - `pylast.NetworkError`: If network connection to Last.fm API endpoints cannot be established.
 
@@ -279,20 +288,21 @@ album_collage = generator.generate_top_albums_collage(
     period="7day"
 )
 
-# Generate Top Artists Collage (5x5, monthly)
+# Generate High-Density Top Artists Collage (10x10, monthly, auto 150px tiles)
 artist_collage = generator.generate_top_artists_collage(
     username="rj",
-    cols=5,
-    rows=5,
+    cols=10,
+    rows=10,
     period="1month"
 )
 
-# Generate Top Tracks Collage (4x3, overall history)
+# Generate Custom High-Res Top Tracks Collage (4x3, overall history, explicit 300px tiles)
 track_collage = generator.generate_top_tracks_collage(
     username="rj",
     cols=4,
     rows=3,
-    period="overall"
+    period="overall",
+    tile_size=300
 )
 ```
 
@@ -596,7 +606,7 @@ Our development roadmap is organized across 4 strategic pillars and versioned mi
 ### 📐 Pillar 3: Advanced Layouts & Modern Formats
 
 - **Phase 2 (v0.6.0 — High-Density Grids)**:
-  - [ ] **Arbitrary $N \times M$ Matrix Grids**: Expand grid size beyond `5x5` (e.g. `10x10` 100-album grids) with dynamic tile resolution downscaling (300px $\to$ 150px $\to$ 100px) and memory-safe allocation.
+  - [x] **Arbitrary $N \times M$ Matrix Grids**: Expand grid size beyond `5x5` (up to `20x20`, max 400 tiles) with dynamic resolution auto-scaling (300px $\to$ 150px $\to$ 100px), configurable explicit tile sizes, and proportional typography.
 - **Phase 3 (v0.7.0 — Social Presets & Backdrop Decorators)**:
   - [ ] **Social Media Dimension Presets**: One-click generation for Instagram Story (`9:16` $1080\times1920$), Instagram Post (`1:1` $1080\times1080$), Twitter Header (`3:1` $1500\times500$), and Desktop Wallpaper (`16:9` $1920\times1080$ / 4K).
   - [ ] **Acrylic Backdrop Blur**: Automatically fill non-square letterboxing with an acrylic Gaussian-blurred backdrop derived from the user's #1 top artwork.

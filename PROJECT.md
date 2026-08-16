@@ -4,7 +4,7 @@
 The `lastfm-collage-generator` library is structured according to a strict 4-layer object-oriented design pattern:
 1. **Facade Layer (`CollageGenerator`)**:
    - Primary public interface encapsulating `LastfmConfig` and parameter validation.
-   - Enforces grid boundaries (`1 <= cols <= 5`, `1 <= rows <= 5`), entity options (`album`, `artist`, `track`), non-empty usernames, and periods.
+   - Enforces grid boundaries (`1 <= cols <= 20`, `1 <= rows <= 20`, `cols * rows <= 400`), `50 <= tile_size <= 600`, entity options (`album`, `artist`, `track`), non-empty usernames, and periods.
    - Exposes direct `generate()` and convenience methods (`generate_top_albums_collage()`, `generate_top_artists_collage()`, `generate_top_tracks_collage()`).
    - Dispatches to `CollageBuilderFactory`.
 2. **Factory Layer (`CollageBuilderFactory`)**:
@@ -44,11 +44,11 @@ The `lastfm-collage-generator` library is structured according to a strict 4-lay
 
 ## Interface Contracts
 ### Facade Entrypoint
-- `CollageGenerator.generate(entity: str, username: str, cols: int, rows: int, period: str = "overall") -> PIL.Image.Image`
-- `CollageGenerator.generate_top_albums_collage(username: str, cols: int = 5, rows: int = 5, period: str = "overall") -> PIL.Image.Image`
-- `CollageGenerator.generate_top_artists_collage(username: str, cols: int = 5, rows: int = 5, period: str = "overall") -> PIL.Image.Image`
-- `CollageGenerator.generate_top_tracks_collage(username: str, cols: int = 5, rows: int = 5, period: str = "overall") -> PIL.Image.Image`
-- Return: Composited `PIL.Image.Image` in RGB mode with dimensions `(cols * 300, rows * 300)`.
+- `CollageGenerator.generate(entity: str, username: str, cols: int, rows: int, period: str = "overall", tile_size: Optional[int] = None) -> PIL.Image.Image`
+- `CollageGenerator.generate_top_albums_collage(username: str, cols: int = 5, rows: int = 5, period: str = "overall", tile_size: Optional[int] = None) -> PIL.Image.Image`
+- `CollageGenerator.generate_top_artists_collage(username: str, cols: int = 5, rows: int = 5, period: str = "overall", tile_size: Optional[int] = None) -> PIL.Image.Image`
+- `CollageGenerator.generate_top_tracks_collage(username: str, cols: int = 5, rows: int = 5, period: str = "overall", tile_size: Optional[int] = None) -> PIL.Image.Image`
+- Return: Composited `PIL.Image.Image` in RGB mode with dimensions `(cols * tile_size, rows * tile_size)`.
 
 ### Builder Interface
 - `BaseCollageBuilder.create(username: str) -> PIL.Image.Image`

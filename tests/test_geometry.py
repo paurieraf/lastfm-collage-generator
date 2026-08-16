@@ -65,3 +65,58 @@ def test_multi_row_title_overlay_geometry():
     pixel_r2_banner = img.getpixel((50, 850))
     assert pixel_r2_banner != (255, 0, 0)
     assert pixel_r2_banner[0] < 255
+
+
+def test_scaled_tile_geometry_150px():
+    """Verify that multi-row title overlays scale proportionally with 150px tiles."""
+    config = CollageBuilderConfig(
+        cols=2, rows=2, period="overall", show_playcount=True, tile_size=150
+    )
+    builder = BaseCollageBuilder(config, lastfm_client=MagicMock())
+
+    # Create 300x300 source tiles (downscaled to 150x150 during canvas creation)
+    red_tile_bytes = SyntheticImageFactory.create_image_bytes(
+        300, 300, color=(255, 0, 0)
+    )
+    tiles = [
+        CollageTile(data=red_tile_bytes, playcount=50, title=f"Item {i}")
+        for i in range(4)
+    ]
+
+    img = builder._create_image(tiles, cols=2, rows=2)
+    assert img.size == (300, 300)
+
+    # Row 0: top area (y=50) is pure red
+    assert img.getpixel((30, 50)) == (255, 0, 0)
+    # Row 0: banner area (y=135) is shaded
+    assert img.getpixel((30, 135))[0] < 255
+
+    # Row 1: top area (y=150 + 40 = 190) is pure red (not overwritten)
+    assert img.getpixel((30, 190)) == (255, 0, 0)
+    # Row 1: banner area (y=150 + 135 = 285) is shaded
+    assert img.getpixel((30, 285))[0] < 255
+
+
+def test_high_density_canvas_allocation():
+    """Verify high-density matrix canvas dimensions with auto and custom tile sizes."""
+    config_10x10 = CollageBuilderConfig(
+        cols=10, rows=10, period="overall", tile_size=150
+    )
+    builder_10x10 = BaseCollageBuilder(config_10x10, lastfm_client=MagicMock())
+    tile_bytes = SyntheticImageFactory.create_image_bytes(150, 150)
+    tiles_100 = [
+        CollageTile(data=tile_bytes, playcount=1, title=f"T{i}") for i in range(100)
+    ]
+    img_10x10 = builder_10x10._create_image(tiles_100, cols=10, rows=10)
+    assert img_10x10.size == (1500, 1500)
+
+    config_20x20 = CollageBuilderConfig(
+        cols=20, rows=20, period="overall", tile_size=100
+    )
+    builder_20x20 = BaseCollageBuilder(config_20x20, lastfm_client=MagicMock())
+    tile_bytes_100 = SyntheticImageFactory.create_image_bytes(100, 100)
+    tiles_400 = [
+        CollageTile(data=tile_bytes_100, playcount=1, title=f"T{i}") for i in range(400)
+    ]
+    img_20x20 = builder_20x20._create_image(tiles_400, cols=20, rows=20)
+    assert img_20x20.size == (2000, 2000)
