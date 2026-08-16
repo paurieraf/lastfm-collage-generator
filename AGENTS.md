@@ -3,7 +3,7 @@
 **Target Repository**: `lastfm-collage-generator`  
 **Distributed Package**: `lastfmcollagegenerator` (v0.4.13)  
 **Target Python Runtime**: Python `^3.8` (compatible with 3.8, 3.9, 3.10, 3.11, 3.12)  
-**Build & Package Manager**: Poetry (`poetry-core`)  
+**Build & Package Manager**: uv (`hatchling`)  
 **Primary Architecture Specification**: [`PROJECT_OVERVIEW.md`](./PROJECT_OVERVIEW.md)  
 **Antigravity Rules**: [`.gemini/rules/`](./.gemini/rules/)  
 **Antigravity Skills**: [`.gemini/skills/`](./.gemini/skills/)
@@ -44,20 +44,17 @@ TrueType fonts are packaged directly inside the distribution package at `src/las
 - `DejaVuSansMono-Bold.ttf`: Bold monospace font variant.
 - Declared in `MANIFEST.in`: `recursive-include src/lastfmcollagegenerator/fonts *.ttf`.
 
-### 2.3 Poetry Development Commands
+### 2.3 uv Development Commands
 
 ```bash
 # Install dependencies into virtual environment
-poetry install
-
-# Spawn active shell within environment
-poetry shell
+uv sync
 
 # Run pytest test suite
-poetry run pytest tests/
+uv run pytest tests/
 
 # Execute CLI workflow in offline mock mode
-poetry run python .gemini/skills/collage-cli-workflow/scripts/generate_collage_cli.py --mock -u testuser -e album -c 3 -r 3 -o collage.png
+uv run python .gemini/skills/collage-cli-workflow/scripts/generate_collage_cli.py --mock -u testuser -e album -c 3 -r 3 -o collage.png
 ```
 
 ---
@@ -136,8 +133,8 @@ The library strictly adheres to a 4-layer object-oriented design: **Facade → F
 
 ```
 lastfm-collage-generator/
-├── pyproject.toml                         # Poetry configuration & pinned dependencies
-├── poetry.lock                            # Locked dependency versions
+├── pyproject.toml                         # Project configuration & PEP 621 metadata (hatchling backend)
+├── uv.lock                                # uv locked dependency versions
 ├── README.md                              # Public documentation & usage examples
 ├── LICENSE                                # MIT License
 ├── MANIFEST.in                            # Asset inclusion declaration (*.ttf fonts)
@@ -225,16 +222,16 @@ Provides unified test execution, coverage calculation, and static analysis:
 
 ```bash
 # Run unit tests
-poetry run python .gemini/skills/poetry-test-runner/scripts/run_tests.py --unit
+uv run python .gemini/skills/poetry-test-runner/scripts/run_tests.py --unit
 
 # Run unit tests with code coverage report
-poetry run python .gemini/skills/poetry-test-runner/scripts/run_tests.py --coverage
+uv run python .gemini/skills/poetry-test-runner/scripts/run_tests.py --coverage
 
 # Run linters (flake8, black --check, mypy)
-poetry run python .gemini/skills/poetry-test-runner/scripts/run_tests.py --lint
+uv run python .gemini/skills/poetry-test-runner/scripts/run_tests.py --lint
 
 # Run entire QA pipeline (tests + coverage >= 90% + linting)
-poetry run python .gemini/skills/poetry-test-runner/scripts/run_tests.py --all
+uv run python .gemini/skills/poetry-test-runner/scripts/run_tests.py --all
 ```
 
 ### 6.2 `lastfm-mocking-fixtures` ([`.gemini/skills/lastfm-mocking-fixtures/SKILL.md`](./.gemini/skills/lastfm-mocking-fixtures/SKILL.md))
@@ -249,17 +246,17 @@ Provides a CLI runner (`scripts/generate_collage_cli.py`) for generating live or
 
 ```bash
 # Generate 3x3 album collage in offline mock mode (no API keys needed)
-poetry run python .gemini/skills/collage-cli-workflow/scripts/generate_collage_cli.py \
+uv run python .gemini/skills/collage-cli-workflow/scripts/generate_collage_cli.py \
   --mock -u demo_user -e album -c 3 -r 3 -p 7day -o album_3x3.png
 
 # Generate 5x5 artist collage in offline mock mode
-poetry run python .gemini/skills/collage-cli-workflow/scripts/generate_collage_cli.py \
+uv run python .gemini/skills/collage-cli-workflow/scripts/generate_collage_cli.py \
   --mock -u demo_user -e artist -c 5 -r 5 -p overall -o artist_5x5.png
 
 # Generate live collage with environment credentials
 export LASTFM_API_KEY="your_api_key"
 export LASTFM_API_SECRET="your_api_secret"
-poetry run python .gemini/skills/collage-cli-workflow/scripts/generate_collage_cli.py \
+uv run python .gemini/skills/collage-cli-workflow/scripts/generate_collage_cli.py \
   -u your_username -e album -c 3 -r 3 -o output.png
 ```
 
@@ -338,11 +335,11 @@ When developing or verifying changes, AI agents must follow this workflow:
    - Do NOT run tests that make real requests to Last.fm or external domains.
 2. **Execute Pytest Suite**:
    ```bash
-   poetry run pytest tests/ -v
+   uv run pytest tests/ -v
    ```
 3. **Execute CLI Visual Validation**:
    ```bash
-   poetry run python .gemini/skills/collage-cli-workflow/scripts/generate_collage_cli.py \
+   uv run python .gemini/skills/collage-cli-workflow/scripts/generate_collage_cli.py \
      --mock -u testuser -e album -c 3 -r 3 -o test_output.png
    ```
 4. **Assert Image Dimensions & Color Properties**:
@@ -362,4 +359,4 @@ Before submitting any code modification or bug fix, confirm the following:
 - [ ] **Timeouts & User-Agent**: Any new HTTP request sets `DEFAULT_HEADERS` and `timeout=(3.05, 10.0)`.
 - [ ] **Exception Derivation**: New custom exceptions inherit from `LastfmCollageGeneratorError`.
 - [ ] **Offline Tests Added**: New functionality or bug fixes include unit tests in `tests/` using synthetic fixtures.
-- [ ] **QA Suite Passes**: `poetry run python .gemini/skills/poetry-test-runner/scripts/run_tests.py --all` executes cleanly.
+- [ ] **QA Suite Passes**: `uv run python .gemini/skills/poetry-test-runner/scripts/run_tests.py --all` executes cleanly.

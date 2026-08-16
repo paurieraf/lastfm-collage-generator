@@ -54,7 +54,7 @@ The codebase exhibits a clean design pattern foundation (Facade, Factory, Builde
 
 ### Runtime Specification
 - **Programming Language**: Python (`^3.8`, supporting Python 3.8, 3.9, 3.10, 3.11, 3.12).
-- **Package Manager & Build Backend**: [Poetry](https://python-poetry.org/) (`poetry-core`, backend `poetry.core.masonry.api`).
+- **Package Manager & Build Backend**: [uv](https://docs.astral.sh/uv/) (`hatchling`, PEP 621 build system).
 - **Package Layout**: `src/`-layout packaging (`src/lastfmcollagegenerator/`).
 - **Asset Distribution**: Declared in `MANIFEST.in` via `recursive-include src/lastfmcollagegenerator/fonts *.ttf`.
 
