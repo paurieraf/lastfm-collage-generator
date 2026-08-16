@@ -1,7 +1,7 @@
 # lastfm-collage-generator: Comprehensive Project Architecture & Technical Analysis
 
 **Document Version**: 1.0.0  
-**Target Package**: `lastfmcollagegenerator` (v0.4.13)  
+**Target Package**: `lastfmcollagegenerator` (v0.5.0)  
 **Target Runtime**: Python ^3.8  
 **Repository**: [https://github.com/paurieraf/lastfm-collage-generator](https://github.com/paurieraf/lastfm-collage-generator)  
 **Analysis Date**: 2026-08-16  
