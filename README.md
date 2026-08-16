@@ -42,7 +42,7 @@ collage_generator = CollageGenerator(
     lastfm_api_secret="YOUR_API_SECRET"
 )
 
-# Returns a PIL Image object
+# 1. Standard generate method (returns a PIL Image object)
 image = collage_generator.generate(
     entity="album", 
     username="username", 
@@ -51,6 +51,19 @@ image = collage_generator.generate(
     period="7day"
 )
 image.save("5x5_album_collage.png", "png")
+
+# 2. Or using dedicated convenience methods
+album_collage = collage_generator.generate_top_albums_collage(
+    username="username", cols=5, rows=5, period="7day"
+)
+
+artist_collage = collage_generator.generate_top_artists_collage(
+    username="username", cols=3, rows=3, period="overall"
+)
+
+track_collage = collage_generator.generate_top_tracks_collage(
+    username="username", cols=4, rows=4, period="1month"
+)
 ```
 
 ### Options Reference

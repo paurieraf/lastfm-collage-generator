@@ -6,10 +6,7 @@ from pylast import User, TopItem
 
 class LastfmClient:
     def __init__(self, api_key: str, api_secret: str):
-        self.network = pylast.LastFMNetwork(
-            api_key=api_key,
-            api_secret=api_secret
-        )
+        self.network = pylast.LastFMNetwork(api_key=api_key, api_secret=api_secret)
 
     def get_user(self, username: str) -> User:
         user = self.network.get_user(username)
@@ -17,27 +14,18 @@ class LastfmClient:
 
     @staticmethod
     def get_top_albums(user: User, limit: int, period: str) -> List[TopItem]:
-        """
-        Returns a list of TopItems with the albums and the play count
-        TODO: It will be necessary to do a custom request because pylast doesn't support page param in this query
-        """
+        """Returns a list of TopItems with the albums and the play count."""
         top_albums = user.get_top_albums(period=period, limit=limit)
         return top_albums
 
     @staticmethod
     def get_top_artists(user: User, limit: int, period: str) -> List[TopItem]:
-        """
-        Returns a list of TopItems with the artists and the play count
-        TODO: It will be necessary to do a custom request because pylast doesn't support page param in this query
-        """
+        """Returns a list of TopItems with the artists and the play count."""
         top_artists = user.get_top_artists(period=period, limit=limit)
         return top_artists
 
     @staticmethod
     def get_top_tracks(user: User, limit: int, period: str) -> List[TopItem]:
-        """
-        Returns a list of TopItems with the tracks and the play count
-        TODO: It will be necessary to do a custom request because pylast doesn't support page param in this query
-        """
+        """Returns a list of TopItems with the tracks and the play count."""
         top_tracks = user.get_top_tracks(period=period, limit=limit)
         return top_tracks
