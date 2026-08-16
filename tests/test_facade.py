@@ -79,3 +79,11 @@ def test_generate_top_tracks_collage(mock_client_cls, mock_factory_cls, mock_bui
     assert call_kwargs["config"].rows == 4
     assert call_kwargs["config"].period == "overall"
     mock_builder.create.assert_called_once_with("testuser")
+
+
+def test_package_exports_and_version():
+    import lastfmcollagegenerator
+
+    assert hasattr(lastfmcollagegenerator, "CollageGenerator")
+    assert hasattr(lastfmcollagegenerator, "__version__")
+    assert lastfmcollagegenerator.__version__ == "0.5.0"
