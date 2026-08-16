@@ -43,12 +43,14 @@ def test_factory_invalid_entity():
 
 
 def test_generate_blank_tile():
-    blank_bytes = BaseCollageBuilder._generate_blank_tile()
+    config = CollageBuilderConfig(cols=3, rows=3, period="overall")
+    builder = BaseCollageBuilder(config, MagicMock())
+    blank_bytes = builder._generate_blank_tile()
     assert isinstance(blank_bytes, bytes)
     with Image.open(BytesIO(blank_bytes)) as img:
         assert img.size == (300, 300)
         assert img.mode == "RGB"
-        assert img.getpixel((0, 0)) == (0, 0, 0)
+        assert img.getpixel((0, 0)) != (0, 0, 0)
 
 
 def test_base_collage_builder_abstract_methods():
@@ -57,7 +59,7 @@ def test_base_collage_builder_abstract_methods():
     with pytest.raises(NotImplementedError):
         builder._get_tiles_from_top_items(MagicMock(), 1, "overall")
     with pytest.raises(NotImplementedError):
-        BaseCollageBuilder._create_tile_from_top_item(MagicMock())
+        builder._create_tile_from_top_item(MagicMock())
 
 
 def test_insert_newline_characters_long_title():
@@ -100,15 +102,17 @@ def test_deterministic_tile_sorting_on_tied_playcounts():
     sample_bytes = SyntheticImageFactory.create_image_bytes(300, 300)
 
     class DummyBuilder(BaseCollageBuilder):
-        @classmethod
-        def _create_tile_from_top_item(cls, top_item):
+        def _create_tile_from_top_item(self, top_item):
             return CollageTile(
                 data=sample_bytes,
                 playcount=top_item.weight,
                 title=f"{top_item.item.artist} - {top_item.item.title}",
             )
 
-    tiles = DummyBuilder._create_tiles_from_top_items(items)
+    dummy = DummyBuilder(
+        CollageBuilderConfig(cols=3, rows=3, period="overall"), MagicMock()
+    )
+    tiles = dummy._create_tiles_from_top_items(items)
 
     assert len(tiles) == 4
     assert tiles[0].playcount == 1000
@@ -173,7 +177,23 @@ def test_builder_resizes_non_standard_tile_images():
 
 
 def test_generate_blank_tile_custom_dimensions():
-    blank_bytes = BaseCollageBuilder._generate_blank_tile(120, 120)
+    config = CollageBuilderConfig(cols=1, rows=1, period="overall")
+    builder = BaseCollageBuilder(config, MagicMock())
+    blank_bytes = builder._generate_blank_tile(120, 120)
+    with Image.open(BytesIO(blank_bytes)) as img:
+        assert img.size == (120, 120)
+        assert img.mode == "RGB"
+        assert img.getpixel((0, 0)) != (0, 0, 0)
+
+
+def test_generate_blank_tile_legacy_black_style():
+    from lastfmcollagegenerator.fallback_art import FALLBACK_STYLE_BLACK
+
+    config = CollageBuilderConfig(
+        cols=1, rows=1, period="overall", fallback_style=FALLBACK_STYLE_BLACK
+    )
+    builder = BaseCollageBuilder(config, MagicMock())
+    blank_bytes = builder._generate_blank_tile(120, 120)
     with Image.open(BytesIO(blank_bytes)) as img:
         assert img.size == (120, 120)
         assert img.mode == "RGB"

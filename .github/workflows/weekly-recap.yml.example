@@ -1,0 +1,43 @@
+# Example workflow: refresh your GitHub profile README with a weekly
+# Last.fm listening recap collage.
+#
+# Copy this file to .github/workflows/weekly-recap.yml and configure:
+#   1. LASTFM_USERNAME / LASTFM_API_KEY / LASTFM_API_SECRET repository secrets
+#   2. A profile README that embeds the generated image:
+#      ![](weekly-recap.png)
+name: Weekly Last.fm Recap
+
+on:
+  schedule:
+    - cron: "0 9 * * 1" # Every Monday at 09:00 UTC
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  recap:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Generate weekly collage
+        uses: paurieraf/lastfm-collage-generator@v0.8.0
+        with:
+          username: ${{ secrets.LASTFM_USERNAME }}
+          entity: album
+          cols: "5"
+          rows: "5"
+          period: 7day
+          output-path: weekly-recap.png
+          api-key: ${{ secrets.LASTFM_API_KEY }}
+          api-secret: ${{ secrets.LASTFM_API_SECRET }}
+
+      - name: Commit updated collage
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add weekly-recap.png
+          git commit -m "chore: update weekly Last.fm recap" || echo "No changes to commit"
+          git push

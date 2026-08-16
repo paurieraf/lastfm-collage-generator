@@ -1,0 +1,62 @@
+name: "Last.fm Collage Generator"
+description: "Generate a Last.fm listening recap collage and write it into the repository."
+inputs:
+  username:
+    description: "Last.fm username to generate the collage for."
+    required: true
+  entity:
+    description: "Entity to collage: album, artist, or track."
+    required: false
+    default: "album"
+  cols:
+    description: "Number of columns in the grid."
+    required: false
+    default: "5"
+  rows:
+    description: "Number of rows in the grid."
+    required: false
+    default: "5"
+  period:
+    description: "Aggregation period: 7day, 1month, 3month, 6month, 12month, overall."
+    required: false
+    default: "7day"
+  output-path:
+    description: "Destination path for the generated collage image."
+    required: false
+    default: "collage.png"
+  mock:
+    description: "Generate an offline mock collage without Last.fm credentials."
+    required: false
+    default: "false"
+  api-key:
+    description: "Last.fm API key (pass from a repository secret)."
+    required: false
+  api-secret:
+    description: "Last.fm API secret (pass from a repository secret)."
+    required: false
+runs:
+  using: "composite"
+  steps:
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: "3.11"
+
+    - name: Install lastfmcollagegenerator
+      shell: bash
+      run: pip install lastfmcollagegenerator
+
+    - name: Generate collage
+      shell: bash
+      env:
+        LASTFM_API_KEY: ${{ inputs.api-key }}
+        LASTFM_API_SECRET: ${{ inputs.api-secret }}
+      run: |
+        python "$GITHUB_ACTION_PATH/scripts/github_action_entrypoint.py" \
+          --username "${{ inputs.username }}" \
+          --entity "${{ inputs.entity }}" \
+          --cols "${{ inputs.cols }}" \
+          --rows "${{ inputs.rows }}" \
+          --period "${{ inputs.period }}" \
+          --output-path "${{ inputs.output-path }}" \
+          ${{ inputs.mock == 'true' && '--mock' || '' }}

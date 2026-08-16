@@ -82,6 +82,11 @@ def _parse_color(color: Any, default_alpha: int = 255) -> Tuple[int, ...]:
     raise TypeError(f"Unsupported color type: {type(color)}")
 
 
+def parse_color(color: Any, default_alpha: int = 255) -> Tuple[int, ...]:
+    """Public entrypoint for validating and normalizing color values."""
+    return _parse_color(color, default_alpha)
+
+
 def resolve_theme(theme: Union[str, Theme, Dict[str, Any]]) -> Theme:
     """Resolve a theme parameter into a validated Theme instance."""
     if isinstance(theme, Theme):

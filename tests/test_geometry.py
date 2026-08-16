@@ -1,4 +1,7 @@
 from unittest.mock import MagicMock
+
+import pytest
+
 from lastfmcollagegenerator.collage import (
     BaseCollageBuilder,
     CollageBuilderConfig,
@@ -120,3 +123,106 @@ def test_high_density_canvas_allocation():
     ]
     img_20x20 = builder_20x20._create_image(tiles_400, cols=20, rows=20)
     assert img_20x20.size == (2000, 2000)
+
+
+def test_rounded_corners_mask_canvas_background():
+    config = CollageBuilderConfig(
+        cols=1, rows=1, period="overall", corner_radius=12, show_text=False
+    )
+    builder = BaseCollageBuilder(config, lastfm_client=MagicMock())
+    tile_bytes = SyntheticImageFactory.create_image_bytes(300, 300, color=(255, 0, 0))
+    img = builder._create_image(
+        [CollageTile(data=tile_bytes, playcount=1, title="T")], cols=1, rows=1
+    )
+    assert img.size == (300, 300)
+    assert img.getpixel((150, 150)) == (255, 0, 0)
+    assert img.getpixel((0, 0)) != (255, 0, 0)
+
+
+def test_border_stroke_rendering():
+    config = CollageBuilderConfig(
+        cols=1,
+        rows=1,
+        period="overall",
+        border_width=6,
+        border_color=(0, 255, 0),
+        show_text=False,
+    )
+    builder = BaseCollageBuilder(config, lastfm_client=MagicMock())
+    tile_bytes = SyntheticImageFactory.create_image_bytes(300, 300, color=(255, 0, 0))
+    img = builder._create_image(
+        [CollageTile(data=tile_bytes, playcount=1, title="T")], cols=1, rows=1
+    )
+    assert img.getpixel((150, 150)) == (255, 0, 0)
+    assert img.getpixel((150, 2)) == (0, 255, 0)
+    assert img.getpixel((2, 150)) == (0, 255, 0)
+
+
+def test_inter_tile_spacing_canvas_growth():
+    config = CollageBuilderConfig(
+        cols=2, rows=2, period="overall", spacing=8, show_text=False
+    )
+    builder = BaseCollageBuilder(config, lastfm_client=MagicMock())
+    tile_bytes = SyntheticImageFactory.create_image_bytes(300, 300, color=(255, 0, 0))
+    tiles = [
+        CollageTile(data=tile_bytes, playcount=10 - i, title=f"T{i}") for i in range(4)
+    ]
+    img = builder._create_image(tiles, cols=2, rows=2)
+    assert img.size == (2 * 300 + 3 * 8, 2 * 300 + 3 * 8)
+    assert img.getpixel((4, 4)) != (255, 0, 0)
+
+
+def test_default_geometry_is_byte_identical_to_legacy():
+    legacy_bytes = SyntheticImageFactory.create_image_bytes(300, 300, color=(255, 0, 0))
+    tiles = [
+        CollageTile(data=legacy_bytes, playcount=100 - i, title=f"Album {i}")
+        for i in range(4)
+    ]
+    plain = BaseCollageBuilder(
+        CollageBuilderConfig(cols=2, rows=2, period="overall"), MagicMock()
+    )
+    legacy = plain._create_image_legacy(tiles, cols=2, rows=2)
+    img = plain._create_image(tiles, cols=2, rows=2)
+    assert img.tobytes() == legacy.tobytes()
+
+
+def test_invalid_geometry_parameters_raise():
+    from lastfmcollagegenerator.collage_generator import CollageGenerator
+
+    generator = CollageGenerator("k", "s")
+    with pytest.raises(ValueError, match="corner_radius"):
+        generator._validate_parameters(
+            entity="album",
+            username="user",
+            cols=3,
+            rows=3,
+            period="overall",
+            corner_radius=-1,
+        )
+    with pytest.raises(ValueError, match="border_width"):
+        generator._validate_parameters(
+            entity="album",
+            username="user",
+            cols=3,
+            rows=3,
+            period="overall",
+            border_width=-2,
+        )
+    with pytest.raises(ValueError, match="spacing"):
+        generator._validate_parameters(
+            entity="album",
+            username="user",
+            cols=3,
+            rows=3,
+            period="overall",
+            spacing=301,
+        )
+    with pytest.raises(ValueError, match="corner_radius"):
+        generator._validate_parameters(
+            entity="album",
+            username="user",
+            cols=3,
+            rows=3,
+            period="overall",
+            corner_radius=301,
+        )

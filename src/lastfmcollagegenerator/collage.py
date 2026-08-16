@@ -8,10 +8,15 @@ from typing import Any, List, Optional, Tuple, Union, cast
 import bs4
 import requests
 from pylast import User, TopItem, Album, Artist, Track
-from PIL import Image, ImageDraw, ImageFile
+from PIL import Image, ImageDraw, ImageEnhance, ImageFile, ImageFilter
 
 
 import lastfmcollagegenerator
+from lastfmcollagegenerator.cache import (
+    ArtworkCache,
+    CACHE_KIND_ALBUM,
+    CACHE_KIND_ARTIST,
+)
 from lastfmcollagegenerator.constants import (
     ENTITY_ARTIST,
     ENTITY_ALBUM,
@@ -27,15 +32,27 @@ from lastfmcollagegenerator.exceptions import (
     ArtistNotFound,
     ArtistImageNotFound,
 )
+from lastfmcollagegenerator.fallback_art import (
+    FALLBACK_STYLE_GRADIENT,
+    FALLBACK_STYLE_BLACK,
+    generate_blank_tile,
+    generate_fallback_tile,
+)
 from lastfmcollagegenerator.lastfm.client import LastfmClient
-from lastfmcollagegenerator.theme import Theme, THEME_PRESETS, resolve_theme
+from lastfmcollagegenerator.network import ResilientHttpFetcher
+from lastfmcollagegenerator.theme import (
+    Theme,
+    THEME_PRESETS,
+    resolve_theme,
+    parse_color,
+)
 from lastfmcollagegenerator.typography import get_auto_scaled_font
 
 ImageFile.LOAD_TRUNCATED_IMAGES = True
 
 DEFAULT_HEADERS = {
     "User-Agent": (
-        "lastfm-collage-generator/0.7.0 "
+        "lastfm-collage-generator/0.8.0 "
         "(+https://github.com/paurieraf/lastfm-collage-generator)"
     )
 }
@@ -59,6 +76,13 @@ class CollageBuilderConfig:
     overlay_style: str = OVERLAY_BANNER
     show_text: bool = True
     font_path: Optional[str] = None
+    corner_radius: int = 0
+    border_width: int = 0
+    border_color: Optional[Union[str, Tuple[int, ...]]] = None
+    spacing: int = 0
+    fallback_style: str = FALLBACK_STYLE_GRADIENT
+    preset_width: Optional[int] = None
+    preset_height: Optional[int] = None
 
 
 @dataclass
@@ -81,10 +105,14 @@ class BaseCollageBuilder:
         self,
         config: CollageBuilderConfig,
         lastfm_client: LastfmClient,
+        cache: Optional[ArtworkCache] = None,
+        fetcher: Optional[ResilientHttpFetcher] = None,
     ):
         ImageFile.LOAD_TRUNCATED_IMAGES = True
         self.config = config
         self.lastfm_client = lastfm_client
+        self.cache = cache
+        self.fetcher = fetcher if fetcher is not None else ResilientHttpFetcher()
         self._path = os.path.dirname(lastfmcollagegenerator.collage.__file__)
         self.tile_width = getattr(self.config, "tile_size", self.TILE_WIDTH)
         self.tile_height = getattr(self.config, "tile_size", self.TILE_HEIGHT)
@@ -107,6 +135,47 @@ class BaseCollageBuilder:
         self, tiles: List[CollageTile], cols: int, rows: int
     ) -> Image.Image:
         """Create composite collage canvas."""
+        width = self.tile_width
+        height = self.tile_height
+        corner_radius = int(getattr(self.config, "corner_radius", 0) or 0)
+        border_width = int(getattr(self.config, "border_width", 0) or 0)
+        border_color = getattr(self.config, "border_color", None)
+        spacing = int(getattr(self.config, "spacing", 0) or 0)
+        preset_width = getattr(self.config, "preset_width", None)
+        preset_height = getattr(self.config, "preset_height", None)
+
+        grid_width = cols * width + (cols + 1) * spacing
+        grid_height = rows * height + (rows + 1) * spacing
+        canvas_width = preset_width if preset_width is not None else grid_width
+        canvas_height = preset_height if preset_height is not None else grid_height
+
+        if (
+            corner_radius == 0
+            and border_width == 0
+            and spacing == 0
+            and canvas_width == cols * width
+            and canvas_height == rows * height
+        ):
+            return self._create_image_legacy(tiles, cols, rows)
+
+        return self._create_image_decorated(
+            tiles=tiles,
+            cols=cols,
+            rows=rows,
+            grid_width=grid_width,
+            grid_height=grid_height,
+            canvas_width=canvas_width,
+            canvas_height=canvas_height,
+            corner_radius=corner_radius,
+            border_width=border_width,
+            border_color=border_color,
+            spacing=spacing,
+        )
+
+    def _create_image_legacy(
+        self, tiles: List[CollageTile], cols: int, rows: int
+    ) -> Image.Image:
+        """Byte-identical rendering path used when no geometry options are set."""
         width = self.tile_width
         height = self.tile_height
         collage_width = cols * width
@@ -142,6 +211,121 @@ class BaseCollageBuilder:
                 x = 0
             cursor = (x, y)
         return new_image
+
+    def _create_image_decorated(
+        self,
+        tiles: List[CollageTile],
+        cols: int,
+        rows: int,
+        grid_width: int,
+        grid_height: int,
+        canvas_width: int,
+        canvas_height: int,
+        corner_radius: int,
+        border_width: int,
+        border_color: Optional[Union[str, Tuple[int, ...]]],
+        spacing: int,
+    ) -> Image.Image:
+        """Rendering path with rounded corners, borders, spacing and backdrop."""
+        width = self.tile_width
+        height = self.tile_height
+        bg = tuple(int(c) for c in self.theme.overlay_bg[:3])
+        new_image = Image.new("RGB", (canvas_width, canvas_height), bg)
+
+        letterboxed = canvas_width > grid_width or canvas_height > grid_height
+        if letterboxed and tiles:
+            self._render_acrylic_backdrop(
+                new_image, canvas_width, canvas_height, tiles[0]
+            )
+
+        offset_x = (canvas_width - grid_width) // 2
+        offset_y = (canvas_height - grid_height) // 2
+        resample_filter = Image.Resampling.LANCZOS
+        show_text = getattr(self.config, "show_text", True)
+        overlay_style = getattr(self.config, "overlay_style", OVERLAY_BANNER)
+
+        if border_width > 0:
+            raw_border = border_color if border_color is not None else (0, 0, 0)
+            border_rgb = parse_color(raw_border)[:3]
+        else:
+            border_rgb = None
+
+        for i, tile in enumerate(tiles):
+            col = i % cols
+            row = i // cols
+            x = offset_x + spacing + col * (width + spacing)
+            y = offset_y + spacing + row * (height + spacing)
+            cursor = (x, y)
+
+            with Image.open(BytesIO(tile.data)) as tile_img:
+                if tile_img.size != (width, height):
+                    resized = tile_img.resize((width, height), resample_filter)
+                    processed: Image.Image = resized
+                else:
+                    processed = tile_img
+
+                if corner_radius > 0:
+                    rounded = self._apply_rounded_mask(
+                        processed, width, height, corner_radius
+                    )
+                    new_image.paste(rounded, cursor, rounded)
+                    rounded.close()
+                    if processed is not tile_img:
+                        processed.close()
+                else:
+                    new_image.paste(processed, cursor)
+                    if processed is not tile_img:
+                        processed.close()
+
+            if border_rgb is not None:
+                draw = ImageDraw.Draw(new_image, "RGBA")
+                draw.rounded_rectangle(
+                    ((x, y), (x + width - 1, y + height - 1)),
+                    radius=corner_radius,
+                    outline=border_rgb,
+                    width=border_width,
+                )
+
+            if show_text and overlay_style != OVERLAY_CLEAN:
+                title = f"{tile.title}"
+                if self.config.show_playcount:
+                    title += f". ({tile.playcount})"
+                self._render_overlay(image=new_image, title=title, cursor=cursor)
+        return new_image
+
+    @staticmethod
+    def _apply_rounded_mask(
+        img: Image.Image, width: int, height: int, radius: int
+    ) -> Image.Image:
+        mask = Image.new("L", (width, height), 0)
+        mask_draw = ImageDraw.Draw(mask)
+        mask_draw.rounded_rectangle(
+            (0, 0, width - 1, height - 1), radius=radius, fill=255
+        )
+        rgba = img.convert("RGBA")
+        rgba.putalpha(mask)
+        return rgba
+
+    def _render_acrylic_backdrop(
+        self,
+        canvas: Image.Image,
+        canvas_width: int,
+        canvas_height: int,
+        first_tile: CollageTile,
+    ) -> None:
+        try:
+            with Image.open(BytesIO(first_tile.data)) as img:
+                backdrop = img.convert("RGB")
+                backdrop = backdrop.resize(
+                    (canvas_width, canvas_height), Image.Resampling.LANCZOS
+                )
+                radius = max(1, min(40, min(canvas_width, canvas_height) // 50))
+                backdrop = backdrop.filter(ImageFilter.GaussianBlur(radius=radius))
+                backdrop = ImageEnhance.Brightness(backdrop).enhance(0.4)
+                canvas.paste(backdrop, (0, 0))
+                backdrop.close()
+        except (OSError, requests.RequestException, Exception):
+            canvas.paste((20, 20, 20), (0, 0, canvas_width, canvas_height))
 
     def _get_font_file(self) -> str:
         if getattr(self.config, "font_path", None):
@@ -360,21 +544,21 @@ class BaseCollageBuilder:
         title = "\n".join(text_lines)
         return title
 
-    @classmethod
-    def _generate_blank_tile(cls, width: int = 300, height: int = 300) -> bytes:
-        with Image.new("RGB", (width, height)) as img:
-            with BytesIO() as img_bytes:
-                img.save(img_bytes, format="png")
-                return img_bytes.getvalue()
+    def _generate_blank_tile(
+        self, width: int = 300, height: int = 300, title: str = ""
+    ) -> bytes:
+        style = getattr(self.config, "fallback_style", FALLBACK_STYLE_GRADIENT)
+        if style == FALLBACK_STYLE_BLACK:
+            return generate_blank_tile(width, height)
+        return generate_fallback_tile(title or "", width, height)
 
     def _get_tiles_from_top_items(
         self, user: User, limit: int, period: str
     ) -> List[CollageTile]:
         raise NotImplementedError
 
-    @classmethod
     def _create_tiles_from_top_items(
-        cls,
+        self,
         top_items: List[TopItem],
     ) -> List[CollageTile]:
         tiles: List[CollageTile] = []
@@ -382,7 +566,7 @@ class BaseCollageBuilder:
             futures = []
             for top_item in top_items:
                 future = executor.submit(
-                    cls._create_tile_from_top_item,
+                    self._create_tile_from_top_item,
                     top_item,
                 )
                 futures.append(future)
@@ -391,12 +575,27 @@ class BaseCollageBuilder:
         tiles.sort(key=lambda x: (int(x.playcount), x.title), reverse=True)
         return tiles
 
-    @classmethod
     def _create_tile_from_top_item(
-        cls,
+        self,
         top_item: TopItem,
     ) -> CollageTile:
         raise NotImplementedError
+
+    def _download_bytes(self, url: str, kind: str) -> bytes:
+        data = None
+        if self.cache is not None:
+            data = self.cache.get(url, kind)
+        if data is None:
+            resp = self.fetcher.get(
+                url,
+                headers=DEFAULT_HEADERS,
+                timeout=DEFAULT_TIMEOUT,
+            )
+            resp.raise_for_status()
+            data = resp.content
+            if self.cache is not None:
+                self.cache.set(url, data, kind)
+        return data
 
 
 class ArtistCollageBuilder(BaseCollageBuilder):
@@ -408,32 +607,31 @@ class ArtistCollageBuilder(BaseCollageBuilder):
         top_artists = self.lastfm_client.get_top_artists(user, limit, period)
         return self._create_tiles_from_top_items(top_artists)
 
-    @classmethod
     def _create_tile_from_top_item(
-        cls,
+        self,
         top_item: TopItem,
     ) -> CollageTile:
-        data = cls._get_artist_image(top_item.item)
         title = top_item.item.name
+        data = self._get_artist_image(top_item.item, title)
         return CollageTile(data=data, playcount=top_item.weight, title=title)
 
-    @classmethod
-    def _get_artist_image(cls, artist: Artist) -> bytes:
+    def _get_artist_image(self, artist: Artist, title: str) -> bytes:
         """Last.fm API does not provide artist images.
 
         So we fetch it from the website.
         """
         try:
             artist_slug = urllib.parse.quote_plus(artist.name)
-            resp = requests.get(
-                f"https://www.last.fm/music/{artist_slug}",
+            page_url = f"https://www.last.fm/music/{artist_slug}"
+            page_resp = self.fetcher.get(
+                page_url,
                 headers=DEFAULT_HEADERS,
                 timeout=DEFAULT_TIMEOUT,
             )
-            if resp.status_code == 404:
+            if page_resp.status_code == 404:
                 raise ArtistNotFound
-            resp.raise_for_status()
-            soup = bs4.BeautifulSoup(resp.content, "html5lib")
+            page_resp.raise_for_status()
+            soup = bs4.BeautifulSoup(page_resp.content, "html5lib")
 
             url = None
             bg_elem = soup.find(class_="header-new-background-image")
@@ -442,12 +640,9 @@ class ArtistCollageBuilder(BaseCollageBuilder):
             if not url:
                 raise ArtistImageNotFound
 
-            response = requests.get(
-                url, headers=DEFAULT_HEADERS, timeout=DEFAULT_TIMEOUT
-            )
-            response.raise_for_status()
-            with Image.open(BytesIO(response.content)) as img:
-                img.thumbnail((cls.TILE_WIDTH, cls.TILE_HEIGHT))
+            data = self._download_bytes(url, CACHE_KIND_ARTIST)
+            with Image.open(BytesIO(data)) as img:
+                img.thumbnail((self.TILE_WIDTH, self.TILE_HEIGHT))
                 with BytesIO() as img_bytes:
                     img.save(img_bytes, format="png")
                     return img_bytes.getvalue()
@@ -458,7 +653,7 @@ class ArtistCollageBuilder(BaseCollageBuilder):
             OSError,
             Exception,
         ):
-            return cls._generate_blank_tile()
+            return self._generate_blank_tile(title=title)
 
     def __repr__(self):
         return (
@@ -478,32 +673,29 @@ class AlbumCollageBuilder(BaseCollageBuilder):
         top_albums = self.lastfm_client.get_top_albums(user, limit, period)
         return self._create_tiles_from_top_items(top_albums)
 
-    @classmethod
     def _create_tile_from_top_item(
-        cls,
+        self,
         top_item: TopItem,
     ) -> CollageTile:
-        data = cls._get_album_cover(top_item.item)
         title = f"{top_item.item.artist} - {top_item.item.title}"
+        data = self._get_album_cover(top_item.item, title)
         return CollageTile(data=data, playcount=top_item.weight, title=title)
 
-    @classmethod
-    def _get_album_cover(cls, item: Union[Album, Track]) -> bytes:
+    def _get_album_cover(self, item: Union[Album, Track], title: str) -> bytes:
         try:
             url = item.get_cover_image()
         except (IndexError, AttributeError, Exception):
             url = None
         if not url:
-            return cls._generate_blank_tile()
+            return self._generate_blank_tile(title=title)
         try:
-            resp = requests.get(url, headers=DEFAULT_HEADERS, timeout=DEFAULT_TIMEOUT)
-            resp.raise_for_status()
-            with Image.open(BytesIO(resp.content)) as img:
+            data = self._download_bytes(url, CACHE_KIND_ALBUM)
+            with Image.open(BytesIO(data)) as img:
                 with BytesIO() as img_bytes:
                     img.save(img_bytes, format="png")
                     return img_bytes.getvalue()
         except (requests.RequestException, OSError, Exception):
-            return cls._generate_blank_tile()
+            return self._generate_blank_tile(title=title)
 
     def __repr__(self):
         return (
@@ -544,8 +736,10 @@ class CollageBuilderFactory:
         entity: str,
         config: CollageBuilderConfig,
         lastfm_client: LastfmClient,
+        cache: Optional[ArtworkCache] = None,
+        fetcher: Optional[ResilientHttpFetcher] = None,
     ):
         collage_builder = cls.entity_collage_builders.get(entity)
         if not collage_builder:
             raise ValueError(f"Invalid entity: {entity}")
-        return collage_builder(config, lastfm_client)
+        return collage_builder(config, lastfm_client, cache=cache, fetcher=fetcher)

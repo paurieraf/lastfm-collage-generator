@@ -4,6 +4,7 @@ from PIL import Image
 
 from lastfmcollagegenerator.collage_generator import CollageGenerator
 from lastfmcollagegenerator.constants import ENTITY_ALBUM, ENTITY_ARTIST, ENTITY_TRACK
+from lastfmcollagegenerator.fallback_art import FALLBACK_STYLE_BLACK
 
 
 @pytest.fixture
@@ -13,9 +14,13 @@ def mock_builder():
     return mock
 
 
+@patch("lastfmcollagegenerator.collage_generator.ResilientHttpFetcher")
+@patch("lastfmcollagegenerator.collage_generator.ArtworkCache")
 @patch("lastfmcollagegenerator.collage_generator.CollageBuilderFactory")
 @patch("lastfmcollagegenerator.collage_generator.LastfmClient")
-def test_generate_top_albums_collage(mock_client_cls, mock_factory_cls, mock_builder):
+def test_generate_top_albums_collage(
+    mock_client_cls, mock_factory_cls, mock_cache_cls, mock_fetcher_cls, mock_builder
+):
     mock_factory_cls.return_value = mock_builder
     generator = CollageGenerator("mock_key", "mock_secret")
 
@@ -37,9 +42,13 @@ def test_generate_top_albums_collage(mock_client_cls, mock_factory_cls, mock_bui
     mock_builder.create.assert_called_once_with("testuser")
 
 
+@patch("lastfmcollagegenerator.collage_generator.ResilientHttpFetcher")
+@patch("lastfmcollagegenerator.collage_generator.ArtworkCache")
 @patch("lastfmcollagegenerator.collage_generator.CollageBuilderFactory")
 @patch("lastfmcollagegenerator.collage_generator.LastfmClient")
-def test_generate_top_artists_collage(mock_client_cls, mock_factory_cls, mock_builder):
+def test_generate_top_artists_collage(
+    mock_client_cls, mock_factory_cls, mock_cache_cls, mock_fetcher_cls, mock_builder
+):
     mock_factory_cls.return_value = mock_builder
     generator = CollageGenerator("mock_key", "mock_secret")
 
@@ -59,9 +68,13 @@ def test_generate_top_artists_collage(mock_client_cls, mock_factory_cls, mock_bu
     mock_builder.create.assert_called_once_with("testuser")
 
 
+@patch("lastfmcollagegenerator.collage_generator.ResilientHttpFetcher")
+@patch("lastfmcollagegenerator.collage_generator.ArtworkCache")
 @patch("lastfmcollagegenerator.collage_generator.CollageBuilderFactory")
 @patch("lastfmcollagegenerator.collage_generator.LastfmClient")
-def test_generate_top_tracks_collage(mock_client_cls, mock_factory_cls, mock_builder):
+def test_generate_top_tracks_collage(
+    mock_client_cls, mock_factory_cls, mock_cache_cls, mock_fetcher_cls, mock_builder
+):
     mock_factory_cls.return_value = mock_builder
     generator = CollageGenerator("mock_key", "mock_secret")
 
@@ -82,10 +95,12 @@ def test_generate_top_tracks_collage(mock_client_cls, mock_factory_cls, mock_bui
     mock_builder.create.assert_called_once_with("testuser")
 
 
+@patch("lastfmcollagegenerator.collage_generator.ResilientHttpFetcher")
+@patch("lastfmcollagegenerator.collage_generator.ArtworkCache")
 @patch("lastfmcollagegenerator.collage_generator.CollageBuilderFactory")
 @patch("lastfmcollagegenerator.collage_generator.LastfmClient")
 def test_generate_with_custom_tile_size_and_high_density(
-    mock_client_cls, mock_factory_cls, mock_builder
+    mock_client_cls, mock_factory_cls, mock_cache_cls, mock_fetcher_cls, mock_builder
 ):
     mock_factory_cls.return_value = mock_builder
     generator = CollageGenerator("mock_key", "mock_secret")
@@ -113,10 +128,12 @@ def test_generate_with_custom_tile_size_and_high_density(
     assert call_kwargs_custom["config"].tile_size == 250
 
 
+@patch("lastfmcollagegenerator.collage_generator.ResilientHttpFetcher")
+@patch("lastfmcollagegenerator.collage_generator.ArtworkCache")
 @patch("lastfmcollagegenerator.collage_generator.CollageBuilderFactory")
 @patch("lastfmcollagegenerator.collage_generator.LastfmClient")
 def test_generate_with_themes_and_overlay_styles(
-    mock_client_cls, mock_factory_cls, mock_builder
+    mock_client_cls, mock_factory_cls, mock_cache_cls, mock_fetcher_cls, mock_builder
 ):
     mock_factory_cls.return_value = mock_builder
     generator = CollageGenerator("mock_key", "mock_secret")
@@ -136,6 +153,74 @@ def test_generate_with_themes_and_overlay_styles(
     assert call_kwargs["config"].show_text is False
 
 
+@patch("lastfmcollagegenerator.collage_generator.ResilientHttpFetcher")
+@patch("lastfmcollagegenerator.collage_generator.ArtworkCache")
+@patch("lastfmcollagegenerator.collage_generator.CollageBuilderFactory")
+@patch("lastfmcollagegenerator.collage_generator.LastfmClient")
+def test_generate_with_preset_overrides_grid(
+    mock_client_cls, mock_factory_cls, mock_cache_cls, mock_fetcher_cls, mock_builder
+):
+    mock_factory_cls.return_value = mock_builder
+    generator = CollageGenerator("mock_key", "mock_secret")
+
+    generator.generate(
+        entity=ENTITY_ALBUM,
+        username="testuser",
+        cols=9,
+        rows=9,
+        period="overall",
+        preset="instagram-post",
+    )
+    call_kwargs = mock_factory_cls.call_args.kwargs
+    config = call_kwargs["config"]
+    assert config.cols == 3
+    assert config.rows == 3
+    assert config.tile_size == 360
+    assert config.preset_width == 1080
+    assert config.preset_height == 1080
+
+
+@patch("lastfmcollagegenerator.collage_generator.ResilientHttpFetcher")
+@patch("lastfmcollagegenerator.collage_generator.ArtworkCache")
+@patch("lastfmcollagegenerator.collage_generator.CollageBuilderFactory")
+@patch("lastfmcollagegenerator.collage_generator.LastfmClient")
+def test_generate_with_geometry_and_fallback_params(
+    mock_client_cls, mock_factory_cls, mock_cache_cls, mock_fetcher_cls, mock_builder
+):
+    mock_factory_cls.return_value = mock_builder
+    generator = CollageGenerator("mock_key", "mock_secret")
+
+    generator.generate(
+        entity=ENTITY_ALBUM,
+        username="testuser",
+        cols=3,
+        rows=3,
+        period="overall",
+        fallback_style=FALLBACK_STYLE_BLACK,
+        corner_radius=12,
+        border_width=3,
+        border_color="#FF0000",
+        spacing=8,
+        cache_dir="/tmp/collage-cache",
+        cache_ttl_override=15,
+        rate_limit=10,
+    )
+    call_kwargs = mock_factory_cls.call_args.kwargs
+    config = call_kwargs["config"]
+    assert config.fallback_style == FALLBACK_STYLE_BLACK
+    assert config.corner_radius == 12
+    assert config.border_width == 3
+    assert config.border_color == "#FF0000"
+    assert config.spacing == 8
+
+    mock_cache_cls.assert_called_once_with(
+        cache_dir="/tmp/collage-cache",
+        ttl_override_days=15,
+    )
+    mock_fetcher_cls.assert_called_once()
+    assert mock_fetcher_cls.call_args.kwargs["rate_limit"] == 10
+
+
 def test_package_exports_and_version():
     import lastfmcollagegenerator
 
@@ -144,5 +229,4 @@ def test_package_exports_and_version():
     assert hasattr(lastfmcollagegenerator, "THEME_PRESETS")
     assert hasattr(lastfmcollagegenerator, "resolve_theme")
     assert hasattr(lastfmcollagegenerator, "__version__")
-    assert lastfmcollagegenerator.__version__ == "0.7.0"
-
+    assert lastfmcollagegenerator.__version__ == "0.8.0"

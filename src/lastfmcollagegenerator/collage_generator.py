@@ -2,6 +2,7 @@ import os
 from typing import Any, Dict, Optional, Union, cast
 from PIL import Image
 
+from lastfmcollagegenerator.cache import ArtworkCache
 from lastfmcollagegenerator.collage import (
     CollageBuilderFactory,
     LastfmConfig,
@@ -18,8 +19,20 @@ from lastfmcollagegenerator.constants import (
     OVERLAY_STYLES,
     THEME_DARK,
 )
+from lastfmcollagegenerator.fallback_art import (
+    FALLBACK_STYLE_GRADIENT,
+    FALLBACK_STYLES,
+)
 from lastfmcollagegenerator.lastfm.client import LastfmClient
-from lastfmcollagegenerator.theme import Theme, resolve_theme
+from lastfmcollagegenerator.network import (
+    ResilientHttpFetcher,
+    DEFAULT_RATE_LIMIT,
+)
+from lastfmcollagegenerator.presets import (
+    SocialPreset,
+    resolve_preset,
+)
+from lastfmcollagegenerator.theme import Theme, resolve_theme, parse_color
 
 
 class CollageGenerator:
@@ -52,6 +65,15 @@ class CollageGenerator:
         overlay_style: str = OVERLAY_BANNER,
         show_text: bool = True,
         font_path: Optional[str] = None,
+        preset: Optional[str] = None,
+        cache_dir: Optional[str] = None,
+        cache_ttl_override: Optional[int] = None,
+        rate_limit: Optional[float] = None,
+        fallback_style: str = FALLBACK_STYLE_GRADIENT,
+        corner_radius: int = 0,
+        border_width: int = 0,
+        border_color: Optional[Union[str, tuple]] = None,
+        spacing: int = 0,
     ) -> Image.Image:
         """Generate a composite collage image from a Last.fm user's top items.
 
@@ -73,16 +95,42 @@ class CollageGenerator:
                        Default True.
             font_path: Optional path to a custom TrueType (.ttf) or OpenType
                        (.otf) font file.
+            preset: Optional social media dimension preset. One of:
+                    "instagram-story", "instagram-post", "twitter-header",
+                    "desktop-wallpaper", "desktop-wallpaper-4k". When set,
+                    it overrides cols, rows and tile_size.
+            cache_dir: Optional directory for the persistent artwork cache.
+                       Defaults to ~/.cache/lastfm-collage/.
+            cache_ttl_override: Optional override for cache entry lifetime
+                       in days (applies to all artwork kinds).
+            rate_limit: Optional maximum HTTP request rate in requests per
+                       second. Defaults to 5.0.
+            fallback_style: Fallback tile style when artwork cannot be
+                       downloaded: "gradient" (default) or "black".
+            corner_radius: Rounded corner radius in pixels (default 0).
+            border_width: Tile border stroke width in pixels (default 0).
+            border_color: Tile border color as hex string or RGB(A) tuple.
+            spacing: Inter-tile spacing margin in pixels (default 0).
 
         Returns:
-            PIL.Image.Image: RGB composite canvas with dimensions
-            (cols * tile_size, rows * tile_size) pixels.
+            PIL.Image.Image: RGB composite canvas. Without a preset, the
+            dimensions are (cols * tile_size, rows * tile_size) pixels.
 
         Raises:
             ValueError: If any parameter is invalid or out of bounds.
             TypeError: If types of parameters are invalid.
             FileNotFoundError: If font_path does not exist on disk.
         """
+        resolved_preset = self._resolve_preset(preset)
+        if resolved_preset is not None:
+            cols = resolved_preset.cols
+            rows = resolved_preset.rows
+
+        if resolved_preset is not None:
+            resolved_tile_size = resolved_preset.tile_size
+        else:
+            resolved_tile_size = self._resolve_tile_size(cols, rows, tile_size)
+
         resolved_theme = self._validate_parameters(
             entity=entity,
             username=username,
@@ -94,8 +142,17 @@ class CollageGenerator:
             overlay_style=overlay_style,
             show_text=show_text,
             font_path=font_path,
+            preset=preset,
+            cache_dir=cache_dir,
+            cache_ttl_override=cache_ttl_override,
+            rate_limit=rate_limit,
+            fallback_style=fallback_style,
+            corner_radius=corner_radius,
+            border_width=border_width,
+            border_color=border_color,
+            spacing=spacing,
+            resolved_tile_size=resolved_tile_size,
         )
-        resolved_tile_size = self._resolve_tile_size(cols, rows, tile_size)
         collage_builder = self._get_collage_builder(
             entity=entity,
             cols=cols,
@@ -106,6 +163,15 @@ class CollageGenerator:
             overlay_style=overlay_style,
             show_text=show_text,
             font_path=font_path,
+            preset=resolved_preset,
+            cache_dir=cache_dir,
+            cache_ttl_override=cache_ttl_override,
+            rate_limit=rate_limit,
+            fallback_style=fallback_style,
+            corner_radius=corner_radius,
+            border_width=border_width,
+            border_color=border_color,
+            spacing=spacing,
         )
         return collage_builder.create(username)
 
@@ -120,6 +186,15 @@ class CollageGenerator:
         overlay_style: str = OVERLAY_BANNER,
         show_text: bool = True,
         font_path: Optional[str] = None,
+        preset: Optional[str] = None,
+        cache_dir: Optional[str] = None,
+        cache_ttl_override: Optional[int] = None,
+        rate_limit: Optional[float] = None,
+        fallback_style: str = FALLBACK_STYLE_GRADIENT,
+        corner_radius: int = 0,
+        border_width: int = 0,
+        border_color: Optional[Union[str, tuple]] = None,
+        spacing: int = 0,
     ) -> Image.Image:
         """Convenience method to generate an album collage."""
         return self.generate(
@@ -133,6 +208,15 @@ class CollageGenerator:
             overlay_style=overlay_style,
             show_text=show_text,
             font_path=font_path,
+            preset=preset,
+            cache_dir=cache_dir,
+            cache_ttl_override=cache_ttl_override,
+            rate_limit=rate_limit,
+            fallback_style=fallback_style,
+            corner_radius=corner_radius,
+            border_width=border_width,
+            border_color=border_color,
+            spacing=spacing,
         )
 
     def generate_top_artists_collage(
@@ -146,6 +230,15 @@ class CollageGenerator:
         overlay_style: str = OVERLAY_BANNER,
         show_text: bool = True,
         font_path: Optional[str] = None,
+        preset: Optional[str] = None,
+        cache_dir: Optional[str] = None,
+        cache_ttl_override: Optional[int] = None,
+        rate_limit: Optional[float] = None,
+        fallback_style: str = FALLBACK_STYLE_GRADIENT,
+        corner_radius: int = 0,
+        border_width: int = 0,
+        border_color: Optional[Union[str, tuple]] = None,
+        spacing: int = 0,
     ) -> Image.Image:
         """Convenience method to generate an artist collage."""
         return self.generate(
@@ -159,6 +252,15 @@ class CollageGenerator:
             overlay_style=overlay_style,
             show_text=show_text,
             font_path=font_path,
+            preset=preset,
+            cache_dir=cache_dir,
+            cache_ttl_override=cache_ttl_override,
+            rate_limit=rate_limit,
+            fallback_style=fallback_style,
+            corner_radius=corner_radius,
+            border_width=border_width,
+            border_color=border_color,
+            spacing=spacing,
         )
 
     def generate_top_tracks_collage(
@@ -172,6 +274,15 @@ class CollageGenerator:
         overlay_style: str = OVERLAY_BANNER,
         show_text: bool = True,
         font_path: Optional[str] = None,
+        preset: Optional[str] = None,
+        cache_dir: Optional[str] = None,
+        cache_ttl_override: Optional[int] = None,
+        rate_limit: Optional[float] = None,
+        fallback_style: str = FALLBACK_STYLE_GRADIENT,
+        corner_radius: int = 0,
+        border_width: int = 0,
+        border_color: Optional[Union[str, tuple]] = None,
+        spacing: int = 0,
     ) -> Image.Image:
         """Convenience method to generate a track collage."""
         return self.generate(
@@ -185,7 +296,22 @@ class CollageGenerator:
             overlay_style=overlay_style,
             show_text=show_text,
             font_path=font_path,
+            preset=preset,
+            cache_dir=cache_dir,
+            cache_ttl_override=cache_ttl_override,
+            rate_limit=rate_limit,
+            fallback_style=fallback_style,
+            corner_radius=corner_radius,
+            border_width=border_width,
+            border_color=border_color,
+            spacing=spacing,
         )
+
+    @staticmethod
+    def _resolve_preset(preset: Optional[str]) -> Optional[SocialPreset]:
+        if preset is None:
+            return None
+        return resolve_preset(preset)
 
     def _resolve_tile_size(
         self, cols: int, rows: int, tile_size: Optional[int] = None
@@ -211,6 +337,15 @@ class CollageGenerator:
         overlay_style: str = OVERLAY_BANNER,
         show_text: bool = True,
         font_path: Optional[str] = None,
+        preset: Optional[SocialPreset] = None,
+        cache_dir: Optional[str] = None,
+        cache_ttl_override: Optional[int] = None,
+        rate_limit: Optional[float] = None,
+        fallback_style: str = FALLBACK_STYLE_GRADIENT,
+        corner_radius: int = 0,
+        border_width: int = 0,
+        border_color: Optional[Union[str, tuple]] = None,
+        spacing: int = 0,
     ) -> BaseCollageBuilder:
         collage_builder_config = CollageBuilderConfig(
             cols=cols,
@@ -221,10 +356,24 @@ class CollageGenerator:
             overlay_style=overlay_style,
             show_text=show_text,
             font_path=font_path,
+            corner_radius=corner_radius,
+            border_width=border_width,
+            border_color=border_color,
+            spacing=spacing,
+            fallback_style=fallback_style,
+            preset_width=preset.width if preset is not None else None,
+            preset_height=preset.height if preset is not None else None,
         )
         lastfm_client = LastfmClient(
             api_key=self.lastfm_config.lastfm_api_key,
             api_secret=self.lastfm_config.lastfm_api_secret,
+        )
+        cache = ArtworkCache(
+            cache_dir=cache_dir,
+            ttl_override_days=cache_ttl_override,
+        )
+        fetcher = ResilientHttpFetcher(
+            rate_limit=rate_limit if rate_limit is not None else DEFAULT_RATE_LIMIT
         )
         return cast(
             BaseCollageBuilder,
@@ -232,6 +381,8 @@ class CollageGenerator:
                 entity=entity,
                 config=collage_builder_config,
                 lastfm_client=lastfm_client,
+                cache=cache,
+                fetcher=fetcher,
             ),
         )
 
@@ -247,6 +398,16 @@ class CollageGenerator:
         overlay_style: str = OVERLAY_BANNER,
         show_text: bool = True,
         font_path: Optional[str] = None,
+        preset: Optional[str] = None,
+        cache_dir: Optional[str] = None,
+        cache_ttl_override: Optional[int] = None,
+        rate_limit: Optional[float] = None,
+        fallback_style: str = FALLBACK_STYLE_GRADIENT,
+        corner_radius: int = 0,
+        border_width: int = 0,
+        border_color: Optional[Union[str, tuple]] = None,
+        spacing: int = 0,
+        resolved_tile_size: Optional[int] = None,
     ) -> Theme:
         if not isinstance(username, str) or not username.strip():
             raise ValueError("A valid non-empty username string is required.")
@@ -296,6 +457,60 @@ class CollageGenerator:
                 raise TypeError("font_path must be a string or None.")
             if not os.path.isfile(font_path):
                 raise FileNotFoundError(f"Custom font file not found: {font_path}")
+
+        if preset is not None:
+            if not isinstance(preset, str):
+                raise TypeError("preset must be a string or None.")
+            resolve_preset(preset)
+
+        if cache_dir is not None and not isinstance(cache_dir, str):
+            raise TypeError("cache_dir must be a string or None.")
+
+        if cache_ttl_override is not None:
+            if type(cache_ttl_override) is not int:
+                raise TypeError("cache_ttl_override must be an integer or None.")
+            if cache_ttl_override <= 0:
+                raise ValueError(
+                    "cache_ttl_override must be a positive number of days."
+                )
+
+        if rate_limit is not None:
+            if type(rate_limit) not in (int, float):
+                raise TypeError("rate_limit must be a number or None.")
+            if rate_limit <= 0:
+                raise ValueError(
+                    "rate_limit must be a positive number of requests per second."
+                )
+
+        if not isinstance(fallback_style, str) or fallback_style not in FALLBACK_STYLES:
+            raise ValueError(
+                f"Invalid fallback_style: '{fallback_style}'. "
+                f"Options are: {FALLBACK_STYLES}"
+            )
+
+        effective_tile = (
+            resolved_tile_size
+            if resolved_tile_size is not None
+            else self._resolve_tile_size(cols, rows, tile_size)
+        )
+
+        for name, value in (
+            ("corner_radius", corner_radius),
+            ("border_width", border_width),
+            ("spacing", spacing),
+        ):
+            if type(value) is not int:
+                raise TypeError(f"{name} must be an integer.")
+            if value < 0:
+                raise ValueError(f"{name} must be a non-negative integer.")
+            if value > effective_tile:
+                raise ValueError(
+                    f"Invalid {name}: {value} exceeds the tile size "
+                    f"of {effective_tile} pixels."
+                )
+
+        if border_color is not None:
+            parse_color(border_color)
 
         resolved_theme = resolve_theme(theme)
         return resolved_theme

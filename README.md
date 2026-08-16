@@ -13,7 +13,7 @@
 [![Downloads](https://img.shields.io/pypi/dm/lastfmcollagegenerator?color=orange)](https://pypi.org/project/lastfmcollagegenerator/)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](https://github.com/paurieraf/lastfm-collage-generator/pulls)
 
-[Key Features](#-key-features) • [Grid Geometry](#-grid-dimensions--geometry-reference) • [Architecture](#-system-architecture--design-patterns) • [Installation](#-installation) • [Quickstart](#-quickstart) • [API Reference](#-python-api-reference) • [Developer Workflows](#-developer--debugging-workflows) • [Testing & QA](#-testing--quality-assurance) • [Roadmap](#-multi-phase-feature-roadmap) • [Defect Catalog](#-known-bugs--defect-catalog) • [Contributing](#-contributing)
+[Key Features](#-key-features) • [Grid Geometry](#-grid-dimensions--geometry-reference) • [Architecture](#-system-architecture--design-patterns) • [Installation](#-installation) • [Quickstart](#-quickstart) • [API Reference](#-python-api-reference) • [Developer Workflows](#-developer--debugging-workflows) • [Testing & QA](#-testing--quality-assurance) • [Caching & Social Presets](#-caching-social-presets--tile-geometry) • [GitHub Actions](#-github-actions-automation) • [Roadmap](#-multi-phase-feature-roadmap) • [Defect Catalog](#-known-bugs--defect-catalog) • [Contributing](#-contributing)
 
 </div>
 
@@ -565,8 +565,113 @@ uv publish
 
 ---
 
-## 🔤 Font Handling & Asset Packaging
+## 🗃️ Caching, Social Presets & Tile Geometry
 
+### Multi-Tier Artwork Caching
+
+Artwork is cached across two tiers: an in-memory LRU store (256 entries) and a persistent SQLite cache at `~/.cache/lastfm-collage/artwork.db`. Album/track covers expire after 30 days, retrieved artist hero images after 7 days. On every cache hit, no HTTP request is issued.
+
+```python
+generator.generate(
+    entity="album",
+    username="your_username",
+    cols=5,
+    rows=5,
+    cache_dir="/custom/cache/dir",  # Default: ~/.cache/lastfm-collage/
+    cache_ttl_override=14,          # Override TTL (days) for all artwork kinds
+    rate_limit=10,                  # HTTP requests per second (default 5.0)
+)
+```
+
+All HTTP acquisition flows through a resilience middleware: a token-bucket rate limiter, exponential backoff with full jitter on transient errors, and a per-host circuit breaker. Unavailable artwork falls back to a deterministic algorithmic gradient tile (SHA-256-derived pastel gradient + initials) instead of a black square; pass `fallback_style="black"` for the legacy solid tile.
+
+### Social Media Dimension Presets
+
+One-click output sizing for common platforms. When a preset is set it overrides `cols`, `rows` and `tile_size`, and letterboxed regions are filled with an acrylic backdrop (Gaussian-blurred, darkened rendition of your #1 artwork):
+
+```python
+generator.generate(
+    entity="album",
+    username="your_username",
+    cols=5,
+    rows=5,
+    preset="instagram-story",
+)
+```
+
+| Preset | Dimensions | Grid |
+|---|---|---|
+| `instagram-story` | 1080 × 1920 (9:16) | 3×5 @ 360px |
+| `instagram-post` | 1080 × 1080 (1:1) | 3×3 @ 360px |
+| `twitter-header` | 1500 × 500 (3:1) | 5×1 @ 300px |
+| `desktop-wallpaper` | 1920 × 1080 (16:9) | 6×3 @ 320px |
+| `desktop-wallpaper-4k` | 3840 × 2160 (16:9) | 6×3 @ 600px |
+
+### Tile Geometry
+
+Rounded corners, border strokes and inter-tile spacing are available with defaults preserving the classic edge-to-edge look:
+
+```python
+generator.generate(
+    entity="album",
+    username="your_username",
+    cols=3,
+    rows=3,
+    corner_radius=12,
+    border_width=3,
+    border_color="#FF5A5F",
+    spacing=8,
+)
+```
+
+---
+
+## 🤖 GitHub Actions Automation
+
+The repository ships a reusable composite action (`action.yml`) that generates a collage inside a workflow and writes it into the repository — ideal for keeping a GitHub profile README fresh with weekly listening recaps.
+
+**Inputs:** `username` (required), `entity`, `cols`, `rows`, `period`, `output-path`, `mock`, `api-key`, `api-secret`.
+
+```yaml
+name: Weekly Last.fm Recap
+on:
+  schedule:
+    - cron: "0 9 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  recap:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Generate weekly collage
+        uses: paurieraf/lastfm-collage-generator@v0.8.0
+        with:
+          username: ${{ secrets.LASTFM_USERNAME }}
+          entity: album
+          cols: "5"
+          rows: "5"
+          period: 7day
+          output-path: weekly-recap.png
+          api-key: ${{ secrets.LASTFM_API_KEY }}
+          api-secret: ${{ secrets.LASTFM_API_SECRET }}
+      - name: Commit updated collage
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add weekly-recap.png
+          git commit -m "chore: update weekly Last.fm recap" || echo "No changes"
+          git push
+```
+
+See [`.github/workflows/weekly-recap.yml.example`](.github/workflows/weekly-recap.yml.example) for a ready-to-copy workflow. Set `mock: "true"` to validate workflows without Last.fm credentials.
+
+---
+
+## 🔤 Font Handling & Asset Packaging
 The library bundles official TrueType fonts directly inside the distribution package at `src/lastfmcollagegenerator/fonts/`:
 - **`DejaVuSansMono.ttf`** (340 KB): Default monospace font for tile title and playcount rendering.
 - **`DejaVuSansMono-Bold.ttf`** (332 KB): Bold monospace font variant.
@@ -598,17 +703,17 @@ Our development roadmap is organized across 4 strategic pillars and versioned mi
 - **Phase 2 (v0.6.0 — Visual Personalization)**:
   - [x] **Dynamic Theme Engine**: Pre-packaged themes (`Dark`, `Light`, `Glassmorphic`, `Sunset`, `Neon`, and custom user hex palettes/Theme objects).
   - [x] **Typography & Auto-Scaling Engine**: Word-boundary line breaking via `textwrap`, dynamic font downscaling for long titles, and custom `.ttf`/`.otf` font path support.
-  - [ ] **Tile Geometry & Rounded Corners**: Rounded squircle corner masking (`radius=12`), configurable border stroke widths and colors, and inter-tile spacing margins.
+  - [x] **Tile Geometry & Rounded Corners**: Rounded squircle corner masking (`radius=12`), configurable border stroke widths and colors, and inter-tile spacing margins.
   - [x] **Versatile Overlay Styles**: `Banner` (lower third), `Full Tint` (centered text), `Gradient Fade`, `Minimalist Badge / Pill` (rank + playcount chip), and `Clean Mode` (`show_text=False` for pure artwork grids).
 
 ### ⚡ Pillar 2: Performance, Caching & Retrieval Resilience
 
 - **Phase 2 (v0.6.0 — Fallbacks & Determinism)**:
-  - [ ] **Dynamic Fallback Artwork Engine**: Algorithmic two-color pastel gradients and initials typography derived from SHA-256 entity hashes to replace solid black tiles.
-  - [ ] **Deterministic Secondary Sorting**: Secondary sort key `(int(playcount), title)` to ensure byte-for-byte identical collages on tied scrobble counts.
+  - [x] **Dynamic Fallback Artwork Engine**: Algorithmic two-color pastel gradients and initials typography derived from SHA-256 entity hashes to replace solid black tiles.
+  - [x] **Deterministic Secondary Sorting**: Secondary sort key `(int(playcount), title)` to ensure byte-for-byte identical collages on tied scrobble counts.
 - **Phase 3 (v0.7.0 — Caching & Network Resilience)**:
-  - [ ] **Multi-Tier Caching Subsystem**: Tier-1 in-memory LRU cache (`maxsize=256`) + Tier-2 SQLite persistent disk cache (`~/.cache/lastfm-collage/`) with 30-day TTL for album covers and 7-day TTL for retrieved artist hero images.
-  - [ ] **Network Resilience Middleware**: Token-bucket rate limiter (5 req/sec), exponential backoff with full jitter for transient HTTP errors, and circuit breaker for web retrieval fallbacks.
+  - [x] **Multi-Tier Caching Subsystem**: Tier-1 in-memory LRU cache (`maxsize=256`) + Tier-2 SQLite persistent disk cache (`~/.cache/lastfm-collage/`) with 30-day TTL for album covers and 7-day TTL for retrieved artist hero images.
+  - [x] **Network Resilience Middleware**: Token-bucket rate limiter (5 req/sec), exponential backoff with full jitter for transient HTTP errors, and circuit breaker for web retrieval fallbacks.
 - **Phase 4 (v1.0.0 — Asynchronous Architecture)**:
   - [ ] **Native AsyncIO Pipeline**: Non-blocking concurrent asset acquisition via `httpx` (`async def generate_async()`) with async semaphore concurrency throttling.
 
@@ -617,8 +722,8 @@ Our development roadmap is organized across 4 strategic pillars and versioned mi
 - **Phase 2 (v0.6.0 — High-Density Grids)**:
   - [x] **Arbitrary $N \times M$ Matrix Grids**: Expand grid size beyond `5x5` (up to `20x20`, max 400 tiles) with dynamic resolution auto-scaling (300px $\to$ 150px $\to$ 100px), configurable explicit tile sizes, and proportional typography.
 - **Phase 3 (v0.7.0 — Social Presets & Backdrop Decorators)**:
-  - [ ] **Social Media Dimension Presets**: One-click generation for Instagram Story (`9:16` $1080\times1920$), Instagram Post (`1:1` $1080\times1080$), Twitter Header (`3:1` $1500\times500$), and Desktop Wallpaper (`16:9` $1920\times1080$ / 4K).
-  - [ ] **Acrylic Backdrop Blur**: Automatically fill non-square letterboxing with an acrylic Gaussian-blurred backdrop derived from the user's #1 top artwork.
+  - [x] **Social Media Dimension Presets**: One-click generation for Instagram Story (`9:16` $1080\times1920$), Instagram Post (`1:1` $1080\times1080$), Twitter Header (`3:1` $1500\times500$), and Desktop Wallpaper (`16:9` $1920\times1080$ / 4K).
+  - [x] **Acrylic Backdrop Blur**: Automatically fill non-square letterboxing with an acrylic Gaussian-blurred backdrop derived from the user's #1 top artwork.
 - **Phase 4 (v1.0.0 — Modern Formats & Asymmetric Grids)**:
   - [ ] **Modern Export Formats**: Direct export to WebP (lossy/lossless), SVG vector containers with crisp `<text>` nodes, and 300 DPI print-ready PDF posters.
   - [ ] **Asymmetrical Layout Strategies**: `Hero Grid` (#1 item in $2\times2$ block, surrounded by $1\times1$ and $0.5\times0.5$ tiles), `Bento Box` editorial grids, and `Honeycomb Hexagon` tessellations.
@@ -630,7 +735,7 @@ Our development roadmap is organized across 4 strategic pillars and versioned mi
 - **Phase 2 (v0.6.0 — Standalone CLI)**:
   - [ ] **Rich CLI Tool (`lastfm-collage`)**: Global console script with rich terminal UI, colorized progress bars, download speed metrics, and ASCII art terminal previews.
 - **Phase 3 (v0.8.0 — GitHub Actions Automation)**:
-  - [ ] **GitHub Profile README Action (`action.yml`)**: Automated scheduled workflow updating developer GitHub Profile READMEs with weekly listening recaps on cron.
+  - [x] **GitHub Profile README Action (`action.yml`)**: Automated scheduled workflow updating developer GitHub Profile READMEs with weekly listening recaps on cron.
 - **Phase 5 (v1.1.0 - v1.2.0 — Web Services & Chatbots)**:
   - [ ] **FastAPI Microservice Wrapper**: Containerized REST API with OpenAPI docs and binary image streaming endpoints (`GET /api/v1/collage`).
   - [ ] **Discord, Telegram & Slack Bot Connectors**: Slash commands (`/collage`), user account binding, and direct embed image attachments.

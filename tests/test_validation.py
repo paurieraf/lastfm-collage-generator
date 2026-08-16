@@ -237,3 +237,114 @@ def test_validation_invalid_theme_preset(generator):
             period="overall",
             theme="invalid_theme_preset",
         )
+
+
+def test_validation_invalid_fallback_style(generator):
+    with pytest.raises(ValueError, match="Invalid fallback_style"):
+        generator._validate_parameters(
+            entity="album",
+            username="valid_user",
+            cols=3,
+            rows=3,
+            period="overall",
+            fallback_style="rainbow",
+        )
+
+
+def test_validation_invalid_cache_ttl_override(generator):
+    with pytest.raises(ValueError, match="cache_ttl_override"):
+        generator._validate_parameters(
+            entity="album",
+            username="valid_user",
+            cols=3,
+            rows=3,
+            period="overall",
+            cache_ttl_override=0,
+        )
+    with pytest.raises(TypeError, match="cache_ttl_override"):
+        generator._validate_parameters(
+            entity="album",
+            username="valid_user",
+            cols=3,
+            rows=3,
+            period="overall",
+            cache_ttl_override="30",
+        )
+
+
+def test_validation_invalid_cache_dir_type(generator):
+    with pytest.raises(TypeError, match="cache_dir"):
+        generator._validate_parameters(
+            entity="album",
+            username="valid_user",
+            cols=3,
+            rows=3,
+            period="overall",
+            cache_dir=123,
+        )
+
+
+def test_validation_invalid_rate_limit(generator):
+    with pytest.raises(ValueError, match="rate_limit"):
+        generator._validate_parameters(
+            entity="album",
+            username="valid_user",
+            cols=3,
+            rows=3,
+            period="overall",
+            rate_limit=0,
+        )
+    with pytest.raises(TypeError, match="rate_limit"):
+        generator._validate_parameters(
+            entity="album",
+            username="valid_user",
+            cols=3,
+            rows=3,
+            period="overall",
+            rate_limit="fast",
+        )
+
+
+def test_validation_invalid_preset_type(generator):
+    with pytest.raises(TypeError, match="preset"):
+        generator._validate_parameters(
+            entity="album",
+            username="valid_user",
+            cols=3,
+            rows=3,
+            period="overall",
+            preset=123,
+        )
+
+
+def test_validation_invalid_border_color(generator):
+    with pytest.raises(TypeError):
+        generator._validate_parameters(
+            entity="album",
+            username="valid_user",
+            cols=3,
+            rows=3,
+            period="overall",
+            border_color=42,
+        )
+
+
+def test_validation_geometry_type_checks(generator):
+    with pytest.raises(TypeError, match="corner_radius"):
+        generator._validate_parameters(
+            entity="album",
+            username="valid_user",
+            cols=3,
+            rows=3,
+            period="overall",
+            corner_radius=1.5,
+        )
+    with pytest.raises(TypeError, match="spacing"):
+        generator._validate_parameters(
+            entity="album",
+            username="valid_user",
+            cols=3,
+            rows=3,
+            period="overall",
+            spacing="8",
+        )
