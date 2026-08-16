@@ -44,10 +44,10 @@ The `lastfm-collage-generator` library is structured according to a strict 4-lay
 
 ## Interface Contracts
 ### Facade Entrypoint
-- `CollageGenerator.generate(entity: str, username: str, cols: int, rows: int, period: str = "overall", tile_size: Optional[int] = None) -> PIL.Image.Image`
-- `CollageGenerator.generate_top_albums_collage(username: str, cols: int = 5, rows: int = 5, period: str = "overall", tile_size: Optional[int] = None) -> PIL.Image.Image`
-- `CollageGenerator.generate_top_artists_collage(username: str, cols: int = 5, rows: int = 5, period: str = "overall", tile_size: Optional[int] = None) -> PIL.Image.Image`
-- `CollageGenerator.generate_top_tracks_collage(username: str, cols: int = 5, rows: int = 5, period: str = "overall", tile_size: Optional[int] = None) -> PIL.Image.Image`
+- `CollageGenerator.generate(entity: str, username: str, cols: int, rows: int, period: str = "overall", tile_size: Optional[int] = None, theme: Union[str, Theme, Dict[str, Any]] = "dark", overlay_style: str = "banner", show_text: bool = True, font_path: Optional[str] = None) -> PIL.Image.Image`
+- `CollageGenerator.generate_top_albums_collage(username: str, cols: int = 5, rows: int = 5, period: str = "overall", tile_size: Optional[int] = None, theme: Union[str, Theme, Dict[str, Any]] = "dark", overlay_style: str = "banner", show_text: bool = True, font_path: Optional[str] = None) -> PIL.Image.Image`
+- `CollageGenerator.generate_top_artists_collage(...) -> PIL.Image.Image`
+- `CollageGenerator.generate_top_tracks_collage(...) -> PIL.Image.Image`
 - Return: Composited `PIL.Image.Image` in RGB mode with dimensions `(cols * tile_size, rows * tile_size)`.
 
 ### Builder Interface
@@ -72,11 +72,13 @@ lastfm-collage-generator/
 ├── AGENTS.md                              # Authoritative AI agent operational guide
 │
 ├── src/lastfmcollagegenerator/            # Source package root
-│   ├── __init__.py                        # Package init
+│   ├── __init__.py                        # Package init (exports CollageGenerator, Theme, THEME_PRESETS, resolve_theme)
 │   ├── collage_generator.py               # Facade entrypoint (CollageGenerator)
 │   ├── collage.py                         # Factory, BaseCollageBuilder, concrete builders, dataclasses
-│   ├── constants.py                       # ENTITIES and PERIODS tuples
+│   ├── constants.py                       # ENTITIES, PERIODS, THEMES, OVERLAY_STYLES constants
 │   ├── exceptions.py                      # LastfmCollageGeneratorError, ArtistNotFound, ArtistImageNotFound
+│   ├── theme.py                           # Theme dataclass, built-in presets (dark, light, glassmorphic, sunset, neon), parser
+│   ├── typography.py                      # Word-boundary text wrapping (textwrap) and auto-scaling font helper
 │   ├── fonts/                             # TrueType fonts bundled for rendering
 │   │   ├── DejaVuSansMono.ttf             # Regular monospace font
 │   │   └── DejaVuSansMono-Bold.ttf        # Bold monospace font
@@ -85,17 +87,20 @@ lastfm-collage-generator/
 │       └── client.py                      # LastfmClient wrapper over pylast
 │
 ├── scripts/                               # Development and debugging runner scripts
-│   └── debug_collage.py                   # Zero-build CLI runner with --mock and --live modes
+│   └── debug_collage.py                   # Zero-build CLI runner with --mock and --live modes, themes, overlay styles
 │
-├── tests/                                 # Automated test directory (44 offline unit tests, 100% coverage)
+├── tests/                                 # Automated test directory (89 offline unit tests, 99% coverage)
 │   ├── __init__.py
 │   ├── conftest.py                        # Synthetic image and pylast mock fixtures
 │   ├── test_builders.py                   # Builder dispatch, sorting, text wrapping tests
 │   ├── test_client.py                     # LastfmClient adapter tests
 │   ├── test_facade.py                     # CollageGenerator direct and convenience method tests
 │   ├── test_geometry.py                   # Multi-row overlay coordinate geometry tests
+│   ├── test_overlays.py                   # Overlay styles (banner, full_tint, gradient, pill, clean) and themes tests
 │   ├── test_resilience.py                 # Network error fallback, timeout, and exception hierarchy tests
-│   └── test_validation.py                 # Input parameter and boundary validation tests
+│   ├── test_theme.py                      # Theme presets, custom Theme parsing, and color parser tests
+│   ├── test_typography.py                 # Word-boundary wrapping, line limits, and dynamic downscaling tests
+│   └── test_validation.py                 # Input parameter, boundary, theme, overlay, font validation tests
 │
 ├── .gemini/                               # Antigravity operational rules & skills
 │   ├── rules/                             # Project-specific architectural rules

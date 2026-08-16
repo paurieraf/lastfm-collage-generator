@@ -179,3 +179,61 @@ def test_validation_invalid_period(generator):
             rows=3,
             period="yesterday",
         )
+
+
+def test_validation_invalid_overlay_style(generator):
+    with pytest.raises(ValueError, match="Invalid overlay_style: 'invalid_style'"):
+        generator._validate_parameters(
+            entity="album",
+            username="valid_user",
+            cols=3,
+            rows=3,
+            period="overall",
+            overlay_style="invalid_style",
+        )
+
+
+def test_validation_invalid_show_text_type(generator):
+    with pytest.raises(TypeError, match="show_text must be a boolean"):
+        generator._validate_parameters(
+            entity="album",
+            username="valid_user",
+            cols=3,
+            rows=3,
+            period="overall",
+            show_text="true",
+        )
+
+
+def test_validation_invalid_font_path(generator):
+    with pytest.raises(TypeError, match="font_path must be a string or None"):
+        generator._validate_parameters(
+            entity="album",
+            username="valid_user",
+            cols=3,
+            rows=3,
+            period="overall",
+            font_path=123,
+        )
+
+    with pytest.raises(FileNotFoundError, match="Custom font file not found"):
+        generator._validate_parameters(
+            entity="album",
+            username="valid_user",
+            cols=3,
+            rows=3,
+            period="overall",
+            font_path="/non/existent/path/font.ttf",
+        )
+
+
+def test_validation_invalid_theme_preset(generator):
+    with pytest.raises(ValueError, match="Unknown theme preset"):
+        generator._validate_parameters(
+            entity="album",
+            username="valid_user",
+            cols=3,
+            rows=3,
+            period="overall",
+            theme="invalid_theme_preset",
+        )

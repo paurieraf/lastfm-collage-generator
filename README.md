@@ -247,7 +247,11 @@ def generate(
     cols: int,
     rows: int,
     period: str = "overall",
-    tile_size: Optional[int] = None
+    tile_size: Optional[int] = None,
+    theme: Union[str, Theme, Dict[str, Any]] = "dark",
+    overlay_style: str = "banner",
+    show_text: bool = True,
+    font_path: Optional[str] = None
 ) -> PIL.Image.Image
 ```
 
@@ -263,13 +267,18 @@ Generates a composite image collage for the specified entity and time horizon.
 | **`rows`** | `int` | `1 <= rows <= 20` | *Required* | Number of vertical grid rows (max 400 total tiles). |
 | **`period`** | `str` | `"7day"`, `"1month"`, `"3month"`, `"6month"`, `"12month"`, `"overall"` | `"overall"` | Scrobble aggregation time window. |
 | **`tile_size`** | `Optional[int]` | `50 <= tile_size <= 600` | `None` *(Auto)* | Explicit tile dimension in px. If `None`, dynamically auto-scaled. |
+| **`theme`** | `Union[str, Theme, dict]` | `"dark"`, `"light"`, `"glassmorphic"`, `"sunset"`, `"neon"`, or custom `Theme` | `"dark"` | Visual color scheme for overlay banners and typography. |
+| **`overlay_style`** | `str` | `"banner"`, `"full_tint"`, `"gradient"`, `"pill"`, `"clean"` | `"banner"` | Overlay visual presentation layout mode. |
+| **`show_text`** | `bool` | `True`, `False` | `True` | Whether to render title and playcount overlays. |
+| **`font_path`** | `Optional[str]` | Filesystem path to `.ttf`/`.otf` | `None` | Custom font file path override. |
 
 **Returns**:
 - `PIL.Image.Image`: An allocated Pillow 24-bit RGB raster canvas with dimensions `(cols * tile_size, rows * tile_size)` pixels.
 
 **Exceptions Raised**:
-- `ValueError`: If `entity` is not in `ENTITIES`, `period` is not in `PERIODS`, `cols`/`rows` are outside `1..20`, total tiles exceed 400, or `tile_size` is outside `50..600`.
-- `TypeError`: If `cols`, `rows`, or `tile_size` are not integers.
+- `ValueError`: If `entity` is not in `ENTITIES`, `period` is not in `PERIODS`, `cols`/`rows` are outside `1..20`, total tiles exceed 400, `tile_size` is outside `50..600`, or `theme`/`overlay_style` are invalid.
+- `TypeError`: If `cols`, `rows`, or `tile_size` are not integers, or parameter types are invalid.
+- `FileNotFoundError`: If custom `font_path` does not exist on disk.
 - `pylast.WSError`: If Last.fm API authentication fails or the requested username does not exist.
 - `pylast.NetworkError`: If network connection to Last.fm API endpoints cannot be established.
 
@@ -587,10 +596,10 @@ Our development roadmap is organized across 4 strategic pillars and versioned mi
   - [x] Implement strict lower boundary validation (`1 <= cols <= 5`, `1 <= rows <= 5`).
   - [x] Author comprehensive 100% offline pytest suite (>90% coverage).
 - **Phase 2 (v0.6.0 — Visual Personalization)**:
-  - [ ] **Dynamic Theme Engine**: Pre-packaged themes (`Dark`, `Light`, `Glassmorphic` with localized Gaussian blur, `Gradient Overlays`, and custom user hex palettes).
-  - [ ] **Typography & Auto-Scaling Engine**: Word-boundary line breaking via `textwrap`, dynamic font downscaling for long titles, and custom `.ttf`/`.otf` font path support.
+  - [x] **Dynamic Theme Engine**: Pre-packaged themes (`Dark`, `Light`, `Glassmorphic`, `Sunset`, `Neon`, and custom user hex palettes/Theme objects).
+  - [x] **Typography & Auto-Scaling Engine**: Word-boundary line breaking via `textwrap`, dynamic font downscaling for long titles, and custom `.ttf`/`.otf` font path support.
   - [ ] **Tile Geometry & Rounded Corners**: Rounded squircle corner masking (`radius=12`), configurable border stroke widths and colors, and inter-tile spacing margins.
-  - [ ] **Versatile Overlay Styles**: `Banner` (lower third), `Full Tint` (centered text), `Gradient Fade`, `Minimalist Badge / Pill` (rank + playcount chip), and `Clean Mode` (`show_text=False` for pure artwork grids).
+  - [x] **Versatile Overlay Styles**: `Banner` (lower third), `Full Tint` (centered text), `Gradient Fade`, `Minimalist Badge / Pill` (rank + playcount chip), and `Clean Mode` (`show_text=False` for pure artwork grids).
 
 ### ⚡ Pillar 2: Performance, Caching & Retrieval Resilience
 

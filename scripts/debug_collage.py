@@ -13,7 +13,7 @@ import platform
 import subprocess
 import sys
 import time
-from typing import Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple, Union
 
 # Ensure src/ is on sys.path for instant, zero-build execution against local source
 PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
@@ -21,7 +21,15 @@ SRC_PATH = os.path.join(PROJECT_ROOT, "src")
 if SRC_PATH not in sys.path:
     sys.path.insert(0, SRC_PATH)
 
-from lastfmcollagegenerator.constants import ENTITIES, PERIODS  # noqa: E402
+from lastfmcollagegenerator.constants import (  # noqa: E402
+    ENTITIES,
+    PERIODS,
+    THEMES,
+    THEME_DARK,
+    OVERLAY_STYLES,
+    OVERLAY_BANNER,
+)
+from lastfmcollagegenerator.theme import Theme, resolve_theme  # noqa: E402
 
 
 def load_dotenv(env_path: Optional[str] = None) -> Dict[str, str]:
@@ -147,6 +155,10 @@ def run_mock_generation(
     period: str,
     show_playcount: bool = True,
     tile_size: Optional[int] = None,
+    theme: Union[str, Theme, Dict[str, Any]] = THEME_DARK,
+    overlay_style: str = OVERLAY_BANNER,
+    show_text: bool = True,
+    font_path: Optional[str] = None,
 ):
     """Renders a collage using local library builder code with synthetic tiles."""
     from unittest.mock import MagicMock
@@ -168,12 +180,18 @@ def run_mock_generation(
     else:
         resolved_tile_size = tile_size
 
+    resolved_theme = resolve_theme(theme)
+
     config = CollageBuilderConfig(
         cols=cols,
         rows=rows,
         period=period,
         show_playcount=show_playcount,
         tile_size=resolved_tile_size,
+        theme=resolved_theme,
+        overlay_style=overlay_style,
+        show_text=show_text,
+        font_path=font_path,
     )
     mock_client = MagicMock(spec=LastfmClient)
     builder = CollageBuilderFactory(
@@ -199,6 +217,10 @@ def run_live_generation(
     api_secret: str,
     show_playcount: bool = True,
     tile_size: Optional[int] = None,
+    theme: Union[str, Theme, Dict[str, Any]] = THEME_DARK,
+    overlay_style: str = OVERLAY_BANNER,
+    show_text: bool = True,
+    font_path: Optional[str] = None,
 ):
     """Renders a live collage by calling the CollageGenerator facade."""
     from lastfmcollagegenerator.collage_generator import CollageGenerator
@@ -214,6 +236,10 @@ def run_live_generation(
         rows=rows,
         period=period,
         tile_size=tile_size,
+        theme=theme,
+        overlay_style=overlay_style,
+        show_text=show_text,
+        font_path=font_path,
     )
 
 
@@ -341,9 +367,34 @@ def parse_arguments() -> argparse.Namespace:
         help="Automatically open the generated image in the system viewer",
     )
     parser.add_argument(
+        "--theme",
+        type=str,
+        default=THEME_DARK,
+        choices=list(THEMES),
+        help="Visual theme preset (dark, light, glassmorphic, sunset, neon)",
+    )
+    parser.add_argument(
+        "--overlay-style",
+        type=str,
+        default=OVERLAY_BANNER,
+        choices=list(OVERLAY_STYLES),
+        help="Overlay presentation mode (banner, full_tint, gradient, pill, clean)",
+    )
+    parser.add_argument(
+        "--no-text",
+        action="store_true",
+        help="Disable all text and overlay rendering (Clean Mode)",
+    )
+    parser.add_argument(
         "--no-title",
         action="store_true",
-        help="Disable title and playcount overlay banners",
+        help="Disable title and playcount overlay banners (alias for --no-text)",
+    )
+    parser.add_argument(
+        "--font-path",
+        type=str,
+        default=None,
+        help="Custom .ttf or .otf font file path",
     )
 
     # API credentials overrides
@@ -399,8 +450,13 @@ def main() -> int:
     if not output_path:
         out_dir = os.path.join(PROJECT_ROOT, "output")
         mode_prefix = "mock" if is_mock else "live"
-        filename = f"debug_{mode_prefix}_{args.entity}_{args.cols}x{args.rows}.png"
+        filename = (
+            f"debug_{mode_prefix}_{args.entity}_{args.cols}x{args.rows}_"
+            f"{args.theme}_{args.overlay_style}.png"
+        )
         output_path = os.path.join(out_dir, filename)
+
+    show_text = not (args.no_text or args.no_title)
 
     mode_label = (
         "OFFLINE MOCK (Synthetic Tiles)" if is_mock else "LIVE API (Last.fm & Retrieval)"
@@ -408,17 +464,19 @@ def main() -> int:
     print("=" * 65)
     print(" 🎵 Last.fm Collage Generator - Debug Runner")
     print("=" * 65)
-    print(f" • Mode        : {mode_label}")
-    print(f" • Username    : {args.username}")
-    print(f" • Entity      : {args.entity.upper()}")
+    print(f" • Mode          : {mode_label}")
+    print(f" • Username      : {args.username}")
+    print(f" • Entity        : {args.entity.upper()}")
     print(
-        f" • Grid Size   : {args.cols} cols x {args.rows} rows "
+        f" • Grid Size     : {args.cols} cols x {args.rows} rows "
         f"({args.cols * args.rows} total tiles)"
     )
-    print(f" • Period      : {args.period}")
-    print(f" • Tile Size   : {args.tile_size if args.tile_size else 'Auto Dynamic'}")
-    print(f" • Banner Info : {'Enabled' if not args.no_title else 'Disabled'}")
-    print(f" • Output Dest : {output_path}")
+    print(f" • Period        : {args.period}")
+    print(f" • Tile Size     : {args.tile_size if args.tile_size else 'Auto Dynamic'}")
+    print(f" • Theme         : {args.theme}")
+    print(f" • Overlay Style : {args.overlay_style}")
+    print(f" • Show Text     : {'Yes' if show_text else 'No'}")
+    print(f" • Output Dest   : {output_path}")
     print("-" * 65)
 
     start_time = time.perf_counter()
@@ -432,8 +490,12 @@ def main() -> int:
                 cols=args.cols,
                 rows=args.rows,
                 period=args.period,
-                show_playcount=not args.no_title,
+                show_playcount=True,
                 tile_size=args.tile_size,
+                theme=args.theme,
+                overlay_style=args.overlay_style,
+                show_text=show_text,
+                font_path=args.font_path,
             )
         else:
             if not args.api_key or not args.api_secret:
@@ -457,8 +519,12 @@ def main() -> int:
                 period=args.period,
                 api_key=args.api_key,
                 api_secret=args.api_secret,
-                show_playcount=not args.no_title,
+                show_playcount=True,
                 tile_size=args.tile_size,
+                theme=args.theme,
+                overlay_style=args.overlay_style,
+                show_text=show_text,
+                font_path=args.font_path,
             )
 
         elapsed = time.perf_counter() - start_time

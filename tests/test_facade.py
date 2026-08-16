@@ -113,10 +113,36 @@ def test_generate_with_custom_tile_size_and_high_density(
     assert call_kwargs_custom["config"].tile_size == 250
 
 
+@patch("lastfmcollagegenerator.collage_generator.CollageBuilderFactory")
+@patch("lastfmcollagegenerator.collage_generator.LastfmClient")
+def test_generate_with_themes_and_overlay_styles(
+    mock_client_cls, mock_factory_cls, mock_builder
+):
+    mock_factory_cls.return_value = mock_builder
+    generator = CollageGenerator("mock_key", "mock_secret")
+
+    generator.generate_top_albums_collage(
+        username="testuser",
+        cols=3,
+        rows=3,
+        period="7day",
+        theme="light",
+        overlay_style="full_tint",
+        show_text=False,
+    )
+    call_kwargs = mock_factory_cls.call_args.kwargs
+    assert call_kwargs["config"].theme.name == "light"
+    assert call_kwargs["config"].overlay_style == "full_tint"
+    assert call_kwargs["config"].show_text is False
+
+
 def test_package_exports_and_version():
     import lastfmcollagegenerator
 
     assert hasattr(lastfmcollagegenerator, "CollageGenerator")
+    assert hasattr(lastfmcollagegenerator, "Theme")
+    assert hasattr(lastfmcollagegenerator, "THEME_PRESETS")
+    assert hasattr(lastfmcollagegenerator, "resolve_theme")
     assert hasattr(lastfmcollagegenerator, "__version__")
-    assert lastfmcollagegenerator.__version__ == "0.6.0"
+    assert lastfmcollagegenerator.__version__ == "0.7.0"
 

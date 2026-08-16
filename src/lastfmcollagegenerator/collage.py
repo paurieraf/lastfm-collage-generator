@@ -3,30 +3,39 @@ import os
 import urllib.parse
 from dataclasses import dataclass
 from io import BytesIO
-from typing import Any, List, Optional, Tuple, Union
+from typing import Any, List, Optional, Tuple, Union, cast
 
 import bs4
 import requests
 from pylast import User, TopItem, Album, Artist, Track
-from PIL import Image, ImageDraw, ImageFont, ImageFile
+from PIL import Image, ImageDraw, ImageFile
+
 
 import lastfmcollagegenerator
 from lastfmcollagegenerator.constants import (
     ENTITY_ARTIST,
     ENTITY_ALBUM,
     ENTITY_TRACK,
+    OVERLAY_BANNER,
+    OVERLAY_FULL_TINT,
+    OVERLAY_GRADIENT,
+    OVERLAY_PILL,
+    OVERLAY_CLEAN,
+    THEME_DARK,
 )
 from lastfmcollagegenerator.exceptions import (
     ArtistNotFound,
     ArtistImageNotFound,
 )
 from lastfmcollagegenerator.lastfm.client import LastfmClient
+from lastfmcollagegenerator.theme import Theme, THEME_PRESETS, resolve_theme
+from lastfmcollagegenerator.typography import get_auto_scaled_font
 
 ImageFile.LOAD_TRUNCATED_IMAGES = True
 
 DEFAULT_HEADERS = {
     "User-Agent": (
-        "lastfm-collage-generator/0.6.0 "
+        "lastfm-collage-generator/0.7.0 "
         "(+https://github.com/paurieraf/lastfm-collage-generator)"
     )
 }
@@ -46,6 +55,10 @@ class CollageBuilderConfig:
     period: str
     show_playcount: bool = True
     tile_size: int = 300
+    theme: Optional[Theme] = None
+    overlay_style: str = OVERLAY_BANNER
+    show_text: bool = True
+    font_path: Optional[str] = None
 
 
 @dataclass
@@ -75,6 +88,11 @@ class BaseCollageBuilder:
         self._path = os.path.dirname(lastfmcollagegenerator.collage.__file__)
         self.tile_width = getattr(self.config, "tile_size", self.TILE_WIDTH)
         self.tile_height = getattr(self.config, "tile_size", self.TILE_HEIGHT)
+        raw_theme = getattr(self.config, "theme", None)
+        if raw_theme is not None:
+            self.theme = resolve_theme(raw_theme)
+        else:
+            self.theme = THEME_PRESETS[THEME_DARK]
 
     def create(self, username: str) -> Image.Image:
         user = self.lastfm_client.get_user(username)
@@ -98,6 +116,9 @@ class BaseCollageBuilder:
         new_image = Image.new("RGB", (collage_width, collage_height))
         cursor = (0, 0)
         resample_filter = Image.Resampling.LANCZOS
+        show_text = getattr(self.config, "show_text", True)
+        overlay_style = getattr(self.config, "overlay_style", OVERLAY_BANNER)
+
         for tile in tiles:
             with Image.open(BytesIO(tile.data)) as tile_img:
                 if tile_img.size != (width, height):
@@ -106,10 +127,12 @@ class BaseCollageBuilder:
                     resized.close()
                 else:
                     new_image.paste(tile_img, cursor)
-            title = f"{tile.title}"
-            if self.config.show_playcount:
-                title += f". ({tile.playcount})"
-            self._insert_tile_title(image=new_image, title=title, cursor=cursor)
+
+            if show_text and overlay_style != OVERLAY_CLEAN:
+                title = f"{tile.title}"
+                if self.config.show_playcount:
+                    title += f". ({tile.playcount})"
+                self._render_overlay(image=new_image, title=title, cursor=cursor)
 
             # move cursor to next tile
             y = cursor[1]
@@ -120,30 +143,203 @@ class BaseCollageBuilder:
             cursor = (x, y)
         return new_image
 
-    def _insert_tile_title(
+    def _get_font_file(self) -> str:
+        if getattr(self.config, "font_path", None):
+            return cast(str, self.config.font_path)
+        if self.theme.font_path:
+            return self.theme.font_path
+        font_path = self.FONT_BOLD_PATH if self.FONT_BOLD else self.FONT_REGULAR_PATH
+        return os.path.join(self._path, font_path)
+
+    def _render_overlay(
         self, image: Image.Image, title: str, cursor: Tuple[int, int]
-    ):
+    ) -> None:
+        style = getattr(self.config, "overlay_style", OVERLAY_BANNER)
+        if style == OVERLAY_FULL_TINT:
+            self._render_full_tint_overlay(image, title, cursor)
+        elif style == OVERLAY_GRADIENT:
+            self._render_gradient_overlay(image, title, cursor)
+        elif style == OVERLAY_PILL:
+            self._render_pill_overlay(image, title, cursor)
+        elif style == OVERLAY_CLEAN:
+            pass
+        else:
+            self._render_banner_overlay(image, title, cursor)
+
+    def _render_banner_overlay(
+        self, image: Image.Image, title: str, cursor: Tuple[int, int]
+    ) -> None:
         scale = self.tile_width / 300.0
         banner_height = max(16, int(round(65 * scale)))
-        font_size = max(8, int(round(self.FONT_SIZE * scale)))
+        base_font_size = max(8, int(round(self.FONT_SIZE * scale)))
 
         draw = ImageDraw.Draw(image, "RGBA")
         x = cursor[0]
         y = cursor[1]
         y_0 = y + (self.tile_height - banner_height)
         y_1 = y + self.tile_height
-        draw.rectangle(((x, y_0), (x + self.tile_width, y_1)), (0, 0, 0, 123))
 
-        font_path = self.FONT_BOLD_PATH if self.FONT_BOLD else self.FONT_REGULAR_PATH
-        font = ImageFont.truetype(f"{self._path}/{font_path}", font_size)
+        draw.rectangle(((x, y_0), (x + self.tile_width, y_1)), self.theme.overlay_bg)
 
+        if self.theme.accent_color:
+            draw.line(
+                [(x, y_0), (x + self.tile_width, y_0)],
+                fill=self.theme.accent_color,
+                width=max(1, int(round(1 * scale))),
+            )
+
+        font_file = self._get_font_file()
         wrap_width = max(40, int(round(275 * scale)))
-        title = self._insert_newline_characters_to_text(
-            font, title, max_width=wrap_width
+        font, wrapped_title = get_auto_scaled_font(
+            font_file,
+            base_font_size,
+            title,
+            max_width=wrap_width,
+            max_height=banner_height - max(4, int(round(8 * scale))),
         )
+
         text_x = x + max(2, int(round(8 * scale)))
         text_y = y_0 + max(2, int(round(5 * scale)))
-        draw.text((text_x, text_y), title, fill=(255, 255, 255), font=font)
+        draw.text(
+            (text_x, text_y), wrapped_title, fill=self.theme.text_color, font=font
+        )
+
+    def _render_full_tint_overlay(
+        self, image: Image.Image, title: str, cursor: Tuple[int, int]
+    ) -> None:
+        scale = self.tile_width / 300.0
+        draw = ImageDraw.Draw(image, "RGBA")
+        x = cursor[0]
+        y = cursor[1]
+
+        draw.rectangle(
+            ((x, y), (x + self.tile_width, y + self.tile_height)), self.theme.overlay_bg
+        )
+
+        if self.theme.accent_color:
+            draw.rectangle(
+                ((x, y), (x + self.tile_width - 1, y + self.tile_height - 1)),
+                outline=self.theme.accent_color,
+                width=max(1, int(round(1 * scale))),
+            )
+
+        font_file = self._get_font_file()
+        wrap_width = max(40, int(round((self.tile_width - 24) * scale)))
+        base_font_size = max(9, int(round(16 * scale)))
+        font, wrapped_title = get_auto_scaled_font(
+            font_file,
+            base_font_size,
+            title,
+            max_width=wrap_width,
+            max_height=self.tile_height - max(10, int(round(20 * scale))),
+        )
+
+        text_x = x + max(4, int(round(12 * scale)))
+        text_y = y + max(4, int(round(12 * scale)))
+        draw.text(
+            (text_x, text_y), wrapped_title, fill=self.theme.text_color, font=font
+        )
+
+    def _render_gradient_overlay(
+        self, image: Image.Image, title: str, cursor: Tuple[int, int]
+    ) -> None:
+        scale = self.tile_width / 300.0
+        grad_img = Image.new("RGBA", (self.tile_width, self.tile_height), (0, 0, 0, 0))
+        r, g, b, max_a = self.theme.overlay_bg
+
+        grad_draw = ImageDraw.Draw(grad_img, "RGBA")
+        for i in range(self.tile_height):
+            ratio = (i / float(self.tile_height)) ** 1.8
+            alpha = int(max_a * ratio)
+            grad_draw.line([(0, i), (self.tile_width, i)], fill=(r, g, b, alpha))
+
+        font_file = self._get_font_file()
+        wrap_width = max(40, int(round(275 * scale)))
+        base_font_size = max(8, int(round(self.FONT_SIZE * scale)))
+        banner_height = max(24, int(round(90 * scale)))
+        font, wrapped_title = get_auto_scaled_font(
+            font_file,
+            base_font_size,
+            title,
+            max_width=wrap_width,
+            max_height=banner_height,
+        )
+
+        text_x = max(2, int(round(8 * scale)))
+        text_y = self.tile_height - banner_height + max(2, int(round(10 * scale)))
+        grad_draw.text(
+            (text_x, text_y), wrapped_title, fill=self.theme.text_color, font=font
+        )
+
+        tile_box = (
+            cursor[0],
+            cursor[1],
+            cursor[0] + self.tile_width,
+            cursor[1] + self.tile_height,
+        )
+        base_crop = image.crop(tile_box).convert("RGBA")
+        blended = Image.alpha_composite(base_crop, grad_img).convert("RGB")
+        image.paste(blended, (cursor[0], cursor[1]))
+        base_crop.close()
+        blended.close()
+        grad_img.close()
+
+    def _render_pill_overlay(
+        self, image: Image.Image, title: str, cursor: Tuple[int, int]
+    ) -> None:
+        scale = self.tile_width / 300.0
+        draw = ImageDraw.Draw(image, "RGBA")
+        x = cursor[0]
+        y = cursor[1]
+
+        font_file = self._get_font_file()
+        wrap_width = max(40, int(round((self.tile_width - 32) * scale)))
+        base_font_size = max(8, int(round(13 * scale)))
+        max_h = max(20, int(round(60 * scale)))
+        font, wrapped_title = get_auto_scaled_font(
+            font_file,
+            base_font_size,
+            title,
+            max_width=wrap_width,
+            max_height=max_h,
+        )
+
+        lines = [line for line in wrapped_title.split("\n") if line]
+        line_heights = [font.size for _ in lines]
+        text_w = max(font.getlength(line) for line in lines) if lines else 0
+        text_h = sum(line_heights) + max(0, (len(lines) - 1) * 2)
+
+        pad_x = max(4, int(round(8 * scale)))
+        pad_y = max(3, int(round(5 * scale)))
+        pill_w = min(self.tile_width - 12, int(round(text_w + 2 * pad_x)))
+        pill_h = int(round(text_h + 2 * pad_y))
+
+        pill_x0 = x + (self.tile_width - pill_w) // 2
+        pill_y0 = y + self.tile_height - pill_h - max(4, int(round(8 * scale)))
+        pill_x1 = pill_x0 + pill_w
+        pill_y1 = pill_y0 + pill_h
+
+        radius = max(3, int(round(6 * scale)))
+        draw.rounded_rectangle(
+            ((pill_x0, pill_y0), (pill_x1, pill_y1)),
+            radius=radius,
+            fill=self.theme.overlay_bg,
+            outline=self.theme.accent_color,
+            width=max(1, int(round(1 * scale))),
+        )
+
+        draw.text(
+            (pill_x0 + pad_x, pill_y0 + pad_y),
+            wrapped_title,
+            fill=self.theme.text_color,
+            font=font,
+        )
+
+    def _insert_tile_title(
+        self, image: Image.Image, title: str, cursor: Tuple[int, int]
+    ) -> None:
+        """Backward-compatible helper for banner overlay rendering."""
+        self._render_banner_overlay(image=image, title=title, cursor=cursor)
 
     @staticmethod
     def _insert_newline_characters_to_text(

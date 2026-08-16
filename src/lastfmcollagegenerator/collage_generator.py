@@ -1,4 +1,5 @@
-from typing import Optional, cast
+import os
+from typing import Any, Dict, Optional, Union, cast
 from PIL import Image
 
 from lastfmcollagegenerator.collage import (
@@ -13,8 +14,12 @@ from lastfmcollagegenerator.constants import (
     ENTITY_ALBUM,
     ENTITY_ARTIST,
     ENTITY_TRACK,
+    OVERLAY_BANNER,
+    OVERLAY_STYLES,
+    THEME_DARK,
 )
 from lastfmcollagegenerator.lastfm.client import LastfmClient
+from lastfmcollagegenerator.theme import Theme, resolve_theme
 
 
 class CollageGenerator:
@@ -43,6 +48,10 @@ class CollageGenerator:
         rows: int,
         period: str = "overall",
         tile_size: Optional[int] = None,
+        theme: Union[str, Theme, Dict[str, Any]] = THEME_DARK,
+        overlay_style: str = OVERLAY_BANNER,
+        show_text: bool = True,
+        font_path: Optional[str] = None,
     ) -> Image.Image:
         """Generate a composite collage image from a Last.fm user's top items.
 
@@ -55,6 +64,15 @@ class CollageGenerator:
                     "6month", "12month", "overall".
             tile_size: Optional explicit tile width and height in pixels (50–600).
                        If None, automatically computed based on grid density.
+            theme: Theme preset string ("dark", "light", "glassmorphic",
+                   "sunset", "neon"), Theme instance, or dictionary configuration.
+                   Default is "dark".
+            overlay_style: Overlay rendering mode ("banner", "full_tint",
+                           "gradient", "pill", "clean"). Default is "banner".
+            show_text: If False, disables all text and overlay backgrounds.
+                       Default True.
+            font_path: Optional path to a custom TrueType (.ttf) or OpenType
+                       (.otf) font file.
 
         Returns:
             PIL.Image.Image: RGB composite canvas with dimensions
@@ -62,15 +80,20 @@ class CollageGenerator:
 
         Raises:
             ValueError: If any parameter is invalid or out of bounds.
-            TypeError: If cols, rows, or tile_size are not integers.
+            TypeError: If types of parameters are invalid.
+            FileNotFoundError: If font_path does not exist on disk.
         """
-        self._validate_parameters(
+        resolved_theme = self._validate_parameters(
             entity=entity,
             username=username,
             cols=cols,
             rows=rows,
             period=period,
             tile_size=tile_size,
+            theme=theme,
+            overlay_style=overlay_style,
+            show_text=show_text,
+            font_path=font_path,
         )
         resolved_tile_size = self._resolve_tile_size(cols, rows, tile_size)
         collage_builder = self._get_collage_builder(
@@ -79,6 +102,10 @@ class CollageGenerator:
             rows=rows,
             period=period,
             tile_size=resolved_tile_size,
+            theme=resolved_theme,
+            overlay_style=overlay_style,
+            show_text=show_text,
+            font_path=font_path,
         )
         return collage_builder.create(username)
 
@@ -89,6 +116,10 @@ class CollageGenerator:
         rows: int = 5,
         period: str = "overall",
         tile_size: Optional[int] = None,
+        theme: Union[str, Theme, Dict[str, Any]] = THEME_DARK,
+        overlay_style: str = OVERLAY_BANNER,
+        show_text: bool = True,
+        font_path: Optional[str] = None,
     ) -> Image.Image:
         """Convenience method to generate an album collage."""
         return self.generate(
@@ -98,6 +129,10 @@ class CollageGenerator:
             rows=rows,
             period=period,
             tile_size=tile_size,
+            theme=theme,
+            overlay_style=overlay_style,
+            show_text=show_text,
+            font_path=font_path,
         )
 
     def generate_top_artists_collage(
@@ -107,6 +142,10 @@ class CollageGenerator:
         rows: int = 5,
         period: str = "overall",
         tile_size: Optional[int] = None,
+        theme: Union[str, Theme, Dict[str, Any]] = THEME_DARK,
+        overlay_style: str = OVERLAY_BANNER,
+        show_text: bool = True,
+        font_path: Optional[str] = None,
     ) -> Image.Image:
         """Convenience method to generate an artist collage."""
         return self.generate(
@@ -116,6 +155,10 @@ class CollageGenerator:
             rows=rows,
             period=period,
             tile_size=tile_size,
+            theme=theme,
+            overlay_style=overlay_style,
+            show_text=show_text,
+            font_path=font_path,
         )
 
     def generate_top_tracks_collage(
@@ -125,6 +168,10 @@ class CollageGenerator:
         rows: int = 5,
         period: str = "overall",
         tile_size: Optional[int] = None,
+        theme: Union[str, Theme, Dict[str, Any]] = THEME_DARK,
+        overlay_style: str = OVERLAY_BANNER,
+        show_text: bool = True,
+        font_path: Optional[str] = None,
     ) -> Image.Image:
         """Convenience method to generate a track collage."""
         return self.generate(
@@ -134,6 +181,10 @@ class CollageGenerator:
             rows=rows,
             period=period,
             tile_size=tile_size,
+            theme=theme,
+            overlay_style=overlay_style,
+            show_text=show_text,
+            font_path=font_path,
         )
 
     def _resolve_tile_size(
@@ -156,12 +207,20 @@ class CollageGenerator:
         rows: int,
         period: str,
         tile_size: int = 300,
+        theme: Optional[Theme] = None,
+        overlay_style: str = OVERLAY_BANNER,
+        show_text: bool = True,
+        font_path: Optional[str] = None,
     ) -> BaseCollageBuilder:
         collage_builder_config = CollageBuilderConfig(
             cols=cols,
             rows=rows,
             period=period,
             tile_size=tile_size,
+            theme=theme,
+            overlay_style=overlay_style,
+            show_text=show_text,
+            font_path=font_path,
         )
         lastfm_client = LastfmClient(
             api_key=self.lastfm_config.lastfm_api_key,
@@ -184,7 +243,11 @@ class CollageGenerator:
         rows: int,
         period: str,
         tile_size: Optional[int] = None,
-    ) -> None:
+        theme: Union[str, Theme, Dict[str, Any]] = THEME_DARK,
+        overlay_style: str = OVERLAY_BANNER,
+        show_text: bool = True,
+        font_path: Optional[str] = None,
+    ) -> Theme:
         if not isinstance(username, str) or not username.strip():
             raise ValueError("A valid non-empty username string is required.")
 
@@ -218,3 +281,21 @@ class CollageGenerator:
 
         if period not in PERIODS:
             raise ValueError(f"Invalid period: {period}. Options are: {PERIODS}")
+
+        if not isinstance(overlay_style, str) or overlay_style not in OVERLAY_STYLES:
+            raise ValueError(
+                f"Invalid overlay_style: '{overlay_style}'. "
+                f"Options are: {OVERLAY_STYLES}"
+            )
+
+        if type(show_text) is not bool:
+            raise TypeError("show_text must be a boolean.")
+
+        if font_path is not None:
+            if not isinstance(font_path, str):
+                raise TypeError("font_path must be a string or None.")
+            if not os.path.isfile(font_path):
+                raise FileNotFoundError(f"Custom font file not found: {font_path}")
+
+        resolved_theme = resolve_theme(theme)
+        return resolved_theme
