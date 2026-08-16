@@ -70,7 +70,10 @@ dmypy.json
 
 # IDEs & Editors
 .idea/
-.vscode/
+.vscode/*
+!.vscode/launch.json
+!.vscode/settings.json
+!.vscode/tasks.json
 *.swp
 *.swo
 *~
@@ -78,6 +81,7 @@ dmypy.json
 *.sublime-workspace
 
 # Generated Output & Media Artifacts (CLI / Test Output Images)
+output/
 *.png
 *.jpg
 *.jpeg
