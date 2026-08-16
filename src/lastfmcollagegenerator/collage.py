@@ -61,6 +61,7 @@ class BaseCollageBuilder:
             config: CollageBuilderConfig,
             lastfm_client: LastfmClient,
     ):
+        ImageFile.LOAD_TRUNCATED_IMAGES = True
         self.config = config
         self.lastfm_client = lastfm_client
         self._path = os.path.dirname(
