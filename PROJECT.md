@@ -1,86 +1,88 @@
-# Project: lastfm-collage-generator Architecture Analysis & Antigravity Tooling
+# Project: lastfm-collage-generator Architecture, Roadmap & Documentation
 
 ## Architecture
-- **Language & Runtime**: Python (^3.8)
-- **Packaging & Dependency Management**: Poetry (`pyproject.toml` with `poetry-core`)
-- **Core Dependencies**:
-  - `pylast` (==5.3.0): Last.fm API client wrapper
-  - `requests` (==2.32.3): HTTP requests for image downloads and retrieval
-  - `Pillow` (==10.4.0): Image processing, grid layout, typography/font rendering
-  - `beautifulsoup4` (==4.12.3) & `html5lib` (1.1): HTML retrieval of artist images from Last.fm web pages
-- **Design Pattern**:
-  - **Facade Pattern**: `CollageGenerator` (`src/lastfmcollagegenerator/collage_generator.py`) serves as the single public entrypoint.
-  - **Factory Pattern**: `CollageBuilderFactory` (`src/lastfmcollagegenerator/collage.py`) instantiates concrete builders based on entity string.
-  - **Builder Pattern**: Abstract `BaseCollageBuilder` (`src/lastfmcollagegenerator/collage.py`) with concrete builders `ArtistCollageBuilder`, `AlbumCollageBuilder`, `TrackCollageBuilder`.
-  - **Concurrent Image Acquisition**: `ThreadPoolExecutor` fetches tile artwork asynchronously in parallel before composite assembly.
+The `lastfm-collage-generator` library is structured according to a strict 4-layer object-oriented design pattern:
+1. **Facade Layer (`CollageGenerator`)**:
+   - Primary public interface encapsulating `LastfmConfig` and parameter validation.
+   - Enforces grid boundaries (`1 <= cols <= 5`, `1 <= rows <= 5`), entity options (`album`, `artist`, `track`), and periods.
+   - Dispatches to `CollageBuilderFactory`.
+2. **Factory Layer (`CollageBuilderFactory`)**:
+   - Resolves concrete builder classes by entity key (`album` -> `AlbumCollageBuilder`, `artist` -> `ArtistCollageBuilder`, `track` -> `TrackCollageBuilder`).
+3. **Builder Layer (`BaseCollageBuilder` & Subclasses)**:
+   - Implements Template Method `create(username)` managing `ThreadPoolExecutor` parallel asset fetching, Pillow RGB canvas creation, and translucent monospace banner overlay rendering (`DejaVuSansMono.ttf`).
+   - `AlbumCollageBuilder`: Queries top albums via pylast and downloads cover art.
+   - `ArtistCollageBuilder`: Queries top artists and fetches hero images from `last.fm/music/<artist>` via BeautifulSoup + html5lib.
+   - `TrackCollageBuilder`: Queries top tracks and extracts associated album artwork with blank tile fallbacks.
+4. **Client Adapter Layer (`LastfmClient`)**:
+   - Isolates `pylast.LastFMNetwork` API queries.
 
 ## Feature Inventory
 | # | Feature | Description | Milestone | Source |
 |---|---------|-------------|-----------|--------|
-| 1 | Album Collage Generation | Fetch top albums via pylast and composite grid with album art | M1 / M2 | survey |
-| 2 | Artist Collage Generation | Fetch top artists via pylast, fetch artist image from Last.fm HTML, composite grid | M1 / M2 | survey |
-| 3 | Track Collage Generation | Fetch top tracks via pylast, extract track album art or fallback, composite grid | M1 / M2 | survey |
-| 4 | Tile Title Overlay Rendering | Optional banner overlay on bottom of each tile showing entity rank/name | M1 / M2 | survey |
-| 5 | Custom Grid Dimensions | Configurable `cols` and `rows` for dynamic collage aspect ratios up to 5x5 | M1 / M2 | survey |
-| 6 | Time Period Selection | Support for Last.fm periods (`overall`, `7day`, `1month`, `3month`, `6month`, `12month`) | M1 / M2 | survey |
-| 7 | General Project Overview Artifact | Full documentation artifact covering architecture, data flow, defects, limitations | M1 | user request |
-| 8 | Antigravity Project Rules | Rules in `.gemini/rules/` for Python standards, architecture, testing, and retrieval | M2 | user request |
-| 9 | Antigravity Custom Skills | Skills in `.gemini/skills/` for test running, mocking fixtures, and CLI workflows | M2 | user request |
-| 10 | AGENTS.md Cross-Reference & Synthesis | Author authoritative `AGENTS.md` guiding future AI operations and reconciling drift | M3 | user request |
-| 11 | Independent Review & Forensic Audit | Multi-agent review (Reviewers + Challengers + Forensic Auditor) for rule validation, skill schemas, and integrity | M4 | user request |
+| 1 | 4-Layer Architecture Analysis | Comprehensive analysis of Facade, Factory, Builder, and Client Adapter layers | M1 | Survey |
+| 2 | Pillow Pipeline & Banner Math Analysis | Analysis of canvas allocation, coordinate math, and multi-row overlay geometry | M1 | Survey |
+| 3 | Concurrency & Sorting Analysis | Analysis of ThreadPoolExecutor, as_completed, and deterministic sorting | M1 | Survey |
+| 4 | Retrieval Resilience Analysis | Analysis of bs4/html5lib artist retrieval, User-Agent, timeouts, and fallbacks | M1 | Survey |
+| 5 | Multi-Phase Roadmap: Visual Styling & Themes | Dynamic themes (Dark/Light/Glass), typography, tile geometry, overlay styles | M1 | Survey |
+| 6 | Multi-Phase Roadmap: Performance & Caching | Multi-tier LRU/SQLite cache, async pipeline (httpx), rate limiting, fallbacks | M1 | Survey |
+| 7 | Multi-Phase Roadmap: Advanced Layouts | Hero grids, bento layouts, honeycomb, arbitrary NxM, WebP/SVG/PDF exports | M1 | Survey |
+| 8 | Multi-Phase Roadmap: CLI & Ecosystem | Standalone CLI (`lastfm-collage`), FastAPI microservice, chat bots, actions | M1 | Survey |
+| 9 | Production-Grade README Documentation | Exhaustive 14-section README with hero header, architecture, API, and workflows | M2 | Survey |
+| 10 | Complete Python API Reference in README | Accurate constructor, generate(), convenience methods, and PIL Image guide | M2 | Survey |
+| 11 | Developer & Debugging Workflows in README | Documentation for `scripts/debug_collage.py`, mock/live modes, and VS Code | M2 | Survey |
+| 12 | Test Suite Verification & Quality Gate | Reviewers, Challengers, and Forensic Auditor verification and test suite run | M3 | Survey |
 
 ## Milestones
-| # | Name | Scope | Dependencies | Status | Key Outputs |
-|---|------|-------|-------------|--------|-------------|
-| 1 | General Project Overview Artifact | Author comprehensive `PROJECT_OVERVIEW.md` detailing architecture, data models, rendering pipeline, defects, and recommendations | Survey | DONE | `PROJECT_OVERVIEW.md` (654 lines) |
-| 2 | Antigravity Rules & Custom Skills | Generate `.gemini/rules/*.md` and `.gemini/skills/*/SKILL.md` (plus scripts/references) following `agy-customizations` | M1 | DONE | 4 rules in `.gemini/rules/`, 3 skills in `.gemini/skills/` |
-| 3 | AGENTS.md Reconciliation & Synthesis | Cross-reference repository findings with `AGENTS.md`, establish guidance for AI agents | M2 | DONE | `AGENTS.md` (authoritative multi-agent guide) |
-| 4 | Independent Verification & Audit | Multi-agent review (Reviewers + Challengers + Forensic Auditor) for rule validation, skill schemas, and integrity | M3 | DONE | `GATE_STATUS.md` PASS, 4 APPROVE verdicts, 1 CLEAN audit |
+| # | Name | Scope | Dependencies | Status |
+|---|------|-------|-------------|--------|
+| M1 | Architectural & Roadmap Synthesis | Synthesize codebase analysis and 4-pillar multi-phase roadmap | none | DONE |
+| M2 | Production README Implementation | Worker updates `README.md` to production standard with all 14 sections | M1 | PLANNED |
+| M3 | Quality Gate, Review & Forensic Audit | 2 Reviewers, 2 Challengers, and 1 Forensic Auditor verify docs, API, and tests | M2 | PLANNED |
 
 ## Interface Contracts
-### Facade Entrypoint
-- `CollageGenerator.generate(cols: int, rows: int, user: str, period: str = "overall", entity: str = "album", title: bool = False) -> PIL.Image.Image`
-- Return: Composited `PIL.Image.Image` in RGB mode with dimensions `(cols * 300, rows * 300)`.
+### Facade Layer ↔ Factory Layer
+- `CollageGenerator._get_collage_builder(entity: str, cols: int, rows: int, period: str) -> BaseCollageBuilder`
+- Passes `CollageBuilderConfig(cols, rows, period, show_playcount)` and `LastfmClient(api_key, api_secret)` to `CollageBuilderFactory`.
 
-### Builder Interface
-- `BaseCollageBuilder.create(user: str) -> PIL.Image.Image`
-- `BaseCollageBuilder._get_tiles_from_top_items(user: str) -> List[CollageTile]`
+### Factory Layer ↔ Concrete Builders
+- `CollageBuilderFactory(entity: str, config: CollageBuilderConfig, lastfm_client: LastfmClient) -> BaseCollageBuilder`
+- Returns instance of `AlbumCollageBuilder`, `ArtistCollageBuilder`, or `TrackCollageBuilder`.
 
-### Antigravity Tooling Contract
-- Rules: `.gemini/rules/<name>.md` with clear scope and prescriptive constraints.
-- Skills: `.gemini/skills/<skill-name>/SKILL.md` with valid YAML frontmatter (`name`, `description`), optional `scripts/` and `references/`.
+### Builder Layer ↔ Client Adapter
+- `BaseCollageBuilder.lastfm_client.get_user(username: str) -> pylast.User`
+- `AlbumCollageBuilder`: `lastfm_client.get_top_albums(user, limit, period) -> List[pylast.TopItem]`
+- `ArtistCollageBuilder`: `lastfm_client.get_top_artists(user, limit, period) -> List[pylast.TopItem]`
+- `TrackCollageBuilder`: `lastfm_client.get_top_tracks(user, limit, period) -> List[pylast.TopItem]`
 
 ## Code Layout
 ```
 lastfm-collage-generator/
-├── pyproject.toml                         # Poetry configuration & pinned dependencies
-├── README.md                              # Public documentation & usage examples
+├── pyproject.toml                         # Project configuration & PEP 621 metadata (hatchling backend)
+├── README.md                              # Public documentation & usage examples (Worker target)
+├── LICENSE                                # MIT License
+├── MANIFEST.in                            # Asset inclusion declaration (*.ttf fonts)
 ├── PROJECT_OVERVIEW.md                    # Comprehensive architecture & technical analysis
 ├── AGENTS.md                              # Authoritative AI agent operational guide
 │
 ├── src/lastfmcollagegenerator/            # Source package root
-│   ├── __init__.py
+│   ├── __init__.py                        # Package init
 │   ├── collage_generator.py               # Facade entrypoint (CollageGenerator)
 │   ├── collage.py                         # Factory, BaseCollageBuilder, concrete builders, dataclasses
 │   ├── constants.py                       # ENTITIES and PERIODS tuples
 │   ├── exceptions.py                      # ArtistNotFound, ArtistImageNotFound
 │   ├── fonts/                             # TrueType fonts bundled for rendering
-│   │   ├── DejaVuSansMono.ttf
-│   │   └── DejaVuSansMono-Bold.ttf
+│   │   ├── DejaVuSansMono.ttf             # Regular monospace font
+│   │   └── DejaVuSansMono-Bold.ttf        # Bold monospace font
 │   └── lastfm/                            # Last.fm client adapter module
 │       ├── __init__.py
 │       └── client.py                      # LastfmClient wrapper over pylast
 │
+├── scripts/                               # Development and debugging runner scripts
+│   └── debug_collage.py                   # Zero-build CLI runner with --mock and --live modes
+│
 ├── tests/                                 # Automated test directory
-├── .gemini/                               # Antigravity operational rules & skills
-│   ├── rules/                             # Project-specific architectural rules
-│   │   ├── python-standards.md
-│   │   ├── architecture-conventions.md
-│   │   ├── testing-standards.md
-│   │   └── lastfm-network-resilience.md
-│   └── skills/                            # Executable AI agent skills
-│       ├── poetry-test-runner/
-│       ├── lastfm-mocking-fixtures/
-│       └── collage-cli-workflow/
-└── .agents/                               # Orchestrator & subagent metadata
+│   ├── __init__.py
+│   └── ...                                # Test suites
+│
+└── .agents/                               # Multi-agent orchestrator & worker metadata
 ```
