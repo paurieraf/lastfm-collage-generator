@@ -1,74 +1,43 @@
-# BRIEFING — 2026-08-16T15:42:30Z
+# BRIEFING — 2026-08-16T16:47:00Z
 
 ## Mission
-Author production-grade Antigravity project rules in `.gemini/rules/` and custom skills in `.gemini/skills/` adhering to `agy-customizations` standards for `lastfm-collage-generator`.
+Authoritative and production-grade update of README.md for lastfm-collage-generator, incorporating all 14 architectural, API, debugging, testing, defect, and multi-phase roadmap sections.
 
 ## 🔒 My Identity
-- Archetype: teamwork_preview_worker_m2
+- Archetype: Worker
 - Roles: implementer, qa, specialist
-- Working directory: /Users/priera/.gemini/antigravity/worktrees/lastfm-collage-generator/initialize_antigravity_architecture_analysis/.agents/teamwork_preview_worker_m2
-- Original parent: 69059f9a-77eb-4f34-a4f4-21c2d34022f7
-- Milestone: Milestone 2 — Antigravity Rules & Custom Skills
+- Working directory: /Users/priera/.gemini/antigravity/worktrees/lastfm-collage-generator/analyze_roadmap_documentation_features/.agents/teamwork_preview_worker_m2
+- Original parent: 5ad59496-ea54-4d75-946d-48e857fc2293
+- Milestone: M2 Documentation & Roadmap Delivery
 
 ## 🔒 Key Constraints
-- Strictly adhere to `agy-customizations` standards for rules (Markdown, clear scope and constraints) and skills (YAML frontmatter with lowercase-hyphenated name, third-person description, scripts/references subdirectories).
-- Zero cheating / zero facade implementations. Scripts must be executable, robust, and tested.
-- Do not place source code or tests in `.agents/`. Rules go to `.gemini/rules/`, skills to `.gemini/skills/`.
+- Exclusively own writing/updating `/Users/priera/.gemini/antigravity/worktrees/lastfm-collage-generator/analyze_roadmap_documentation_features/README.md`.
+- No cheats, dummy facades, or shortcuts. Genuine, exhaustive documentation.
+- Maintain consistency with AGENTS.md, PROJECT_OVERVIEW.md, and Explorer 1, 2, and 3 survey handoffs.
+- Follow 5-component handoff report structure in `handoff.md`.
 
 ## Current Parent
-- Conversation ID: 69059f9a-77eb-4f34-a4f4-21c2d34022f7
-- Updated: 2026-08-16T15:42:30Z
+- Conversation ID: 5ad59496-ea54-4d75-946d-48e857fc2293
+- Updated: 2026-08-16T16:47:00Z
 
 ## Task Summary
-- **What to build**:
-  - 4 Project Rules in `.gemini/rules/`: `python-standards.md`, `architecture-conventions.md`, `testing-standards.md`, `lastfm-scraping-resilience.md`
-  - 3 Custom Skills in `.gemini/skills/`: `poetry-test-runner/`, `lastfm-mocking-fixtures/`, `collage-cli-workflow/`
-- **Success criteria**:
-  - All rules provide clear, prescriptive guidelines for Python 3.8+, PIL lifecycle, Facade/Factory/Builder/Client architecture, zero network tests, and scraping safety.
-  - All custom skills contain valid frontmatter, comprehensive markdown runbooks, and tested Python scripts/references.
-  - Independent execution testing confirms all CLI tools and fixture factories function cleanly.
-- **Interface contracts**: `PROJECT.md` & `PROJECT_OVERVIEW.md`
-- **Code layout**: `.gemini/rules/` and `.gemini/skills/`
-
-## Key Decisions Made
-- Implemented dual-mode CLI (`generate_collage_cli.py`) supporting both live Last.fm API credentials and offline mock mode generating real RGB collages with Pillow.
-- Created `SyntheticImageFactory`, `MockPylastEntityFactory`, `MockLastfmClient`, and `MockHtmlScraperResponses` in `fixture_templates.py` for comprehensive offline testing.
-- Created unified test runner and linter CLI (`run_tests.py`) supporting unit tests, coverage thresholds, flake8, black, and mypy.
-
-## Artifact Index
-- `.gemini/rules/python-standards.md` — Python conventions, type hinting, PIL image handling, dataclasses, exceptions.
-- `.gemini/rules/architecture-conventions.md` — Facade/Factory/Builder/Client pattern rules, layer boundaries, font resolution, entity extension.
-- `.gemini/rules/testing-standards.md` — Zero network calls, pylast/HTTP mocking, synthetic image fixtures, coverage rules.
-- `.gemini/rules/lastfm-scraping-resilience.md` — Scraping safety, User-Agent requirements, timeouts, blank tile fallbacks, thread safety.
-- `.gemini/skills/poetry-test-runner/SKILL.md` — Pytest test runner and linting skill.
-- `.gemini/skills/poetry-test-runner/scripts/run_tests.py` — Test runner and linting execution script.
-- `.gemini/skills/lastfm-mocking-fixtures/SKILL.md` — Last.fm mocking patterns and fixture skill.
-- `.gemini/skills/lastfm-mocking-fixtures/references/fixture_templates.py` — Ready-to-use fixtures and mock classes.
-- `.gemini/skills/collage-cli-workflow/SKILL.md` — Collage generation CLI and visual validation skill.
-- `.gemini/skills/collage-cli-workflow/scripts/generate_collage_cli.py` — Production-grade CLI for live and mock generation.
-- `.agents/teamwork_preview_worker_m2/handoff.md` — 5-component handoff report.
+- **What to build**: Complete, production-grade `README.md` containing all 14 structured sections detailing features, previews, architecture, installation, quickstart, API reference, developer workflows, QA/testing, fonts, 4-pillar multi-phase roadmap, defect catalog (BUG-01 to BUG-05), contributing guidelines, and license.
+- **Success criteria**: Comprehensive, flawless Markdown formatting, fully aligned with Explorer 3 structure and Explorers 1 & 2 findings, validated with zero test regressions.
+- **Interface contracts**: PROJECT_OVERVIEW.md, AGENTS.md, Explorer handoffs.
+- **Code layout**: README.md in repository root.
 
 ## Change Tracker
-- **Files modified**:
-  - Added `.gemini/rules/python-standards.md`
-  - Added `.gemini/rules/architecture-conventions.md`
-  - Added `.gemini/rules/testing-standards.md`
-  - Added `.gemini/rules/lastfm-scraping-resilience.md`
-  - Added `.gemini/skills/poetry-test-runner/SKILL.md`
-  - Added `.gemini/skills/poetry-test-runner/scripts/run_tests.py`
-  - Added `.gemini/skills/lastfm-mocking-fixtures/SKILL.md`
-  - Added `.gemini/skills/lastfm-mocking-fixtures/references/fixture_templates.py`
-  - Added `.gemini/skills/collage-cli-workflow/SKILL.md`
-  - Added `.gemini/skills/collage-cli-workflow/scripts/generate_collage_cli.py`
-- **Build status**: PASS (Python compilation, mock collage generation, fixture tests all exit 0)
-- **Pending issues**: None
+- **Files modified**: `README.md` — Updated from basic 256-line draft to comprehensive 625-line production-grade documentation homepage.
+- **Build status**: PASS (Mock 3x3 and 5x5 generation clean, test runner clean).
+- **Pending issues**: None.
 
 ## Quality Status
-- **Build/test result**: All scripts compiled with `py_compile` (code 0) and executed in smoke tests (code 0).
-- **Lint status**: 0 violations
-- **Tests added/modified**: Ready-to-use fixtures in `fixture_templates.py`
+- **Build/test result**: PASS. `uv run python scripts/debug_collage.py --mock -g 3x3` and `-g 5x5` generate valid 900x900 and 1500x1500 images.
+- **Lint status**: README.md formatting verified.
+- **Tests added/modified**: Verified against test runner and CLI mock generation.
 
 ## Loaded Skills
-- **Source**: `/Users/priera/.gemini/antigravity/builtin/skills/agy-customizations/SKILL.md`
-- **Local copy**: Inspected directly via `view_file`
-- **Core methodology**: Antigravity Customization System — YAML frontmatter (`name`, `description`), progressive disclosure (`references/`, `scripts/`), markdown rules without frontmatter.
+- None
+
+## Key Decisions Made
+- Implemented all 14 exhaustive sections in `README.md`, including badges, visual ASCII diagrams, grid geometry reference table, 4-layer architecture diagram, full Python API documentation with parameter matrix, PIL image guide, error handling, debugging workflows, testing commands, font packaging details, multi-phase roadmap across 4 strategic pillars, defect catalog (BUG-01 to BUG-05), contributing guide, and MIT license.
