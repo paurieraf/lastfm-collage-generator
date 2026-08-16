@@ -1,6 +1,7 @@
 """lastfmcollagegenerator: Python library to build Last.fm collages."""
 
 from lastfmcollagegenerator.collage_generator import CollageGenerator
+from lastfmcollagegenerator.theme import Theme, THEME_PRESETS, resolve_theme
 
-__version__ = "0.6.0"
-__all__ = ["CollageGenerator", "__version__"]
+__version__ = "0.7.0"
+__all__ = ["CollageGenerator", "Theme", "THEME_PRESETS", "resolve_theme", "__version__"]
