@@ -2,14 +2,14 @@
 
 ## Architecture
 - **Language & Runtime**: Python (^3.8)
-- **Packaging & Dependency Management**: Poetry (`pyproject.toml` with `poetry-core`)
+- **Packaging & Dependency Management**: uv (`pyproject.toml` with `hatchling` build backend)
 - **Core Dependencies**:
   - `pylast` (==5.3.0): Last.fm API client wrapper
   - `requests` (==2.32.3): HTTP requests for image downloads and scraping
   - `Pillow` (==10.4.0): Image processing, grid layout, typography/font rendering
   - `beautifulsoup4` (==4.12.3) & `html5lib` (1.1): HTML scraping of artist images from Last.fm web pages
 - **Design Pattern**:
-  - **Facade Pattern**: `CollageGenerator` (`src/lastfmcollagegenerator/collage_generator.py`) serves as the single public entrypoint.
+  - **Facade Pattern**: `CollageGenerator` (`src/lastfmcollagegenerator/collage_generator.py`) serves as the single public entrypoint with direct and convenience methods.
   - **Factory Pattern**: `CollageBuilderFactory` (`src/lastfmcollagegenerator/collage.py`) instantiates concrete builders based on entity string.
   - **Builder Pattern**: Abstract `BaseCollageBuilder` (`src/lastfmcollagegenerator/collage.py`) with concrete builders `ArtistCollageBuilder`, `AlbumCollageBuilder`, `TrackCollageBuilder`.
   - **Concurrent Image Acquisition**: `ThreadPoolExecutor` fetches tile artwork asynchronously in parallel before composite assembly.
@@ -28,6 +28,7 @@
 | 9 | Antigravity Custom Skills | Skills in `.gemini/skills/` for test running, mocking fixtures, and CLI workflows | M2 | user request |
 | 10 | AGENTS.md Cross-Reference & Synthesis | Author authoritative `AGENTS.md` guiding future AI operations and reconciling drift | M3 | user request |
 | 11 | Independent Review & Forensic Audit | Multi-agent review (Reviewers + Challengers + Forensic Auditor) for rule validation, skill schemas, and integrity | M4 | user request |
+| 12 | Remediation of Documented Bugs & QA Suite | Fix geometry, validation, timeouts/headers, sorting, and add 100% coverage offline test suite | M5 | user request |
 
 ## Milestones
 | # | Name | Scope | Dependencies | Status | Key Outputs |
@@ -36,15 +37,19 @@
 | 2 | Antigravity Rules & Custom Skills | Generate `.gemini/rules/*.md` and `.gemini/skills/*/SKILL.md` (plus scripts/references) following `agy-customizations` | M1 | DONE | 4 rules in `.gemini/rules/`, 3 skills in `.gemini/skills/` |
 | 3 | AGENTS.md Reconciliation & Synthesis | Cross-reference repository findings with `AGENTS.md`, establish guidance for AI agents | M2 | DONE | `AGENTS.md` (authoritative multi-agent guide) |
 | 4 | Independent Verification & Audit | Multi-agent review (Reviewers + Challengers + Forensic Auditor) for rule validation, skill schemas, and integrity | M3 | DONE | `GATE_STATUS.md` PASS, 4 APPROVE verdicts, 1 CLEAN audit |
+| 5 | Remediation of Documented Bugs & QA Suite | Fix overlay geometry, convenience methods, validation, resilience, and establish 100% offline test suite | M4 | DONE | 44 passing unit tests, 100% coverage, OpenSpec archived change |
 
 ## Interface Contracts
 ### Facade Entrypoint
-- `CollageGenerator.generate(cols: int, rows: int, user: str, period: str = "overall", entity: str = "album", title: bool = False) -> PIL.Image.Image`
+- `CollageGenerator.generate(entity: str, username: str, cols: int, rows: int, period: str = "overall") -> PIL.Image.Image`
+- `CollageGenerator.generate_top_albums_collage(username: str, cols: int = 5, rows: int = 5, period: str = "overall") -> PIL.Image.Image`
+- `CollageGenerator.generate_top_artists_collage(username: str, cols: int = 5, rows: int = 5, period: str = "overall") -> PIL.Image.Image`
+- `CollageGenerator.generate_top_tracks_collage(username: str, cols: int = 5, rows: int = 5, period: str = "overall") -> PIL.Image.Image`
 - Return: Composited `PIL.Image.Image` in RGB mode with dimensions `(cols * 300, rows * 300)`.
 
 ### Builder Interface
-- `BaseCollageBuilder.create(user: str) -> PIL.Image.Image`
-- `BaseCollageBuilder._get_tiles_from_top_items(user: str) -> List[CollageTile]`
+- `BaseCollageBuilder.create(username: str) -> PIL.Image.Image`
+- `BaseCollageBuilder._get_tiles_from_top_items(user: User, limit: int, period: str) -> List[CollageTile]`
 
 ### Antigravity Tooling Contract
 - Rules: `.gemini/rules/<name>.md` with clear scope and prescriptive constraints.
@@ -53,7 +58,8 @@
 ## Code Layout
 ```
 lastfm-collage-generator/
-├── pyproject.toml                         # Poetry configuration & pinned dependencies
+├── pyproject.toml                         # Project configuration & dependencies (hatchling backend)
+├── uv.lock                                # uv locked dependency versions
 ├── README.md                              # Public documentation & usage examples
 ├── PROJECT_OVERVIEW.md                    # Comprehensive architecture & technical analysis
 ├── AGENTS.md                              # Authoritative AI agent operational guide
@@ -63,7 +69,7 @@ lastfm-collage-generator/
 │   ├── collage_generator.py               # Facade entrypoint (CollageGenerator)
 │   ├── collage.py                         # Factory, BaseCollageBuilder, concrete builders, dataclasses
 │   ├── constants.py                       # ENTITIES and PERIODS tuples
-│   ├── exceptions.py                      # ArtistNotFound, ArtistImageNotFound
+│   ├── exceptions.py                      # LastfmCollageGeneratorError, ArtistNotFound, ArtistImageNotFound
 │   ├── fonts/                             # TrueType fonts bundled for rendering
 │   │   ├── DejaVuSansMono.ttf
 │   │   └── DejaVuSansMono-Bold.ttf
@@ -71,7 +77,16 @@ lastfm-collage-generator/
 │       ├── __init__.py
 │       └── client.py                      # LastfmClient wrapper over pylast
 │
-├── tests/                                 # Automated test directory
+├── tests/                                 # Automated test directory (44 offline unit tests, 100% coverage)
+│   ├── __init__.py
+│   ├── conftest.py                        # Synthetic image and pylast mock fixtures
+│   ├── test_builders.py                   # Builder dispatch, sorting, text wrapping tests
+│   ├── test_client.py                     # LastfmClient adapter tests
+│   ├── test_facade.py                     # CollageGenerator direct and convenience method tests
+│   ├── test_geometry.py                   # Multi-row overlay coordinate geometry tests
+│   ├── test_resilience.py                 # Network error fallback, timeout, and exception hierarchy tests
+│   └── test_validation.py                 # Input parameter and boundary validation tests
+│
 ├── .gemini/                               # Antigravity operational rules & skills
 │   ├── rules/                             # Project-specific architectural rules
 │   │   ├── python-standards.md
