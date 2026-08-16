@@ -1,32 +1,41 @@
-[tool.poetry]
+[project]
 name = "lastfmcollagegenerator"
-version = "0.4.13 "
+version = "0.4.13"
 description = "Python library to build Last.fm collages"
-authors = ["Pau Riera <pau.riera.forteza@gmail.com>"]
 readme = "README.md"
+requires-python = ">=3.8.1"
+license = { text = "MIT" }
+authors = [
+    { name = "Pau Riera", email = "pau.riera.forteza@gmail.com" }
+]
 keywords = ["lastfm", "music", "collage", "album", "cover", "artist", "musicbucket", "musicbucket.net"]
-repository = "https://github.com/paurieraf/lastfm-collage-generator"
-homepage = "https://github.com/paurieraf/lastfm-collage-generator"
 classifiers = [
     "Programming Language :: Python :: 3",
     "License :: OSI Approved :: MIT License",
-    "Operating System :: OS Independent"
+    "Operating System :: OS Independent",
 ]
-packages = [
-    { include = "lastfmcollagegenerator", from = "src" }
+dependencies = [
+    "requests==2.32.3",
+    "pylast==5.3.0",
+    "Pillow==10.4.0",
+    "beautifulsoup4==4.12.3",
+    "html5lib==1.1",
 ]
 
-[tool.poetry.urls]
+[project.urls]
+Homepage = "https://github.com/paurieraf/lastfm-collage-generator"
+Repository = "https://github.com/paurieraf/lastfm-collage-generator"
 "Bug Tracker" = "https://github.com/paurieraf/lastfm-collage-generator/issues"
 
-[tool.poetry.dependencies]
-python = "^3.8"
-requests = "==2.32.3"
-pylast = "==5.3.0"
-Pillow = "==10.4.0"
-beautifulsoup4 = "==4.12.3"
-html5lib = "1.1"
+[dependency-groups]
+dev = [
+    "pytest>=7.0.0",
+    "pytest-cov>=4.0.0",
+    "flake8>=6.0.0",
+    "black>=23.0.0",
+    "mypy>=1.0.0",
+]
 
 [build-system]
-requires = ["poetry-core"]
-build-backend = "poetry.core.masonry.api"
+requires = ["hatchling"]
+build-backend = "hatchling.build"

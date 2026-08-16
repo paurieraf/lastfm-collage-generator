@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Poetry Test Runner & QA Script for lastfm-collage-generator.
+"""Test Runner & QA Script for lastfm-collage-generator.
 
 Executes pytest test suites, coverage reports, and linters with unified summary metrics.
 """

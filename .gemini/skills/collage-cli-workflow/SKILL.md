@@ -20,7 +20,7 @@ Run in mock mode to test grid geometry, typography, and image compositing instan
 
 ```bash
 # Generate a 3x3 album collage in mock mode
-poetry run python .gemini/skills/collage-cli-workflow/scripts/generate_collage_cli.py \
+uv run python .gemini/skills/collage-cli-workflow/scripts/generate_collage_cli.py \
   --mock \
   --username testuser \
   --entity album \
@@ -30,7 +30,7 @@ poetry run python .gemini/skills/collage-cli-workflow/scripts/generate_collage_c
   --output sample_album_3x3.png
 
 # Generate a 5x5 artist collage in mock mode
-poetry run python .gemini/skills/collage-cli-workflow/scripts/generate_collage_cli.py \
+uv run python .gemini/skills/collage-cli-workflow/scripts/generate_collage_cli.py \
   --mock \
   --username testuser \
   --entity artist \
@@ -40,7 +40,7 @@ poetry run python .gemini/skills/collage-cli-workflow/scripts/generate_collage_c
   --output sample_artist_5x5.png
 
 # Generate an asymmetric 3x5 track collage without playcount titles
-poetry run python .gemini/skills/collage-cli-workflow/scripts/generate_collage_cli.py \
+uv run python .gemini/skills/collage-cli-workflow/scripts/generate_collage_cli.py \
   --mock \
   --username testuser \
   --entity track \
@@ -61,7 +61,7 @@ export LASTFM_API_KEY="your_api_key"
 export LASTFM_API_SECRET="your_api_secret"
 
 # Generate live collage
-poetry run python .gemini/skills/collage-cli-workflow/scripts/generate_collage_cli.py \
+uv run python .gemini/skills/collage-cli-workflow/scripts/generate_collage_cli.py \
   --username your_lastfm_username \
   --entity album \
   --cols 3 \
