@@ -307,6 +307,224 @@ class CollageGenerator:
             spacing=spacing,
         )
 
+    async def generate_async(
+        self,
+        entity: str,
+        username: str,
+        cols: int,
+        rows: int,
+        period: str = "overall",
+        tile_size: Optional[int] = None,
+        theme: Union[str, Theme, Dict[str, Any]] = THEME_DARK,
+        overlay_style: str = OVERLAY_BANNER,
+        show_text: bool = True,
+        font_path: Optional[str] = None,
+        preset: Optional[str] = None,
+        cache_dir: Optional[str] = None,
+        cache_ttl_override: Optional[int] = None,
+        rate_limit: Optional[float] = None,
+        fallback_style: str = FALLBACK_STYLE_GRADIENT,
+        corner_radius: int = 0,
+        border_width: int = 0,
+        border_color: Optional[Union[str, tuple]] = None,
+        spacing: int = 0,
+        max_concurrency: int = 20,
+    ) -> Image.Image:
+        """Asynchronously generate a composite collage image."""
+        resolved_preset = self._resolve_preset(preset)
+        if resolved_preset is not None:
+            cols = resolved_preset.cols
+            rows = resolved_preset.rows
+
+        if resolved_preset is not None:
+            resolved_tile_size = resolved_preset.tile_size
+        else:
+            resolved_tile_size = self._resolve_tile_size(cols, rows, tile_size)
+
+        resolved_theme = self._validate_parameters(
+            entity=entity,
+            username=username,
+            cols=cols,
+            rows=rows,
+            period=period,
+            tile_size=tile_size,
+            theme=theme,
+            overlay_style=overlay_style,
+            show_text=show_text,
+            font_path=font_path,
+            preset=preset,
+            cache_dir=cache_dir,
+            cache_ttl_override=cache_ttl_override,
+            rate_limit=rate_limit,
+            fallback_style=fallback_style,
+            corner_radius=corner_radius,
+            border_width=border_width,
+            border_color=border_color,
+            spacing=spacing,
+            resolved_tile_size=resolved_tile_size,
+        )
+        collage_builder = self._get_collage_builder(
+            entity=entity,
+            cols=cols,
+            rows=rows,
+            period=period,
+            tile_size=resolved_tile_size,
+            theme=resolved_theme,
+            overlay_style=overlay_style,
+            show_text=show_text,
+            font_path=font_path,
+            preset=resolved_preset,
+            cache_dir=cache_dir,
+            cache_ttl_override=cache_ttl_override,
+            rate_limit=rate_limit,
+            fallback_style=fallback_style,
+            corner_radius=corner_radius,
+            border_width=border_width,
+            border_color=border_color,
+            spacing=spacing,
+        )
+        return await collage_builder.create_async(
+            username, max_concurrency=max_concurrency
+        )
+
+    async def generate_top_albums_collage_async(
+        self,
+        username: str,
+        cols: int = 5,
+        rows: int = 5,
+        period: str = "overall",
+        tile_size: Optional[int] = None,
+        theme: Union[str, Theme, Dict[str, Any]] = THEME_DARK,
+        overlay_style: str = OVERLAY_BANNER,
+        show_text: bool = True,
+        font_path: Optional[str] = None,
+        preset: Optional[str] = None,
+        cache_dir: Optional[str] = None,
+        cache_ttl_override: Optional[int] = None,
+        rate_limit: Optional[float] = None,
+        fallback_style: str = FALLBACK_STYLE_GRADIENT,
+        corner_radius: int = 0,
+        border_width: int = 0,
+        border_color: Optional[Union[str, tuple]] = None,
+        spacing: int = 0,
+        max_concurrency: int = 20,
+    ) -> Image.Image:
+        """Convenience method to asynchronously generate an album collage."""
+        return await self.generate_async(
+            entity=ENTITY_ALBUM,
+            username=username,
+            cols=cols,
+            rows=rows,
+            period=period,
+            tile_size=tile_size,
+            theme=theme,
+            overlay_style=overlay_style,
+            show_text=show_text,
+            font_path=font_path,
+            preset=preset,
+            cache_dir=cache_dir,
+            cache_ttl_override=cache_ttl_override,
+            rate_limit=rate_limit,
+            fallback_style=fallback_style,
+            corner_radius=corner_radius,
+            border_width=border_width,
+            border_color=border_color,
+            spacing=spacing,
+            max_concurrency=max_concurrency,
+        )
+
+    async def generate_top_artists_collage_async(
+        self,
+        username: str,
+        cols: int = 5,
+        rows: int = 5,
+        period: str = "overall",
+        tile_size: Optional[int] = None,
+        theme: Union[str, Theme, Dict[str, Any]] = THEME_DARK,
+        overlay_style: str = OVERLAY_BANNER,
+        show_text: bool = True,
+        font_path: Optional[str] = None,
+        preset: Optional[str] = None,
+        cache_dir: Optional[str] = None,
+        cache_ttl_override: Optional[int] = None,
+        rate_limit: Optional[float] = None,
+        fallback_style: str = FALLBACK_STYLE_GRADIENT,
+        corner_radius: int = 0,
+        border_width: int = 0,
+        border_color: Optional[Union[str, tuple]] = None,
+        spacing: int = 0,
+        max_concurrency: int = 20,
+    ) -> Image.Image:
+        """Convenience method to asynchronously generate an artist collage."""
+        return await self.generate_async(
+            entity=ENTITY_ARTIST,
+            username=username,
+            cols=cols,
+            rows=rows,
+            period=period,
+            tile_size=tile_size,
+            theme=theme,
+            overlay_style=overlay_style,
+            show_text=show_text,
+            font_path=font_path,
+            preset=preset,
+            cache_dir=cache_dir,
+            cache_ttl_override=cache_ttl_override,
+            rate_limit=rate_limit,
+            fallback_style=fallback_style,
+            corner_radius=corner_radius,
+            border_width=border_width,
+            border_color=border_color,
+            spacing=spacing,
+            max_concurrency=max_concurrency,
+        )
+
+    async def generate_top_tracks_collage_async(
+        self,
+        username: str,
+        cols: int = 5,
+        rows: int = 5,
+        period: str = "overall",
+        tile_size: Optional[int] = None,
+        theme: Union[str, Theme, Dict[str, Any]] = THEME_DARK,
+        overlay_style: str = OVERLAY_BANNER,
+        show_text: bool = True,
+        font_path: Optional[str] = None,
+        preset: Optional[str] = None,
+        cache_dir: Optional[str] = None,
+        cache_ttl_override: Optional[int] = None,
+        rate_limit: Optional[float] = None,
+        fallback_style: str = FALLBACK_STYLE_GRADIENT,
+        corner_radius: int = 0,
+        border_width: int = 0,
+        border_color: Optional[Union[str, tuple]] = None,
+        spacing: int = 0,
+        max_concurrency: int = 20,
+    ) -> Image.Image:
+        """Convenience method to asynchronously generate a track collage."""
+        return await self.generate_async(
+            entity=ENTITY_TRACK,
+            username=username,
+            cols=cols,
+            rows=rows,
+            period=period,
+            tile_size=tile_size,
+            theme=theme,
+            overlay_style=overlay_style,
+            show_text=show_text,
+            font_path=font_path,
+            preset=preset,
+            cache_dir=cache_dir,
+            cache_ttl_override=cache_ttl_override,
+            rate_limit=rate_limit,
+            fallback_style=fallback_style,
+            corner_radius=corner_radius,
+            border_width=border_width,
+            border_color=border_color,
+            spacing=spacing,
+            max_concurrency=max_concurrency,
+        )
+
     @staticmethod
     def _resolve_preset(preset: Optional[str]) -> Optional[SocialPreset]:
         if preset is None:

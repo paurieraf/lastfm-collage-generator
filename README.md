@@ -715,7 +715,7 @@ Our development roadmap is organized across 4 strategic pillars and versioned mi
   - [x] **Multi-Tier Caching Subsystem**: Tier-1 in-memory LRU cache (`maxsize=256`) + Tier-2 SQLite persistent disk cache (`~/.cache/lastfm-collage/`) with 30-day TTL for album covers and 7-day TTL for retrieved artist hero images.
   - [x] **Network Resilience Middleware**: Token-bucket rate limiter (5 req/sec), exponential backoff with full jitter for transient HTTP errors, and circuit breaker for web retrieval fallbacks.
 - **Phase 4 (v1.0.0 — Asynchronous Architecture)**:
-  - [ ] **Native AsyncIO Pipeline**: Non-blocking concurrent asset acquisition via `httpx` (`async def generate_async()`) with async semaphore concurrency throttling.
+  - [x] **Native AsyncIO Pipeline**: Non-blocking concurrent asset acquisition via `httpx` (`async def generate_async()`) with async semaphore concurrency throttling.
 
 ### 📐 Pillar 3: Advanced Layouts & Modern Formats
 

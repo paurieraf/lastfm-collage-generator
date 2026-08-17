@@ -1,6 +1,6 @@
 [project]
 name = "lastfmcollagegenerator"
-version = "0.8.0"
+version = "1.0.0"
 description = "Python library to build Last.fm collages"
 readme = "README.md"
 requires-python = ">=3.8.1"
@@ -20,6 +20,7 @@ dependencies = [
     "Pillow==10.4.0",
     "beautifulsoup4==4.12.3",
     "html5lib==1.1",
+    "httpx>=0.27.0",
 ]
 
 [project.urls]
@@ -31,6 +32,7 @@ Repository = "https://github.com/paurieraf/lastfm-collage-generator"
 dev = [
     "pytest>=7.0.0",
     "pytest-cov>=4.0.0",
+    "pytest-asyncio>=0.21.0",
     "flake8>=6.0.0",
     "black>=23.0.0",
     "mypy>=1.0.0",

@@ -229,4 +229,4 @@ def test_package_exports_and_version():
     assert hasattr(lastfmcollagegenerator, "THEME_PRESETS")
     assert hasattr(lastfmcollagegenerator, "resolve_theme")
     assert hasattr(lastfmcollagegenerator, "__version__")
-    assert lastfmcollagegenerator.__version__ == "0.8.0"
+    assert lastfmcollagegenerator.__version__ == "1.0.0"

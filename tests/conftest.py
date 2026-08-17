@@ -165,12 +165,20 @@ class MockLastfmClient:
     def get_user(self, username: str) -> MagicMock:
         return self.mock_user
 
+    async def get_user_async(self, username: str) -> MagicMock:
+        return self.get_user(username)
+
     def get_top_albums(
         self, user: MagicMock, limit: int, period: str
     ) -> List[MagicMock]:
         return MockPylastEntityFactory.create_mock_top_items_list(
             count=limit, entity_type="album"
         )
+
+    async def get_top_albums_async(
+        self, user: MagicMock, limit: int, period: str
+    ) -> List[MagicMock]:
+        return self.get_top_albums(user, limit, period)
 
     def get_top_artists(
         self, user: MagicMock, limit: int, period: str
@@ -179,12 +187,22 @@ class MockLastfmClient:
             count=limit, entity_type="artist"
         )
 
+    async def get_top_artists_async(
+        self, user: MagicMock, limit: int, period: str
+    ) -> List[MagicMock]:
+        return self.get_top_artists(user, limit, period)
+
     def get_top_tracks(
         self, user: MagicMock, limit: int, period: str
     ) -> List[MagicMock]:
         return MockPylastEntityFactory.create_mock_top_items_list(
             count=limit, entity_type="track"
         )
+
+    async def get_top_tracks_async(
+        self, user: MagicMock, limit: int, period: str
+    ) -> List[MagicMock]:
+        return self.get_top_tracks(user, limit, period)
 
 
 @pytest.fixture

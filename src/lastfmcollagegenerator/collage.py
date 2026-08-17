@@ -1,3 +1,4 @@
+import asyncio
 import concurrent.futures
 import os
 import urllib.parse
@@ -6,6 +7,7 @@ from io import BytesIO
 from typing import Any, List, Optional, Tuple, Union, cast
 
 import bs4
+import httpx
 import requests
 from pylast import User, TopItem, Album, Artist, Track
 from PIL import Image, ImageDraw, ImageEnhance, ImageFile, ImageFilter
@@ -52,7 +54,7 @@ ImageFile.LOAD_TRUNCATED_IMAGES = True
 
 DEFAULT_HEADERS = {
     "User-Agent": (
-        "lastfm-collage-generator/0.8.0 "
+        "lastfm-collage-generator/1.0.0 "
         "(+https://github.com/paurieraf/lastfm-collage-generator)"
     )
 }
@@ -122,12 +124,26 @@ class BaseCollageBuilder:
         else:
             self.theme = THEME_PRESETS[THEME_DARK]
 
+    DEFAULT_CONCURRENCY = 20
+
     def create(self, username: str) -> Image.Image:
         user = self.lastfm_client.get_user(username)
         tiles = self._get_tiles_from_top_items(
             user=user,
             limit=self.config.cols * self.config.rows,
             period=self.config.period,
+        )
+        return self._create_image(tiles, self.config.cols, self.config.rows)
+
+    async def create_async(
+        self, username: str, max_concurrency: int = DEFAULT_CONCURRENCY
+    ) -> Image.Image:
+        user = await self.lastfm_client.get_user_async(username)
+        tiles = await self._get_tiles_from_top_items_async(
+            user=user,
+            limit=self.config.cols * self.config.rows,
+            period=self.config.period,
+            max_concurrency=max_concurrency,
         )
         return self._create_image(tiles, self.config.cols, self.config.rows)
 
@@ -557,6 +573,15 @@ class BaseCollageBuilder:
     ) -> List[CollageTile]:
         raise NotImplementedError
 
+    async def _get_tiles_from_top_items_async(
+        self,
+        user: User,
+        limit: int,
+        period: str,
+        max_concurrency: int = DEFAULT_CONCURRENCY,
+    ) -> List[CollageTile]:
+        raise NotImplementedError
+
     def _create_tiles_from_top_items(
         self,
         top_items: List[TopItem],
@@ -575,8 +600,35 @@ class BaseCollageBuilder:
         tiles.sort(key=lambda x: (int(x.playcount), x.title), reverse=True)
         return tiles
 
+    async def _create_tiles_from_top_items_async(
+        self,
+        top_items: List[TopItem],
+        max_concurrency: int = DEFAULT_CONCURRENCY,
+    ) -> List[CollageTile]:
+        semaphore = asyncio.Semaphore(max_concurrency)
+        timeout = httpx.Timeout(10.0, connect=3.05)
+        async with httpx.AsyncClient(
+            headers=DEFAULT_HEADERS, timeout=timeout, follow_redirects=True
+        ) as client:
+            tasks = [
+                self._create_tile_from_top_item_async(client, semaphore, top_item)
+                for top_item in top_items
+            ]
+            tiles = await asyncio.gather(*tasks)
+        sorted_tiles = list(tiles)
+        sorted_tiles.sort(key=lambda x: (int(x.playcount), x.title), reverse=True)
+        return sorted_tiles
+
     def _create_tile_from_top_item(
         self,
+        top_item: TopItem,
+    ) -> CollageTile:
+        raise NotImplementedError
+
+    async def _create_tile_from_top_item_async(
+        self,
+        client: httpx.AsyncClient,
+        semaphore: asyncio.Semaphore,
         top_item: TopItem,
     ) -> CollageTile:
         raise NotImplementedError
@@ -597,6 +649,20 @@ class BaseCollageBuilder:
                 self.cache.set(url, data, kind)
         return data
 
+    async def _download_bytes_async(
+        self, client: httpx.AsyncClient, url: str, kind: str
+    ) -> bytes:
+        data = None
+        if self.cache is not None:
+            data = self.cache.get(url, kind)
+        if data is None:
+            resp = await client.get(url)
+            resp.raise_for_status()
+            data = resp.content
+            if self.cache is not None:
+                self.cache.set(url, data, kind)
+        return data
+
 
 class ArtistCollageBuilder(BaseCollageBuilder):
     ENTITY = ENTITY_ARTIST
@@ -607,12 +673,37 @@ class ArtistCollageBuilder(BaseCollageBuilder):
         top_artists = self.lastfm_client.get_top_artists(user, limit, period)
         return self._create_tiles_from_top_items(top_artists)
 
+    async def _get_tiles_from_top_items_async(
+        self,
+        user: User,
+        limit: int,
+        period: str,
+        max_concurrency: int = BaseCollageBuilder.DEFAULT_CONCURRENCY,
+    ) -> List[CollageTile]:
+        top_artists = await self.lastfm_client.get_top_artists_async(
+            user, limit, period
+        )
+        return await self._create_tiles_from_top_items_async(
+            top_artists, max_concurrency=max_concurrency
+        )
+
     def _create_tile_from_top_item(
         self,
         top_item: TopItem,
     ) -> CollageTile:
         title = top_item.item.name
         data = self._get_artist_image(top_item.item, title)
+        return CollageTile(data=data, playcount=top_item.weight, title=title)
+
+    async def _create_tile_from_top_item_async(
+        self,
+        client: httpx.AsyncClient,
+        semaphore: asyncio.Semaphore,
+        top_item: TopItem,
+    ) -> CollageTile:
+        title = top_item.item.name
+        async with semaphore:
+            data = await self._get_artist_image_async(client, top_item.item, title)
         return CollageTile(data=data, playcount=top_item.weight, title=title)
 
     def _get_artist_image(self, artist: Artist, title: str) -> bytes:
@@ -655,6 +746,41 @@ class ArtistCollageBuilder(BaseCollageBuilder):
         ):
             return self._generate_blank_tile(title=title)
 
+    async def _get_artist_image_async(
+        self, client: httpx.AsyncClient, artist: Artist, title: str
+    ) -> bytes:
+        try:
+            artist_slug = urllib.parse.quote_plus(artist.name)
+            page_url = f"https://www.last.fm/music/{artist_slug}"
+            page_resp = await client.get(page_url)
+            if page_resp.status_code == 404:
+                raise ArtistNotFound
+            page_resp.raise_for_status()
+            soup = bs4.BeautifulSoup(page_resp.content, "html5lib")
+
+            url = None
+            bg_elem = soup.find(class_="header-new-background-image")
+            if bg_elem:
+                url = str(bg_elem.get("content"))
+            if not url:
+                raise ArtistImageNotFound
+
+            data = await self._download_bytes_async(client, url, CACHE_KIND_ARTIST)
+            with Image.open(BytesIO(data)) as img:
+                img.thumbnail((self.TILE_WIDTH, self.TILE_HEIGHT))
+                with BytesIO() as img_bytes:
+                    img.save(img_bytes, format="png")
+                    return img_bytes.getvalue()
+        except (
+            ArtistNotFound,
+            ArtistImageNotFound,
+            httpx.HTTPError,
+            requests.RequestException,
+            OSError,
+            Exception,
+        ):
+            return self._generate_blank_tile(title=title)
+
     def __repr__(self):
         return (
             f"<ArtistCollage ["
@@ -673,12 +799,35 @@ class AlbumCollageBuilder(BaseCollageBuilder):
         top_albums = self.lastfm_client.get_top_albums(user, limit, period)
         return self._create_tiles_from_top_items(top_albums)
 
+    async def _get_tiles_from_top_items_async(
+        self,
+        user: User,
+        limit: int,
+        period: str,
+        max_concurrency: int = BaseCollageBuilder.DEFAULT_CONCURRENCY,
+    ) -> List[CollageTile]:
+        top_albums = await self.lastfm_client.get_top_albums_async(user, limit, period)
+        return await self._create_tiles_from_top_items_async(
+            top_albums, max_concurrency=max_concurrency
+        )
+
     def _create_tile_from_top_item(
         self,
         top_item: TopItem,
     ) -> CollageTile:
         title = f"{top_item.item.artist} - {top_item.item.title}"
         data = self._get_album_cover(top_item.item, title)
+        return CollageTile(data=data, playcount=top_item.weight, title=title)
+
+    async def _create_tile_from_top_item_async(
+        self,
+        client: httpx.AsyncClient,
+        semaphore: asyncio.Semaphore,
+        top_item: TopItem,
+    ) -> CollageTile:
+        title = f"{top_item.item.artist} - {top_item.item.title}"
+        async with semaphore:
+            data = await self._get_album_cover_async(client, top_item.item, title)
         return CollageTile(data=data, playcount=top_item.weight, title=title)
 
     def _get_album_cover(self, item: Union[Album, Track], title: str) -> bytes:
@@ -695,6 +844,24 @@ class AlbumCollageBuilder(BaseCollageBuilder):
                     img.save(img_bytes, format="png")
                     return img_bytes.getvalue()
         except (requests.RequestException, OSError, Exception):
+            return self._generate_blank_tile(title=title)
+
+    async def _get_album_cover_async(
+        self, client: httpx.AsyncClient, item: Union[Album, Track], title: str
+    ) -> bytes:
+        try:
+            url = item.get_cover_image()
+        except (IndexError, AttributeError, Exception):
+            url = None
+        if not url:
+            return self._generate_blank_tile(title=title)
+        try:
+            data = await self._download_bytes_async(client, url, CACHE_KIND_ALBUM)
+            with Image.open(BytesIO(data)) as img:
+                with BytesIO() as img_bytes:
+                    img.save(img_bytes, format="png")
+                    return img_bytes.getvalue()
+        except (httpx.HTTPError, requests.RequestException, OSError, Exception):
             return self._generate_blank_tile(title=title)
 
     def __repr__(self):
@@ -714,6 +881,18 @@ class TrackCollageBuilder(AlbumCollageBuilder):
     ) -> List[CollageTile]:
         top_tracks = self.lastfm_client.get_top_tracks(user, limit, period)
         return self._create_tiles_from_top_items(top_tracks)
+
+    async def _get_tiles_from_top_items_async(
+        self,
+        user: User,
+        limit: int,
+        period: str,
+        max_concurrency: int = BaseCollageBuilder.DEFAULT_CONCURRENCY,
+    ) -> List[CollageTile]:
+        top_tracks = await self.lastfm_client.get_top_tracks_async(user, limit, period)
+        return await self._create_tiles_from_top_items_async(
+            top_tracks, max_concurrency=max_concurrency
+        )
 
     def __repr__(self):
         return (
