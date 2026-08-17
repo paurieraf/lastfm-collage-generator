@@ -19,7 +19,7 @@
   - **Top Albums (`album`)**: Fetches top albums via the Last.fm REST API (`pylast`), downloads cover artwork, and composites them into a grid.
   - **Top Artists (`artist`)**: Fetches top artists via `pylast`, fetches artist hero images directly from `https://www.last.fm/music/<artist>` (as artist images were deprecated in the Last.fm API), thumbnails images to 300x300px, and composites the grid.
   - **Top Tracks (`track`)**: Fetches top tracks via `pylast`, resolves associated album cover art (or applies blank tile fallback), and renders the collage.
-- **Configurable Grid Geometry**: Generates rectangular or square grids up to `5x5` (e.g., `3x3`, `5x5`, asymmetric `3x5`). Standard tile size is `300 x 300` pixels.
+- **Configurable Grid Geometry**: Generates rectangular or square grids up to `20x20` (max 400 tiles). Standard tile size is dynamically scaled based on density (e.g., 300px, 150px, 100px) or fully customizable.
 - **Aggregation Horizons**: Supports all standard Last.fm periods: `7day`, `1month`, `3month`, `6month`, `12month`, `overall`.
 - **Title Overlay Banners**: Renders a dark translucent banner overlay on each tile with white monospace typography (`DejaVuSansMono.ttf`) displaying entity name and scrobble playcount.
 
@@ -98,7 +98,7 @@ The library strictly adheres to a 4-layer object-oriented design: **Facade → F
 
 1. **`CollageGenerator`** (`collage_generator.py`):
    - Single public entrypoint.
-   - Enforces parameter validation in `_validate_parameters()` (`cols <= 5`, `rows <= 5`, `entity in ENTITIES`, `period in PERIODS`).
+   - Enforces parameter validation in `_validate_parameters()` (`cols <= 20`, `rows <= 20`, `entity in ENTITIES`, `period in PERIODS`).
    - Delegates execution to `CollageBuilderFactory`.
 2. **`CollageBuilderFactory`** (`collage.py`):
    - Uses `__new__` to instantiate concrete builders (`AlbumCollageBuilder`, `ArtistCollageBuilder`, `TrackCollageBuilder`) based on entity key.
@@ -123,7 +123,7 @@ The library strictly adheres to a 4-layer object-oriented design: **Facade → F
 
 ### 3.2 Internal Data Models (`collage.py`)
 - `LastfmConfig`: `@dataclass` holding `lastfm_api_key` and `lastfm_api_secret`.
-- `CollageBuilderConfig`: `@dataclass` holding `cols`, `rows`, `period`, and `show_playcount`.
+- `CollageBuilderConfig`: `@dataclass` holding `cols`, `rows`, `period`, `tile_size`, `theme`, `overlay_style`, etc.
 - `CollageTile`: `@dataclass` holding `data: bytes`, `playcount: int`, and `title: str`.
 - `CollageConfig`: Dead code dataclass (defined but unused).
 
@@ -310,7 +310,7 @@ The table below reconciles all contradictions between existing `README.md`, the 
 | Topic / Feature | README.md Statement | Codebase Reality | Architectural Design Spec | Status |
 |---|---|---|---|---|
 | **Convenience Methods** | Mentions `generate_top_albums_collage()` | Fully implemented on `CollageGenerator` | Convenience methods exist on Facade | **RESOLVED** |
-| **Grid Boundary Validation** | Mentions "up to 5" rows/cols | Validates `1 <= cols <= 5` and `1 <= rows <= 5` | Strict boundary and type validation | **RESOLVED** |
+| **Grid Boundary Validation** | Mentions "up to 20" rows/cols | Validates `1 <= cols <= 20` and `1 <= rows <= 20` | Strict boundary and type validation | **RESOLVED** |
 | **Title Overlay Geometry** | Shows visual overlay sample | Bounded to `y + 235` to `y + 300` on every row | Banner strictly occupies tile bottom 65px | **RESOLVED** |
 | **Network Error Handling** | No mention of network failures | Graceful fallback to black blank tile | Catch all network errors, timeouts, and 404s | **RESOLVED** |
 | **Automated Test Coverage** | No mention of tests | 44 offline unit tests with 100% coverage | Full offline pytest suite with synthetic mocks | **RESOLVED** |

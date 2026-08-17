@@ -625,14 +625,14 @@ tests/
 - [x] Author comprehensive offline `pytest` test suite achieving 100% code coverage.
 
 ### Phase 2: Enhanced Typography & Grid Flexibility (v0.6.0)
-- [ ] Implement word-boundary line wrapping (`textwrap` integration with `font.getlength()`).
-- [ ] Expose `show_playcount: bool` and `font_bold: bool` parameters through `CollageGenerator.generate()`.
-- [ ] Support customizable tile dimensions (e.g., 150px, 300px, 600px).
-- [ ] Lift arbitrary `5x5` dimension cap to support larger grids (e.g., `10x10`).
-- [ ] Introduce in-memory LRU caching (`functools.lru_cache` or `cachetools`) for retrieved artist images.
+- [x] Implement word-boundary line wrapping (`textwrap` integration with `font.getlength()`).
+- [x] Expose `show_playcount: bool` and `font_bold: bool` parameters through `CollageGenerator.generate()`.
+- [x] Support customizable tile dimensions (e.g., 150px, 300px, 600px).
+- [x] Lift arbitrary `5x5` dimension cap to support larger grids (e.g., `10x10`).
+- [x] Introduce in-memory LRU caching (`functools.lru_cache` or `cachetools`) for retrieved artist images.
 
 ### Phase 3: Modern Concurrency & Multi-Platform Support (v1.0.0+)
-- [ ] Modernize I/O pipeline using `asyncio` and `httpx` / `aiohttp` for non-blocking asynchronous downloading.
+- [x] Modernize I/O pipeline using `asyncio` and `httpx` / `aiohttp` for non-blocking asynchronous downloading.
 - [ ] Implement CLI entry point (`lastfm-collage`) using `argparse` / `click` with terminal progress bars.
 - [ ] Support additional image export formats (JPEG with quality control, WebP).
 - [ ] Abstract provider interface to support multi-service backends (Spotify top tracks, Apple Music, ListenBrainz).

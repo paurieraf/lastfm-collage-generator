@@ -44,10 +44,11 @@ The `lastfm-collage-generator` library is structured according to a strict 4-lay
 
 ## Interface Contracts
 ### Facade Entrypoint
-- `CollageGenerator.generate(entity: str, username: str, cols: int, rows: int, period: str = "overall", tile_size: Optional[int] = None, theme: Union[str, Theme, Dict[str, Any]] = "dark", overlay_style: str = "banner", show_text: bool = True, font_path: Optional[str] = None) -> PIL.Image.Image`
-- `CollageGenerator.generate_top_albums_collage(username: str, cols: int = 5, rows: int = 5, period: str = "overall", tile_size: Optional[int] = None, theme: Union[str, Theme, Dict[str, Any]] = "dark", overlay_style: str = "banner", show_text: bool = True, font_path: Optional[str] = None) -> PIL.Image.Image`
+- `CollageGenerator.generate(entity: str, username: str, cols: int, rows: int, period: str = "overall", tile_size: Optional[int] = None, theme: Union[str, Theme, Dict[str, Any]] = "dark", overlay_style: str = "banner", show_text: bool = True, show_playcount: bool = True, font_bold: bool = False, font_path: Optional[str] = None, preset: Optional[str] = None, cache_dir: Optional[str] = None, cache_ttl_override: Optional[int] = None, rate_limit: Optional[float] = None, fallback_style: str = "gradient", corner_radius: int = 0, border_width: int = 0, border_color: Optional[Union[str, tuple]] = None, spacing: int = 0) -> PIL.Image.Image`
+- `CollageGenerator.generate_top_albums_collage(...) -> PIL.Image.Image`
 - `CollageGenerator.generate_top_artists_collage(...) -> PIL.Image.Image`
 - `CollageGenerator.generate_top_tracks_collage(...) -> PIL.Image.Image`
+- Async versions: `generate_async`, `generate_top_albums_collage_async`, etc., returning `PIL.Image.Image`.
 - Return: Composited `PIL.Image.Image` in RGB mode with dimensions `(cols * tile_size, rows * tile_size)`.
 
 ### Builder Interface
