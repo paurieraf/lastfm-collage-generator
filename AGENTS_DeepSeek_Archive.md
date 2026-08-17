@@ -239,7 +239,7 @@ Provides drop-in fixtures and factories in `references/fixture_templates.py`:
 - `SyntheticImageFactory`: Generates raw PNG bytes in memory.
 - `MockPylastEntityFactory`: Creates mock `Album`, `Artist`, `Track`, and `TopItem` objects.
 - `MockLastfmNetwork` / `MockLastfmClient`: Intercepts `pylast` network instantiation.
-- `MockHtmlResponses`: Pre-canned HTML fixtures for testing artist web retrieval.
+- `MockHtmlFetcherResponses`: Pre-canned HTML fixtures for testing artist web retrieval.
 
 ### 6.3 `collage-cli-workflow` ([`.gemini/skills/collage-cli-workflow/SKILL.md`](./.gemini/skills/collage-cli-workflow/SKILL.md))
 Provides a CLI runner (`scripts/generate_collage_cli.py`) for generating live or offline mock collages:
