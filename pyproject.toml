@@ -1,6 +1,6 @@
 [project]
 name = "lastfmcollagegenerator"
-version = "1.2.0"
+version = "1.3.0"
 description = "Python library to build Last.fm collages"
 readme = "README.md"
 requires-python = ">=3.8.1"
