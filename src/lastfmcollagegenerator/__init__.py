@@ -2,6 +2,22 @@
 
 from lastfmcollagegenerator.collage_generator import CollageGenerator
 from lastfmcollagegenerator.theme import Theme, THEME_PRESETS, resolve_theme
+from lastfmcollagegenerator.effects import (
+    ImageFilter,
+    VisualEffectPipeline,
+    DuotoneFilter,
+    ColorExtractor,
+)
 
-__version__ = "1.1.0"
-__all__ = ["CollageGenerator", "Theme", "THEME_PRESETS", "resolve_theme", "__version__"]
+__version__ = "1.2.0"
+__all__ = [
+    "CollageGenerator",
+    "Theme",
+    "THEME_PRESETS",
+    "resolve_theme",
+    "ImageFilter",
+    "VisualEffectPipeline",
+    "DuotoneFilter",
+    "ColorExtractor",
+    "__version__",
+]

@@ -7,6 +7,7 @@ from lastfmcollagegenerator.constants import (
     THEME_GLASSMORPHIC,
     THEME_SUNSET,
     THEME_NEON,
+    THEME_ADAPTIVE,
 )
 
 
@@ -94,11 +95,17 @@ def resolve_theme(theme: Union[str, Theme, Dict[str, Any]]) -> Theme:
 
     if isinstance(theme, str):
         normalized = theme.lower().strip()
+        if normalized == THEME_ADAPTIVE:
+            return Theme(
+                name=THEME_ADAPTIVE,
+                overlay_bg=(0, 0, 0, 180),
+                text_color=(255, 255, 255),
+            )
         if normalized in THEME_PRESETS:
             return THEME_PRESETS[normalized]
         raise ValueError(
             f"Unknown theme preset: '{theme}'. "
-            f"Available presets: {list(THEME_PRESETS.keys())}"
+            f"Available presets: {list(THEME_PRESETS.keys()) + [THEME_ADAPTIVE]}"
         )
 
     if isinstance(theme, dict):

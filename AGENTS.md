@@ -1,7 +1,7 @@
 # AGENTS.md: AI Agent Development & Architecture Guide
 
 **Target Repository**: `lastfm-collage-generator`  
-**Distributed Package**: `lastfmcollagegenerator` (v1.1.0)  
+**Distributed Package**: `lastfmcollagegenerator` (v1.2.0)  
 **Target Python Runtime**: Python `^3.8` (compatible with 3.8, 3.9, 3.10, 3.11, 3.12)  
 **Build & Package Manager**: uv (`hatchling`)  
 **Primary Architecture Specification**: [`PROJECT_OVERVIEW.md`](./PROJECT_OVERVIEW.md)  

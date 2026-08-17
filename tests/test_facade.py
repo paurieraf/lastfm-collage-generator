@@ -251,5 +251,9 @@ def test_package_exports_and_version():
     assert hasattr(lastfmcollagegenerator, "Theme")
     assert hasattr(lastfmcollagegenerator, "THEME_PRESETS")
     assert hasattr(lastfmcollagegenerator, "resolve_theme")
+    assert hasattr(lastfmcollagegenerator, "ImageFilter")
+    assert hasattr(lastfmcollagegenerator, "VisualEffectPipeline")
+    assert hasattr(lastfmcollagegenerator, "DuotoneFilter")
+    assert hasattr(lastfmcollagegenerator, "ColorExtractor")
     assert hasattr(lastfmcollagegenerator, "__version__")
-    assert lastfmcollagegenerator.__version__ == "1.1.0"
+    assert lastfmcollagegenerator.__version__ == "1.2.0"

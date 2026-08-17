@@ -11,7 +11,7 @@ import bs4
 import httpx
 import requests
 from pylast import User, TopItem, Album, Artist, Track
-from PIL import Image, ImageDraw, ImageEnhance, ImageFile, ImageFilter
+from PIL import Image, ImageDraw, ImageEnhance, ImageFile, ImageFilter as PILImageFilter
 
 
 import lastfmcollagegenerator
@@ -30,6 +30,7 @@ from lastfmcollagegenerator.constants import (
     OVERLAY_PILL,
     OVERLAY_CLEAN,
     THEME_DARK,
+    THEME_ADAPTIVE,
 )
 from lastfmcollagegenerator.exceptions import (
     ArtistNotFound,
@@ -40,6 +41,11 @@ from lastfmcollagegenerator.fallback_art import (
     FALLBACK_STYLE_BLACK,
     generate_blank_tile,
     generate_fallback_tile,
+)
+from lastfmcollagegenerator.effects import (
+    ImageFilter,
+    VisualEffectPipeline,
+    ColorExtractor,
 )
 from lastfmcollagegenerator.lastfm.client import LastfmClient
 from lastfmcollagegenerator.network import ResilientHttpFetcher
@@ -55,7 +61,7 @@ ImageFile.LOAD_TRUNCATED_IMAGES = True
 
 DEFAULT_HEADERS = {
     "User-Agent": (
-        "lastfm-collage-generator/1.1.0 "
+        "lastfm-collage-generator/1.2.0 "
         "(+https://github.com/paurieraf/lastfm-collage-generator)"
     )
 }
@@ -87,6 +93,7 @@ class CollageBuilderConfig:
     fallback_style: str = FALLBACK_STYLE_GRADIENT
     preset_width: Optional[int] = None
     preset_height: Optional[int] = None
+    filters: Optional[Union[List[ImageFilter], VisualEffectPipeline]] = None
 
 
 @dataclass
@@ -126,6 +133,14 @@ class BaseCollageBuilder:
         else:
             self.theme = THEME_PRESETS[THEME_DARK]
 
+        raw_filters = getattr(self.config, "filters", None)
+        if isinstance(raw_filters, VisualEffectPipeline):
+            self.pipeline = raw_filters
+        elif raw_filters is not None:
+            self.pipeline = VisualEffectPipeline(raw_filters)
+        else:
+            self.pipeline = VisualEffectPipeline()
+
     DEFAULT_CONCURRENCY = 20
 
     def create(self, username: str) -> Image.Image:
@@ -153,6 +168,13 @@ class BaseCollageBuilder:
         self, tiles: List[CollageTile], cols: int, rows: int
     ) -> Image.Image:
         """Create composite collage canvas."""
+        if getattr(self.theme, "name", None) == THEME_ADAPTIVE and tiles:
+            try:
+                with Image.open(BytesIO(tiles[0].data)) as top_img:
+                    self.theme = ColorExtractor.generate_adaptive_theme(top_img)
+            except Exception:
+                self.theme = THEME_PRESETS[THEME_DARK]
+
         width = self.tile_width
         height = self.tile_height
         corner_radius = int(getattr(self.config, "corner_radius", 0) or 0)
@@ -210,10 +232,16 @@ class BaseCollageBuilder:
             with Image.open(BytesIO(tile.data)) as tile_img:
                 if tile_img.size != (width, height):
                     resized = tile_img.resize((width, height), resample_filter)
-                    new_image.paste(resized, cursor)
+                    filtered = self.pipeline.apply(resized)
+                    new_image.paste(filtered, cursor)
+                    if filtered is not resized:
+                        filtered.close()
                     resized.close()
                 else:
-                    new_image.paste(tile_img, cursor)
+                    filtered = self.pipeline.apply(tile_img)
+                    new_image.paste(filtered, cursor)
+                    if filtered is not tile_img:
+                        filtered.close()
 
             if show_text and overlay_style != OVERLAY_CLEAN:
                 title = f"{tile.title}"
@@ -278,9 +306,13 @@ class BaseCollageBuilder:
             with Image.open(BytesIO(tile.data)) as tile_img:
                 if tile_img.size != (width, height):
                     resized = tile_img.resize((width, height), resample_filter)
-                    processed: Image.Image = resized
+                    filtered = self.pipeline.apply(resized)
+                    if filtered is not resized:
+                        resized.close()
+                    processed: Image.Image = filtered
                 else:
-                    processed = tile_img
+                    filtered = self.pipeline.apply(tile_img)
+                    processed = filtered
 
                 if corner_radius > 0:
                     rounded = self._apply_rounded_mask(
@@ -338,7 +370,7 @@ class BaseCollageBuilder:
                     (canvas_width, canvas_height), Image.Resampling.LANCZOS
                 )
                 radius = max(1, min(40, min(canvas_width, canvas_height) // 50))
-                backdrop = backdrop.filter(ImageFilter.GaussianBlur(radius=radius))
+                backdrop = backdrop.filter(PILImageFilter.GaussianBlur(radius=radius))
                 backdrop = ImageEnhance.Brightness(backdrop).enhance(0.4)
                 canvas.paste(backdrop, (0, 0))
                 backdrop.close()

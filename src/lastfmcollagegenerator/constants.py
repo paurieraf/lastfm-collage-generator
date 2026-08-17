@@ -38,10 +38,12 @@ THEME_LIGHT = "light"
 THEME_GLASSMORPHIC = "glassmorphic"
 THEME_SUNSET = "sunset"
 THEME_NEON = "neon"
+THEME_ADAPTIVE = "adaptive"
 THEMES = (
     THEME_DARK,
     THEME_LIGHT,
     THEME_GLASSMORPHIC,
     THEME_SUNSET,
     THEME_NEON,
+    THEME_ADAPTIVE,
 )
