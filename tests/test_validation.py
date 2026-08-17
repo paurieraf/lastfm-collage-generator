@@ -205,6 +205,30 @@ def test_validation_invalid_show_text_type(generator):
         )
 
 
+def test_validation_invalid_show_playcount_type(generator):
+    with pytest.raises(TypeError, match="show_playcount must be a boolean"):
+        generator._validate_parameters(
+            entity="album",
+            username="valid_user",
+            cols=3,
+            rows=3,
+            period="overall",
+            show_playcount="true",
+        )
+
+
+def test_validation_invalid_font_bold_type(generator):
+    with pytest.raises(TypeError, match="font_bold must be a boolean"):
+        generator._validate_parameters(
+            entity="album",
+            username="valid_user",
+            cols=3,
+            rows=3,
+            period="overall",
+            font_bold="true",
+        )
+
+
 def test_validation_invalid_font_path(generator):
     with pytest.raises(TypeError, match="font_path must be a string or None"):
         generator._validate_parameters(

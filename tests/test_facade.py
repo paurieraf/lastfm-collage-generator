@@ -157,6 +157,29 @@ def test_generate_with_themes_and_overlay_styles(
 @patch("lastfmcollagegenerator.collage_generator.ArtworkCache")
 @patch("lastfmcollagegenerator.collage_generator.CollageBuilderFactory")
 @patch("lastfmcollagegenerator.collage_generator.LastfmClient")
+def test_generate_with_typography_options(
+    mock_client_cls, mock_factory_cls, mock_cache_cls, mock_fetcher_cls, mock_builder
+):
+    mock_factory_cls.return_value = mock_builder
+    generator = CollageGenerator("mock_key", "mock_secret")
+
+    generator.generate_top_artists_collage(
+        username="testuser",
+        cols=3,
+        rows=3,
+        period="overall",
+        show_playcount=False,
+        font_bold=True,
+    )
+    call_kwargs = mock_factory_cls.call_args.kwargs
+    assert call_kwargs["config"].show_playcount is False
+    assert call_kwargs["config"].font_bold is True
+
+
+@patch("lastfmcollagegenerator.collage_generator.ResilientHttpFetcher")
+@patch("lastfmcollagegenerator.collage_generator.ArtworkCache")
+@patch("lastfmcollagegenerator.collage_generator.CollageBuilderFactory")
+@patch("lastfmcollagegenerator.collage_generator.LastfmClient")
 def test_generate_with_preset_overrides_grid(
     mock_client_cls, mock_factory_cls, mock_cache_cls, mock_fetcher_cls, mock_builder
 ):
@@ -229,4 +252,4 @@ def test_package_exports_and_version():
     assert hasattr(lastfmcollagegenerator, "THEME_PRESETS")
     assert hasattr(lastfmcollagegenerator, "resolve_theme")
     assert hasattr(lastfmcollagegenerator, "__version__")
-    assert lastfmcollagegenerator.__version__ == "1.0.0"
+    assert lastfmcollagegenerator.__version__ == "1.1.0"

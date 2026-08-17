@@ -1,5 +1,6 @@
 import asyncio
 import concurrent.futures
+import functools
 import os
 import urllib.parse
 from dataclasses import dataclass
@@ -48,13 +49,13 @@ from lastfmcollagegenerator.theme import (
     resolve_theme,
     parse_color,
 )
-from lastfmcollagegenerator.typography import get_auto_scaled_font
+from lastfmcollagegenerator.typography import get_auto_scaled_font, wrap_text_to_width
 
 ImageFile.LOAD_TRUNCATED_IMAGES = True
 
 DEFAULT_HEADERS = {
     "User-Agent": (
-        "lastfm-collage-generator/1.0.0 "
+        "lastfm-collage-generator/1.1.0 "
         "(+https://github.com/paurieraf/lastfm-collage-generator)"
     )
 }
@@ -73,6 +74,7 @@ class CollageBuilderConfig:
     rows: int
     period: str
     show_playcount: bool = True
+    font_bold: bool = False
     tile_size: int = 300
     theme: Optional[Theme] = None
     overlay_style: str = OVERLAY_BANNER
@@ -348,7 +350,8 @@ class BaseCollageBuilder:
             return cast(str, self.config.font_path)
         if self.theme.font_path:
             return self.theme.font_path
-        font_path = self.FONT_BOLD_PATH if self.FONT_BOLD else self.FONT_REGULAR_PATH
+        font_bold = getattr(self.config, "font_bold", self.FONT_BOLD)
+        font_path = self.FONT_BOLD_PATH if font_bold else self.FONT_REGULAR_PATH
         return os.path.join(self._path, font_path)
 
     def _render_overlay(
@@ -545,20 +548,7 @@ class BaseCollageBuilder:
     def _insert_newline_characters_to_text(
         font: Any, text: str, max_width: int = 275
     ) -> str:
-        processed_chars = []
-        processed_text = ""
-        text_lines = []
-        for c in text:
-            processed_chars.append(c)
-            processed_text = "".join(processed_chars)
-            font_w = font.getlength(processed_text)
-            if font_w >= max_width:
-                text_lines.append(processed_text)
-                processed_chars = []
-                processed_text = ""
-        text_lines.append(processed_text)  # Add residual characters
-        title = "\n".join(text_lines)
-        return title
+        return wrap_text_to_width(font, text, max_width=max_width)
 
     def _generate_blank_tile(
         self, width: int = 300, height: int = 300, title: str = ""
@@ -706,6 +696,7 @@ class ArtistCollageBuilder(BaseCollageBuilder):
             data = await self._get_artist_image_async(client, top_item.item, title)
         return CollageTile(data=data, playcount=top_item.weight, title=title)
 
+    @functools.lru_cache(maxsize=128)
     def _get_artist_image(self, artist: Artist, title: str) -> bytes:
         """Last.fm API does not provide artist images.
 

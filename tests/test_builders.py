@@ -198,3 +198,56 @@ def test_generate_blank_tile_legacy_black_style():
         assert img.size == (120, 120)
         assert img.mode == "RGB"
         assert img.getpixel((0, 0)) == (0, 0, 0)
+
+
+def test_builder_font_bold_selection():
+    config_regular = CollageBuilderConfig(
+        cols=1, rows=1, period="overall", font_bold=False
+    )
+    builder_regular = BaseCollageBuilder(config_regular, MagicMock())
+    assert "DejaVuSansMono.ttf" in builder_regular._get_font_file()
+    assert "DejaVuSansMono-Bold.ttf" not in builder_regular._get_font_file()
+
+    config_bold = CollageBuilderConfig(cols=1, rows=1, period="overall", font_bold=True)
+    builder_bold = BaseCollageBuilder(config_bold, MagicMock())
+    assert "DejaVuSansMono-Bold.ttf" in builder_bold._get_font_file()
+
+
+def test_artist_image_lru_cache():
+    config = CollageBuilderConfig(cols=1, rows=1, period="overall")
+    builder = ArtistCollageBuilder(config, MagicMock())
+
+    # Clear cache before testing
+    builder._get_artist_image.cache_clear()
+
+    artist = MockPylastEntityFactory.create_mock_artist("Cached Artist")
+    sample_bytes = SyntheticImageFactory.create_image_bytes(300, 300)
+
+    with patch.object(builder, "_download_bytes", return_value=sample_bytes):
+        with patch.object(builder.fetcher, "get") as mock_get:
+            mock_resp = MagicMock()
+            mock_resp.status_code = 200
+            mock_resp.content = (
+                b'<div class="header-new-background-image" '
+                b'content="https://img.last.fm/art.png"></div>'
+            )
+            mock_get.return_value = mock_resp
+
+            res1 = builder._get_artist_image(artist, "Cached Artist")
+            res2 = builder._get_artist_image(artist, "Cached Artist")
+
+            assert res1 == res2
+            # Fetcher should only be called once due to LRU cache
+            assert mock_get.call_count == 1
+            info = builder._get_artist_image.cache_info()
+            assert info.hits >= 1
+
+
+def test_insert_newline_characters_word_boundary():
+    config = CollageBuilderConfig(cols=1, rows=1, period="overall")
+    builder = BaseCollageBuilder(config, MagicMock())
+    font = ImageFont.load_default()
+    text = "WordOne WordTwo WordThree"
+    formatted = builder._insert_newline_characters_to_text(font, text, max_width=100)
+    assert "\n" in formatted
+    assert "WordOne" in formatted

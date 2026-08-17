@@ -64,6 +64,8 @@ class CollageGenerator:
         theme: Union[str, Theme, Dict[str, Any]] = THEME_DARK,
         overlay_style: str = OVERLAY_BANNER,
         show_text: bool = True,
+        show_playcount: bool = True,
+        font_bold: bool = False,
         font_path: Optional[str] = None,
         preset: Optional[str] = None,
         cache_dir: Optional[str] = None,
@@ -93,6 +95,10 @@ class CollageGenerator:
                            "gradient", "pill", "clean"). Default is "banner".
             show_text: If False, disables all text and overlay backgrounds.
                        Default True.
+            show_playcount: If False, hides the scrobble count on overlays.
+                       Default True.
+            font_bold: If True, uses bold typography for overlay text.
+                       Default False.
             font_path: Optional path to a custom TrueType (.ttf) or OpenType
                        (.otf) font file.
             preset: Optional social media dimension preset. One of:
@@ -141,6 +147,8 @@ class CollageGenerator:
             theme=theme,
             overlay_style=overlay_style,
             show_text=show_text,
+            show_playcount=show_playcount,
+            font_bold=font_bold,
             font_path=font_path,
             preset=preset,
             cache_dir=cache_dir,
@@ -162,6 +170,8 @@ class CollageGenerator:
             theme=resolved_theme,
             overlay_style=overlay_style,
             show_text=show_text,
+            show_playcount=show_playcount,
+            font_bold=font_bold,
             font_path=font_path,
             preset=resolved_preset,
             cache_dir=cache_dir,
@@ -185,6 +195,8 @@ class CollageGenerator:
         theme: Union[str, Theme, Dict[str, Any]] = THEME_DARK,
         overlay_style: str = OVERLAY_BANNER,
         show_text: bool = True,
+        show_playcount: bool = True,
+        font_bold: bool = False,
         font_path: Optional[str] = None,
         preset: Optional[str] = None,
         cache_dir: Optional[str] = None,
@@ -207,6 +219,8 @@ class CollageGenerator:
             theme=theme,
             overlay_style=overlay_style,
             show_text=show_text,
+            show_playcount=show_playcount,
+            font_bold=font_bold,
             font_path=font_path,
             preset=preset,
             cache_dir=cache_dir,
@@ -229,6 +243,8 @@ class CollageGenerator:
         theme: Union[str, Theme, Dict[str, Any]] = THEME_DARK,
         overlay_style: str = OVERLAY_BANNER,
         show_text: bool = True,
+        show_playcount: bool = True,
+        font_bold: bool = False,
         font_path: Optional[str] = None,
         preset: Optional[str] = None,
         cache_dir: Optional[str] = None,
@@ -251,6 +267,8 @@ class CollageGenerator:
             theme=theme,
             overlay_style=overlay_style,
             show_text=show_text,
+            show_playcount=show_playcount,
+            font_bold=font_bold,
             font_path=font_path,
             preset=preset,
             cache_dir=cache_dir,
@@ -273,6 +291,8 @@ class CollageGenerator:
         theme: Union[str, Theme, Dict[str, Any]] = THEME_DARK,
         overlay_style: str = OVERLAY_BANNER,
         show_text: bool = True,
+        show_playcount: bool = True,
+        font_bold: bool = False,
         font_path: Optional[str] = None,
         preset: Optional[str] = None,
         cache_dir: Optional[str] = None,
@@ -295,6 +315,8 @@ class CollageGenerator:
             theme=theme,
             overlay_style=overlay_style,
             show_text=show_text,
+            show_playcount=show_playcount,
+            font_bold=font_bold,
             font_path=font_path,
             preset=preset,
             cache_dir=cache_dir,
@@ -318,6 +340,8 @@ class CollageGenerator:
         theme: Union[str, Theme, Dict[str, Any]] = THEME_DARK,
         overlay_style: str = OVERLAY_BANNER,
         show_text: bool = True,
+        show_playcount: bool = True,
+        font_bold: bool = False,
         font_path: Optional[str] = None,
         preset: Optional[str] = None,
         cache_dir: Optional[str] = None,
@@ -351,6 +375,8 @@ class CollageGenerator:
             theme=theme,
             overlay_style=overlay_style,
             show_text=show_text,
+            show_playcount=show_playcount,
+            font_bold=font_bold,
             font_path=font_path,
             preset=preset,
             cache_dir=cache_dir,
@@ -372,6 +398,8 @@ class CollageGenerator:
             theme=resolved_theme,
             overlay_style=overlay_style,
             show_text=show_text,
+            show_playcount=show_playcount,
+            font_bold=font_bold,
             font_path=font_path,
             preset=resolved_preset,
             cache_dir=cache_dir,
@@ -397,6 +425,8 @@ class CollageGenerator:
         theme: Union[str, Theme, Dict[str, Any]] = THEME_DARK,
         overlay_style: str = OVERLAY_BANNER,
         show_text: bool = True,
+        show_playcount: bool = True,
+        font_bold: bool = False,
         font_path: Optional[str] = None,
         preset: Optional[str] = None,
         cache_dir: Optional[str] = None,
@@ -420,6 +450,8 @@ class CollageGenerator:
             theme=theme,
             overlay_style=overlay_style,
             show_text=show_text,
+            show_playcount=show_playcount,
+            font_bold=font_bold,
             font_path=font_path,
             preset=preset,
             cache_dir=cache_dir,
@@ -443,6 +475,8 @@ class CollageGenerator:
         theme: Union[str, Theme, Dict[str, Any]] = THEME_DARK,
         overlay_style: str = OVERLAY_BANNER,
         show_text: bool = True,
+        show_playcount: bool = True,
+        font_bold: bool = False,
         font_path: Optional[str] = None,
         preset: Optional[str] = None,
         cache_dir: Optional[str] = None,
@@ -466,6 +500,8 @@ class CollageGenerator:
             theme=theme,
             overlay_style=overlay_style,
             show_text=show_text,
+            show_playcount=show_playcount,
+            font_bold=font_bold,
             font_path=font_path,
             preset=preset,
             cache_dir=cache_dir,
@@ -489,6 +525,8 @@ class CollageGenerator:
         theme: Union[str, Theme, Dict[str, Any]] = THEME_DARK,
         overlay_style: str = OVERLAY_BANNER,
         show_text: bool = True,
+        show_playcount: bool = True,
+        font_bold: bool = False,
         font_path: Optional[str] = None,
         preset: Optional[str] = None,
         cache_dir: Optional[str] = None,
@@ -512,6 +550,8 @@ class CollageGenerator:
             theme=theme,
             overlay_style=overlay_style,
             show_text=show_text,
+            show_playcount=show_playcount,
+            font_bold=font_bold,
             font_path=font_path,
             preset=preset,
             cache_dir=cache_dir,
@@ -554,6 +594,8 @@ class CollageGenerator:
         theme: Optional[Theme] = None,
         overlay_style: str = OVERLAY_BANNER,
         show_text: bool = True,
+        show_playcount: bool = True,
+        font_bold: bool = False,
         font_path: Optional[str] = None,
         preset: Optional[SocialPreset] = None,
         cache_dir: Optional[str] = None,
@@ -573,6 +615,8 @@ class CollageGenerator:
             theme=theme,
             overlay_style=overlay_style,
             show_text=show_text,
+            show_playcount=show_playcount,
+            font_bold=font_bold,
             font_path=font_path,
             corner_radius=corner_radius,
             border_width=border_width,
@@ -615,6 +659,8 @@ class CollageGenerator:
         theme: Union[str, Theme, Dict[str, Any]] = THEME_DARK,
         overlay_style: str = OVERLAY_BANNER,
         show_text: bool = True,
+        show_playcount: bool = True,
+        font_bold: bool = False,
         font_path: Optional[str] = None,
         preset: Optional[str] = None,
         cache_dir: Optional[str] = None,
@@ -669,6 +715,12 @@ class CollageGenerator:
 
         if type(show_text) is not bool:
             raise TypeError("show_text must be a boolean.")
+
+        if type(show_playcount) is not bool:
+            raise TypeError("show_playcount must be a boolean.")
+
+        if type(font_bold) is not bool:
+            raise TypeError("font_bold must be a boolean.")
 
         if font_path is not None:
             if not isinstance(font_path, str):

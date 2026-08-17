@@ -4,11 +4,15 @@
 Provides multi-tier artwork caching and network resilience middleware so repeated collage generation avoids redundant downloads and survives transient Last.fm/CDN failures gracefully.
 ## Requirements
 ### Requirement: Multi-Tier Artwork Caching
-The system SHALL cache downloaded artwork across two tiers: a Tier-1 in-memory LRU cache and a Tier-2 persistent SQLite-backed disk cache located under `~/.cache/lastfm-collage/`, with time-to-live (TTL) expiration of 30 days for album covers and 7 days for retrieved artist hero images.
+The system SHALL cache downloaded artwork across two tiers: a Tier-1 in-memory LRU cache and a Tier-2 persistent SQLite-backed disk cache located under `~/.cache/lastfm-collage/`, with time-to-live (TTL) expiration of 30 days for album covers and 7 days for retrieved artist hero images. The Tier-1 in-memory cache specifically accelerates repetitive artist image web retrieval across same-process generations.
 
 #### Scenario: Cache hit avoids network request
-- **WHEN** an album cover URL has been fetched within its 30-day TTL and the same URL is requested again
+- **WHEN** an album cover or artist hero image URL has been fetched within its TTL and the same URL is requested again
 - **THEN** the cached bytes are returned without issuing any HTTP request
+
+#### Scenario: In-memory cache accelerates repeated artist retrieval
+- **WHEN** the same artist is retrieved multiple times in the same process
+- **THEN** the Tier-1 in-memory cache serves the image instantly without touching the SQLite disk cache or network
 
 #### Scenario: Expired cache entry is refreshed
 - **WHEN** an album cover cache entry is older than its TTL
@@ -54,3 +58,4 @@ The system SHALL maintain a circuit breaker per remote host (Last.fm web and art
 #### Scenario: Resilience failure never aborts generation
 - **WHEN** rate limiting, retries, or circuit breaking prevent an artwork from being acquired
 - **THEN** collage generation still completes with fallback tiles in place of the missing artwork
+
