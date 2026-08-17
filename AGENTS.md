@@ -1,8 +1,8 @@
 # AGENTS.md: AI Agent Development & Architecture Guide
 
 **Target Repository**: `lastfm-collage-generator`  
-**Distributed Package**: `lastfmcollagegenerator` (v1.3.2)  
-**Target Python Runtime**: Python `^3.8` (compatible with 3.8, 3.9, 3.10, 3.11, 3.12)  
+**Distributed Package**: `lastfmcollagegenerator` (v1.4.0)  
+**Target Python Runtime**: Python `^3.10` (compatible with 3.10, 3.11, 3.12, 3.13, 3.14)  
 **Build & Package Manager**: uv (`hatchling`)  
 **Primary Architecture Specification**: [`PROJECT_OVERVIEW.md`](./PROJECT_OVERVIEW.md)  
 **Antigravity Rules**: [`.gemini/rules/`](./.gemini/rules/)  
@@ -31,8 +31,8 @@
 
 | Dependency | Version Constraint | Locked Version | Architectural Role |
 |---|---|---|---|
-| `python` | `^3.8` | 3.8 - 3.12 | Base execution runtime |
-| `pylast` | `==5.3.0` | 5.3.0 | Last.fm Audioscrobbler REST API v2.0 wrapper |
+| `python` | `>=3.10` | 3.10 - 3.14 | Base execution runtime |
+| `pylast` | `>=7.1.0` | 7.1.0 | Last.fm Audioscrobbler REST API v2.0 wrapper |
 | `Pillow` | `==10.4.0` | 10.4.0 | 2D raster image allocation, alpha compositing, font rendering |
 | `requests` | `==2.32.3` | 2.32.3 | HTTP client for image downloads and artist HTML retrieval |
 | `beautifulsoup4` | `==4.12.3` | 4.12.3 | HTML DOM parsing for artist web retrieval |

@@ -310,7 +310,7 @@ raw_png_bytes = buffer.getvalue()
 The repository includes an `action.yml` to generate collages automatically within GitHub Actions workflows (e.g. to update a profile README):
 
 ```yaml
-- uses: paurieraf/lastfm-collage-generator@v1.3.2
+- uses: paurieraf/lastfm-collage-generator@v1.4.0
   with:
     username: ${{ secrets.LASTFM_USERNAME }}
     api-key: ${{ secrets.LASTFM_API_KEY }}

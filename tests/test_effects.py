@@ -1,18 +1,15 @@
 import pytest
-from unittest.mock import MagicMock, patch
-from io import BytesIO
+from unittest.mock import AsyncMock, MagicMock, patch
 from PIL import Image
 
-from lastfmcollagegenerator.collage import BaseCollageBuilder, CollageBuilderConfig, CollageTile
 from lastfmcollagegenerator.collage_generator import CollageGenerator
-from lastfmcollagegenerator.constants import THEME_ADAPTIVE, THEME_DARK
+from lastfmcollagegenerator.constants import THEME_ADAPTIVE
 from lastfmcollagegenerator.effects import (
-    ImageFilter,
     VisualEffectPipeline,
     DuotoneFilter,
     ColorExtractor,
 )
-from lastfmcollagegenerator.theme import Theme, resolve_theme
+from lastfmcollagegenerator.theme import resolve_theme
 from tests.conftest import SyntheticImageFactory, MockPylastEntityFactory
 
 
@@ -81,8 +78,12 @@ def test_collage_generator_with_filters_and_adaptive_theme():
     red_tile = SyntheticImageFactory.create_image_bytes(300, 300, color=(255, 0, 0))
     mock_album = MockPylastEntityFactory.create_mock_album("Artist", "Adaptive Album")
 
-    with patch("lastfmcollagegenerator.collage_generator.LastfmClient") as mock_client_cls, \
-         patch("lastfmcollagegenerator.collage.requests.get") as mock_http:
+    with (
+        patch(
+            "lastfmcollagegenerator.collage_generator.LastfmClient"
+        ) as mock_client_cls,
+        patch("lastfmcollagegenerator.collage.requests.get") as mock_http,
+    ):
         mock_client = MagicMock()
         mock_client.get_top_albums.return_value = [
             MockPylastEntityFactory.create_mock_top_item(mock_album, weight=100)
@@ -116,22 +117,25 @@ def test_collage_generator_invalid_filters_type():
         )
 
 
-from unittest.mock import AsyncMock, MagicMock, patch
-
-
 @pytest.mark.asyncio
 async def test_collage_generator_async_with_filters():
     generator = CollageGenerator("test_key", "test_secret")
     blue_tile = SyntheticImageFactory.create_image_bytes(300, 300, color=(0, 0, 255))
     mock_album = MockPylastEntityFactory.create_mock_album("Artist", "Async Album")
 
-    with patch("lastfmcollagegenerator.collage_generator.LastfmClient") as mock_client_cls, \
-         patch("httpx.AsyncClient.get") as mock_get:
+    with (
+        patch(
+            "lastfmcollagegenerator.collage_generator.LastfmClient"
+        ) as mock_client_cls,
+        patch("httpx.AsyncClient.get") as mock_get,
+    ):
         mock_client = MagicMock()
         mock_client.get_user_async = AsyncMock(return_value=MagicMock())
-        mock_client.get_top_albums_async = AsyncMock(return_value=[
-            MockPylastEntityFactory.create_mock_top_item(mock_album, weight=100)
-        ])
+        mock_client.get_top_albums_async = AsyncMock(
+            return_value=[
+                MockPylastEntityFactory.create_mock_top_item(mock_album, weight=100)
+            ]
+        )
         mock_client_cls.return_value = mock_client
         mock_get.return_value = MagicMock(
             status_code=200,

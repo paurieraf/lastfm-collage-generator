@@ -259,4 +259,4 @@ def test_package_exports_and_version():
     assert hasattr(lastfmcollagegenerator, "infer_format")
     assert hasattr(lastfmcollagegenerator, "SUPPORTED_EXPORT_FORMATS")
     assert hasattr(lastfmcollagegenerator, "__version__")
-    assert lastfmcollagegenerator.__version__ == "1.3.2"
+    assert lastfmcollagegenerator.__version__ == "1.4.0"

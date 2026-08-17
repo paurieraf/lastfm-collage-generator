@@ -61,7 +61,7 @@ ImageFile.LOAD_TRUNCATED_IMAGES = True
 
 DEFAULT_HEADERS = {
     "User-Agent": (
-        "lastfm-collage-generator/1.3.2 "
+        "lastfm-collage-generator/1.4.0 "
         "(+https://github.com/paurieraf/lastfm-collage-generator)"
     )
 }
@@ -713,9 +713,10 @@ class ArtistCollageBuilder(BaseCollageBuilder):
         self,
         top_item: TopItem,
     ) -> CollageTile:
-        title = top_item.item.name
-        data = self._get_artist_image(top_item.item, title)
-        return CollageTile(data=data, playcount=top_item.weight, title=title)
+        artist = cast(Artist, top_item.item)
+        title = str(artist.name or "")
+        data = self._get_artist_image(artist, title)
+        return CollageTile(data=data, playcount=int(top_item.weight), title=title)
 
     async def _create_tile_from_top_item_async(
         self,
@@ -723,10 +724,11 @@ class ArtistCollageBuilder(BaseCollageBuilder):
         semaphore: asyncio.Semaphore,
         top_item: TopItem,
     ) -> CollageTile:
-        title = top_item.item.name
+        artist = cast(Artist, top_item.item)
+        title = str(artist.name or "")
         async with semaphore:
-            data = await self._get_artist_image_async(client, top_item.item, title)
-        return CollageTile(data=data, playcount=top_item.weight, title=title)
+            data = await self._get_artist_image_async(client, artist, title)
+        return CollageTile(data=data, playcount=int(top_item.weight), title=title)
 
     @functools.lru_cache(maxsize=128)
     def _get_artist_image(self, artist: Artist, title: str) -> bytes:
@@ -735,7 +737,8 @@ class ArtistCollageBuilder(BaseCollageBuilder):
         So we fetch it from the website.
         """
         try:
-            artist_slug = urllib.parse.quote_plus(artist.name)
+            artist_name = str(artist.name or title)
+            artist_slug = urllib.parse.quote_plus(artist_name)
             page_url = f"https://www.last.fm/music/{artist_slug}"
             page_resp = self.fetcher.get(
                 page_url,
@@ -773,7 +776,8 @@ class ArtistCollageBuilder(BaseCollageBuilder):
         self, client: httpx.AsyncClient, artist: Artist, title: str
     ) -> bytes:
         try:
-            artist_slug = urllib.parse.quote_plus(artist.name)
+            artist_name = str(artist.name or title)
+            artist_slug = urllib.parse.quote_plus(artist_name)
             page_url = f"https://www.last.fm/music/{artist_slug}"
             page_resp = await client.get(page_url)
             if page_resp.status_code == 404:
@@ -838,9 +842,10 @@ class AlbumCollageBuilder(BaseCollageBuilder):
         self,
         top_item: TopItem,
     ) -> CollageTile:
-        title = f"{top_item.item.artist} - {top_item.item.title}"
-        data = self._get_album_cover(top_item.item, title)
-        return CollageTile(data=data, playcount=top_item.weight, title=title)
+        album_or_track = cast(Union[Album, Track], top_item.item)
+        title = f"{album_or_track.artist} - {album_or_track.title}"
+        data = self._get_album_cover(album_or_track, title)
+        return CollageTile(data=data, playcount=int(top_item.weight), title=title)
 
     async def _create_tile_from_top_item_async(
         self,
@@ -848,10 +853,11 @@ class AlbumCollageBuilder(BaseCollageBuilder):
         semaphore: asyncio.Semaphore,
         top_item: TopItem,
     ) -> CollageTile:
-        title = f"{top_item.item.artist} - {top_item.item.title}"
+        album_or_track = cast(Union[Album, Track], top_item.item)
+        title = f"{album_or_track.artist} - {album_or_track.title}"
         async with semaphore:
-            data = await self._get_album_cover_async(client, top_item.item, title)
-        return CollageTile(data=data, playcount=top_item.weight, title=title)
+            data = await self._get_album_cover_async(client, album_or_track, title)
+        return CollageTile(data=data, playcount=int(top_item.weight), title=title)
 
     def _get_album_cover(self, item: Union[Album, Track], title: str) -> bytes:
         try:

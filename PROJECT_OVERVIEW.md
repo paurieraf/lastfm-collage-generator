@@ -53,7 +53,7 @@ The codebase exhibits a clean design pattern foundation (Facade, Factory, Builde
 ## 2. Technology Stack & Runtime Environment
 
 ### Runtime Specification
-- **Programming Language**: Python (`^3.8`, supporting Python 3.8, 3.9, 3.10, 3.11, 3.12).
+- **Programming Language**: Python (`>=3.10`, supporting Python 3.10, 3.11, 3.12, 3.13, 3.14).
 - **Package Manager & Build Backend**: [uv](https://docs.astral.sh/uv/) (`hatchling`, PEP 621 build system).
 - **Package Layout**: `src/`-layout packaging (`src/lastfmcollagegenerator/`).
 - **Asset Distribution**: Declared in `MANIFEST.in` via `recursive-include src/lastfmcollagegenerator/fonts *.ttf`.
@@ -62,7 +62,7 @@ The codebase exhibits a clean design pattern foundation (Facade, Factory, Builde
 
 | Dependency | Locked Version | Purpose / Architectural Role |
 |---|---|---|
-| `pylast` | `5.3.0` | Official-standard Python client wrapper for the Last.fm Audioscrobbler REST API v2.0. Handles network authentication, user entity resolution, and top-item queries. |
+| `pylast` | `7.1.0` | Official-standard Python client wrapper for the Last.fm Audioscrobbler REST API v2.0. Handles network authentication, user entity resolution, and top-item queries. |
 | `Pillow` | `10.4.0` | Core 2D raster image processing library. Handles canvas allocation, RGB/RGBA buffer manipulation, tile pasting, alpha blending, and TrueType font rendering. |
 | `requests` | `2.32.3` | Synchronous HTTP client for binary asset downloads (album covers, artist images) and HTML page fetching for retrieval. |
 | `beautifulsoup4` | `4.12.3` | HTML DOM tree parser utilized during artist image web retrieval. |
@@ -74,7 +74,7 @@ The library packages TrueType fonts directly inside the distribution package at 
 - `DejaVuSansMono-Bold.ttf` (334,168 bytes): Bold monospace font variant.
 
 ### Dependency Evaluation
-In `pyproject.toml`, dependencies are pinned with exact versions (`==2.32.3`, `==5.3.0`, `==10.4.0`, `==4.12.3`). For reusable Python library packages, strict `==` pinning restricts downstream consumers from resolving shared dependencies. Modern Python library best practices recommend compatible release constraints (e.g. `pylast >= 5.0.0, < 6.0.0`).
+In `pyproject.toml`, core dependencies use compatible release constraints (e.g., `pylast>=7.1.0`, `httpx>=0.27.0`) ensuring interoperability with modern Python environments.
 
 ---
 

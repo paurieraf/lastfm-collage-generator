@@ -4,7 +4,6 @@ import os
 from typing import Optional, Tuple, Union
 from PIL import Image
 
-
 SUPPORTED_EXPORT_FORMATS = ("PNG", "JPEG", "WEBP")
 
 EXTENSION_TO_FORMAT = {
@@ -48,7 +47,8 @@ def export_image(
         The normalized output path where the file was saved.
 
     Raises:
-        ValueError: If format is unsupported, output_path is empty, or quality is out of range.
+        ValueError: If format is unsupported, output_path is empty, or quality
+            is out of range.
         TypeError: If parameters have invalid types.
     """
     if not isinstance(image, Image.Image):
