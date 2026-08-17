@@ -1,6 +1,11 @@
 """lastfmcollagegenerator: Python library to build Last.fm collages."""
 
 from lastfmcollagegenerator.collage_generator import CollageGenerator
+from lastfmcollagegenerator.export import (
+    SUPPORTED_EXPORT_FORMATS,
+    export_image,
+    infer_format,
+)
 from lastfmcollagegenerator.theme import Theme, THEME_PRESETS, resolve_theme
 from lastfmcollagegenerator.effects import (
     ImageFilter,
@@ -19,5 +24,8 @@ __all__ = [
     "VisualEffectPipeline",
     "DuotoneFilter",
     "ColorExtractor",
+    "export_image",
+    "infer_format",
+    "SUPPORTED_EXPORT_FORMATS",
     "__version__",
 ]

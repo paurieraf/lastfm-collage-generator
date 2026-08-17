@@ -1,5 +1,5 @@
 import os
-from typing import Any, Dict, List, Optional, Union, cast
+from typing import Any, Dict, List, Optional, Tuple, Union, cast
 from PIL import Image
 
 from lastfmcollagegenerator.cache import ArtworkCache
@@ -29,6 +29,7 @@ from lastfmcollagegenerator.network import (
     ResilientHttpFetcher,
     DEFAULT_RATE_LIMIT,
 )
+from lastfmcollagegenerator.export import export_image
 from lastfmcollagegenerator.presets import (
     SocialPreset,
     resolve_preset,
@@ -583,6 +584,38 @@ class CollageGenerator:
             spacing=spacing,
             filters=filters,
             max_concurrency=max_concurrency,
+        )
+
+    @staticmethod
+    def export_image(
+        image: Image.Image,
+        output_path: str,
+        format: Optional[str] = None,
+        quality: int = 85,
+        background_color: Union[str, Tuple[int, int, int]] = (0, 0, 0),
+        optimize: bool = True,
+    ) -> str:
+        """Export a composite collage image to disk.
+
+        Args:
+            image: PIL Image to save.
+            output_path: Destination file path.
+            format: Target format (e.g. 'PNG', 'JPEG', 'WEBP'). If None, inferred
+                from output_path.
+            quality: Image quality for lossy formats (1-100). Default 85.
+            background_color: Background color for flattening transparency on JPEG.
+            optimize: Whether to enable encoder optimization. Default True.
+
+        Returns:
+            The saved output path.
+        """
+        return export_image(
+            image=image,
+            output_path=output_path,
+            format=format,
+            quality=quality,
+            background_color=background_color,
+            optimize=optimize,
         )
 
     @staticmethod

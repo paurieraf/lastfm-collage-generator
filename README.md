@@ -317,6 +317,28 @@ track_collage = generator.generate_top_tracks_collage(
 
 ---
 
+### Safe Image Export with `export_image()`
+
+The library provides a built-in `export_image()` utility (also available as `CollageGenerator.export_image()`) that safely handles format inference, quality settings, directory creation, and automatic RGBA-to-RGB background flattening for JPEG:
+
+```python
+from lastfmcollagegenerator import export_image, CollageGenerator
+
+generator = CollageGenerator("YOUR_API_KEY", "YOUR_API_SECRET")
+image = generator.generate(entity="album", username="user", cols=3, rows=3, period="7day")
+
+# 1. Automatic format inference & directory creation
+export_image(image, "output/weekly_recap.png")
+
+# 2. Modern WebP export with optimized quality (default quality=85)
+export_image(image, "output/weekly_recap.webp")
+
+# 3. Safe JPEG export (automatically flattens alpha channel onto black background to prevent crashes)
+export_image(image, "output/weekly_recap.jpg", quality=90)
+```
+
+---
+
 ### Working with Returned `PIL.Image` Objects
 
 The returned object is a standard Pillow `PIL.Image.Image` instance, offering full flexibility for saving, converting, streaming, or displaying:

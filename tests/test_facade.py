@@ -255,5 +255,8 @@ def test_package_exports_and_version():
     assert hasattr(lastfmcollagegenerator, "VisualEffectPipeline")
     assert hasattr(lastfmcollagegenerator, "DuotoneFilter")
     assert hasattr(lastfmcollagegenerator, "ColorExtractor")
+    assert hasattr(lastfmcollagegenerator, "export_image")
+    assert hasattr(lastfmcollagegenerator, "infer_format")
+    assert hasattr(lastfmcollagegenerator, "SUPPORTED_EXPORT_FORMATS")
     assert hasattr(lastfmcollagegenerator, "__version__")
     assert lastfmcollagegenerator.__version__ == "1.2.0"
