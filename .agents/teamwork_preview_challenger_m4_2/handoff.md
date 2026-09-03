@@ -2,7 +2,7 @@
 
 **Role**: Challenger 2 (Adversarial Schema & Documentation Verifier)  
 **Target Deliverables**:
-1. `.gemini/rules/*.md` (`architecture-conventions.md`, `lastfm-network-resilience.md`, `python-standards.md`, `testing-standards.md`)
+1. `.gemini/rules/*.md` (`architecture-conventions.md`, `lastfm-scraping-resilience.md`, `python-standards.md`, `testing-standards.md`)
 2. `.gemini/skills/*/SKILL.md` (`collage-cli-workflow`, `lastfm-mocking-fixtures`, `poetry-test-runner`)
 3. `PROJECT_OVERVIEW.md`
 4. `AGENTS.md`  
@@ -40,7 +40,7 @@ Direct empirical observations obtained by executing automated test harnesses on 
   - `src/lastfmcollagegenerator/collage.py:109-114`: Verified cursor advancement logic (`y = cursor[1] + height`).
   - `src/lastfmcollagegenerator/collage.py:143-157`: Verified `_insert_newline_characters_to_text()` character-based wrapping logic.
   - `src/lastfmcollagegenerator/collage.py:189-191`: Verified non-deterministic `as_completed` gathering and single-key sorting.
-  - `src/lastfmcollagegenerator/collage.py:202-269`: Verified `ArtistCollageBuilder` definition and retrieval pipeline.
+  - `src/lastfmcollagegenerator/collage.py:202-269`: Verified `ArtistCollageBuilder` definition and scraping pipeline.
   - `src/lastfmcollagegenerator/collage.py:234, 251, 308`: Verified unhandled `requests.get()` calls without `timeout=`.
   - `src/lastfmcollagegenerator/collage.py:270-318`: Verified `AlbumCollageBuilder` definition.
   - `src/lastfmcollagegenerator/collage.py:319-336`: Verified `TrackCollageBuilder` subclassing.
@@ -55,7 +55,7 @@ Direct empirical observations obtained by executing automated test harnesses on 
 - Extracted all 34 Python code snippets (```` ```python ... ``` ````) across all deliverables.
 - Executed `ast.parse(textwrap.dedent(block))` on every snippet:
   - `.gemini/rules/architecture-conventions.md`: 6 blocks → 6 PASSED AST parse.
-  - `.gemini/rules/lastfm-network-resilience.md`: 4 blocks → 4 PASSED AST parse.
+  - `.gemini/rules/lastfm-scraping-resilience.md`: 4 blocks → 4 PASSED AST parse.
   - `.gemini/rules/python-standards.md`: 4 blocks → 4 PASSED AST parse.
   - `.gemini/rules/testing-standards.md`: 3 blocks → 3 PASSED AST parse.
   - `.gemini/skills/lastfm-mocking-fixtures/SKILL.md`: 4 blocks → 4 PASSED AST parse.

@@ -4,7 +4,7 @@
 - **Timeline & Provenance**: File modification timestamps demonstrate a clean, sequential, iterative development history across 4 milestones from 15:33:55 to 15:48:28 (Explorers -> Worker M1 -> Worker M2 -> Worker M3 -> Reviewers/Challengers/Auditor M4 -> Orchestrator Gate).
 - **Deliverables Created**:
   1. `PROJECT_OVERVIEW.md`: 654 lines (38,661 bytes), comprehensive technical analysis of architecture, components, data flow, API specs, configuration, rendering engine, defect catalog (5 critical/high/medium bugs), and modernization roadmap.
-  2. `.gemini/rules/`: 4 project-specific rules (`architecture-conventions.md`, `lastfm-network-resilience.md`, `python-standards.md`, `testing-standards.md`) adhering to Antigravity rules format.
+  2. `.gemini/rules/`: 4 project-specific rules (`architecture-conventions.md`, `lastfm-scraping-resilience.md`, `python-standards.md`, `testing-standards.md`) adhering to Antigravity rules format.
   3. `.gemini/skills/`: 3 modular custom skills:
      - `poetry-test-runner` (`SKILL.md`, `scripts/run_tests.py` - 203 lines)
      - `lastfm-mocking-fixtures` (`SKILL.md`, `references/fixture_templates.py` - 213 lines)
@@ -20,7 +20,7 @@
   - `generate_collage_cli.py`: Executed 3x3 album collage (900x900 px, RGB), 5x5 artist collage (1500x1500 px, RGB), and 3x5 track collage (900x1500 px, RGB).
   - Pixel coordinate check confirmed overlay banner spans only `y + 235` to `y + 300` and row 1 content at `(150, 350)` is intact and unobstructed.
   - Parameter boundary validation verified rejection on `cols=0`, `cols=6`, and invalid entity names.
-  - `fixture_templates.py`: Imported and exercised `SyntheticImageFactory`, `MockPylastEntityFactory`, `MockLastfmClient`, `MockHtmlResponses` with 100% pass rate.
+  - `fixture_templates.py`: Imported and exercised `SyntheticImageFactory`, `MockPylastEntityFactory`, `MockLastfmClient`, `MockHtmlScraperResponses` with 100% pass rate.
   - `run_tests.py`: CLI help and argument parsing verified.
 
 ## 2. Logic Chain

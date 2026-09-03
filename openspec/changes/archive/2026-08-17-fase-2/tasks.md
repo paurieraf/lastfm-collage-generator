@@ -13,7 +13,7 @@
 
 ## 3. Caching and Performance
 
-- [x] 3.1 Decorate `ArtistCollageBuilder._get_artist_image` with `@functools.lru_cache(maxsize=128)` to prevent redundant web retrieval within the same process.
+- [x] 3.1 Decorate `ArtistCollageBuilder._get_artist_image` with `@functools.lru_cache(maxsize=128)` to prevent redundant web scraping within the same process.
 
 ## 4. Testing
 

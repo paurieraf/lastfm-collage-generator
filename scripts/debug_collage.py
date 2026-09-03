@@ -3,7 +3,7 @@
 
 Provides zero-build, instant execution and debugging for both:
 1. Offline Mock Mode (--mock): 0 network calls, instant synthetic visual rendering.
-2. Live API Mode (--live): Real Last.fm queries and web retrieval using .env.
+2. Live API Mode (--live): Real Last.fm queries and web scraping using .env.
 """
 
 import argparse
@@ -300,7 +300,7 @@ def parse_arguments() -> argparse.Namespace:
     mode_group.add_argument(
         "--live",
         action="store_true",
-        help="Run live Last.fm API querying and web retrieval using .env credentials",
+        help="Run live Last.fm API querying and web scraping using .env credentials",
     )
 
     # Collage parameters
@@ -459,7 +459,7 @@ def main() -> int:
     show_text = not (args.no_text or args.no_title)
 
     mode_label = (
-        "OFFLINE MOCK (Synthetic Tiles)" if is_mock else "LIVE API (Last.fm & Retrieval)"
+        "OFFLINE MOCK (Synthetic Tiles)" if is_mock else "LIVE API (Last.fm & Scraping)"
     )
     print("=" * 65)
     print(" 🎵 Last.fm Collage Generator - Debug Runner")

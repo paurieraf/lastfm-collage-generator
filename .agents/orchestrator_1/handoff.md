@@ -23,7 +23,7 @@
   - `.gemini/rules/python-standards.md`
   - `.gemini/rules/architecture-conventions.md`
   - `.gemini/rules/testing-standards.md`
-  - `.gemini/rules/lastfm-network-resilience.md`
+  - `.gemini/rules/lastfm-scraping-resilience.md`
 - **Custom Skills**:
   - `.gemini/skills/poetry-test-runner/SKILL.md` (and `scripts/run_tests.py`)
   - `.gemini/skills/lastfm-mocking-fixtures/SKILL.md` (and `references/fixture_templates.py`)

@@ -11,7 +11,7 @@ The authoritative user request is located at:
 `/Users/priera/.gemini/antigravity/worktrees/lastfm-collage-generator/analyze_roadmap_documentation_features/.agents/ORIGINAL_REQUEST.md`
 
 Your objectives:
-1. Deep Architectural & Codebase Analysis: Analyze `src/lastfmcollagegenerator/`, `collage_generator.py`, `collage.py`, `lastfm/client.py`, `PROJECT_OVERVIEW.md`, `AGENTS.md`. Examine the 4-layer architecture (Facade -> Factory -> Builder -> Client), data models, Pillow pipeline, concurrency model, retrieval mechanics, and extension points.
+1. Deep Architectural & Codebase Analysis: Analyze `src/lastfmcollagegenerator/`, `collage_generator.py`, `collage.py`, `lastfm/client.py`, `PROJECT_OVERVIEW.md`, `AGENTS.md`. Examine the 4-layer architecture (Facade -> Factory -> Builder -> Client), data models, Pillow pipeline, concurrency model, scraping mechanics, and extension points.
 2. Comprehensive Multi-Phase Feature Roadmap: Formulate an extensive, prioritized roadmap across 4 strategic pillars:
    - Visual Styling & Custom Themes
    - Performance, Caching & Resilience

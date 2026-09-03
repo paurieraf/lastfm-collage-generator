@@ -24,7 +24,7 @@ Conduct a strict, comprehensive forensic integrity audit across all deliverables
 - **Work product**:
   1. `PROJECT_OVERVIEW.md`
   2. `AGENTS.md`
-  3. `.gemini/rules/` (`python-standards.md`, `architecture-conventions.md`, `testing-standards.md`, `lastfm-network-resilience.md`)
+  3. `.gemini/rules/` (`python-standards.md`, `architecture-conventions.md`, `testing-standards.md`, `lastfm-scraping-resilience.md`)
   4. `.gemini/skills/` (`poetry-test-runner`, `lastfm-mocking-fixtures`, `collage-cli-workflow`)
 - **Profile loaded**: General Project + agy-customizations
 - **Audit type**: forensic integrity check

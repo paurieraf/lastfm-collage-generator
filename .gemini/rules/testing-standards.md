@@ -39,7 +39,7 @@ def mock_top_album():
     return top_item
 ```
 
-### 2.2 Mocking HTTP Requests & Web Retrieval
+### 2.2 Mocking HTTP Requests & Web Scraping
 - Use `unittest.mock.patch("requests.get")` or `requests_mock` fixture to intercept calls in `ArtistCollageBuilder` and `AlbumCollageBuilder`.
 - Test both success and edge-case responses:
   - **HTTP 200 with Valid HTML**: Contains `<div class="header-new-background-image" content="https://mock.cdn/artist.jpg">`.
@@ -48,7 +48,7 @@ def mock_top_album():
   - **HTTP 500 / Network Timeout**: Simulates CDN / server failures (must gracefully fallback to blank tile without crashing).
 
 ```python
-# Example: Mocking artist retrieval
+# Example: Mocking artist scraping
 MOCK_ARTIST_HTML = """
 <!DOCTYPE html>
 <html>
@@ -59,7 +59,7 @@ MOCK_ARTIST_HTML = """
 </html>
 """
 
-def test_artist_retrieve(monkeypatch, synthetic_png_bytes):
+def test_artist_scraping_success(monkeypatch, synthetic_png_bytes):
     def mock_get(url, *args, **kwargs):
         resp = MagicMock()
         if "last.fm/music" in url:
@@ -107,7 +107,7 @@ tests/
 ├── test_factory.py               # CollageBuilderFactory entity resolution and error cases
 ├── test_rendering_engine.py      # Pillow canvas composition, layout geometry, typography
 ├── test_builders.py              # Concrete builders (AlbumCollageBuilder, TrackCollageBuilder)
-├── test_retrieve.py              # ArtistCollageBuilder web retrieval and fallback behavior
+├── test_scraping.py              # ArtistCollageBuilder web scraping and fallback behavior
 └── test_integration.py           # End-to-end Facade generate() with mocked client backend
 ```
 

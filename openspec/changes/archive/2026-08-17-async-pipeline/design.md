@@ -6,7 +6,7 @@ L'arquitectura actual utilitza `ThreadPoolExecutor` per a l'adquisició d'imatge
 
 **Goals:**
 - Proporcionar un pipeline `100% asíncron` sota AsyncIO per la creació de collages (ex. nova interfície `generate_async()`).
-- Utilitzar `httpx` per a la descàrrega asíncrona d'imatges i retrieval de perfils.
+- Utilitzar `httpx` per a la descàrrega asíncrona d'imatges i scraping de perfils.
 - Aplicar rate limiting amb un semàfor (`asyncio.Semaphore`) a l'hora de descarregar múltiples imatges en bloc, de cara a protegir la CDN de rebuitjos HTTP 429 i gestionar connexions eficientment.
 
 **Non-Goals:**

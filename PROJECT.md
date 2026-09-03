@@ -12,7 +12,7 @@ The `lastfm-collage-generator` library is structured according to a strict 4-lay
 3. **Builder Layer (`BaseCollageBuilder` & Subclasses)**:
    - Implements Template Method `create(username)` managing `ThreadPoolExecutor` parallel asset fetching, Pillow RGB canvas creation, and translucent monospace banner overlay rendering (`DejaVuSansMono.ttf`).
    - `AlbumCollageBuilder`: Queries top albums via pylast and downloads cover art with timeout and blank tile fallbacks.
-   - `ArtistCollageBuilder`: Queries top artists and fetches hero images from `last.fm/music/<artist>` via BeautifulSoup + html5lib with custom User-Agent and timeouts.
+   - `ArtistCollageBuilder`: Queries top artists and scrapes hero images from `last.fm/music/<artist>` via BeautifulSoup + html5lib with custom User-Agent and timeouts.
    - `TrackCollageBuilder`: Queries top tracks and extracts associated album artwork with blank tile fallbacks.
 4. **Client Adapter Layer (`LastfmClient`)**:
    - Isolates `pylast.LastFMNetwork` API queries.
@@ -21,13 +21,13 @@ The `lastfm-collage-generator` library is structured according to a strict 4-lay
 | # | Feature | Description | Milestone | Source |
 |---|---------|-------------|-----------|--------|
 | 1 | Album Collage Generation | Fetch top albums via pylast and composite grid with album art | M1 | Survey |
-| 2 | Artist Collage Generation | Fetch top artists via pylast, fetch artist image from Last.fm HTML, composite grid | M1 | Survey |
+| 2 | Artist Collage Generation | Fetch top artists via pylast, scrape artist image from Last.fm HTML, composite grid | M1 | Survey |
 | 3 | Track Collage Generation | Fetch top tracks via pylast, extract track album art or fallback, composite grid | M1 | Survey |
 | 4 | Tile Title Overlay Rendering | Optional banner overlay on bottom of each tile showing entity rank/name | M1 | Survey |
 | 5 | Custom Grid Dimensions | Configurable `cols` and `rows` for dynamic collage aspect ratios up to 5x5 | M1 | Survey |
 | 6 | Time Period Selection | Support for Last.fm periods (`overall`, `7day`, `1month`, `3month`, `6month`, `12month`) | M1 | Survey |
 | 7 | General Project Overview Artifact | Full documentation artifact covering architecture, data flow, defects, limitations | M1 | Survey |
-| 8 | Antigravity Project Rules | Rules in `.gemini/rules/` for Python standards, architecture, testing, and retrieval | M2 | Survey |
+| 8 | Antigravity Project Rules | Rules in `.gemini/rules/` for Python standards, architecture, testing, and scraping | M2 | Survey |
 | 9 | Antigravity Custom Skills | Skills in `.gemini/skills/` for test running, mocking fixtures, and CLI workflows | M2 | Survey |
 | 10 | AGENTS.md Cross-Reference & Synthesis | Author authoritative `AGENTS.md` guiding future AI operations and reconciling drift | M3 | Survey |
 | 11 | Independent Review & Forensic Audit | Multi-agent review (Reviewers + Challengers + Forensic Auditor) for rule validation, skill schemas, and integrity | M4 | Survey |
@@ -108,7 +108,7 @@ lastfm-collage-generator/
 │   │   ├── python-standards.md
 │   │   ├── architecture-conventions.md
 │   │   ├── testing-standards.md
-│   │   └── lastfm-network-resilience.md
+│   │   └── lastfm-scraping-resilience.md
 │   └── skills/                            # Executable AI agent skills
 │       ├── poetry-test-runner/
 │       ├── lastfm-mocking-fixtures/

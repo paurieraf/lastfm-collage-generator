@@ -1,6 +1,6 @@
 """Pytest Fixture Templates & Mock Builders for lastfm-collage-generator.
 
-Provides synthetic image generation, pylast entity mocking, and HTML retrieval
+Provides synthetic image generation, pylast entity mocking, and HTML scraping
 response simulators for offline, zero-network automated testing.
 """
 
@@ -123,8 +123,8 @@ class MockPylastEntityFactory:
         return items
 
 
-class MockHtmlResponses:
-    """Simulated HTML responses for Last.fm artist web retrieval."""
+class MockHtmlScraperResponses:
+    """Simulated HTML responses for Last.fm artist web scraping."""
 
     SUCCESS_HTML = """
     <!DOCTYPE html>

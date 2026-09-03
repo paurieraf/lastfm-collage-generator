@@ -24,7 +24,7 @@ Remediating these defects establishes a stable, robust, and reliable foundation 
 ## Capabilities
 
 ### New Capabilities
-- `collage-core-engine`: Core collage generation engine covering grid geometry rendering, facade convenience methods, parameter validation, HTTP/retrieval resilience with blank tile fallback, deterministic ordering, and unified exception handling.
+- `collage-core-engine`: Core collage generation engine covering grid geometry rendering, facade convenience methods, parameter validation, HTTP/scraping resilience with blank tile fallback, deterministic ordering, and unified exception handling.
 
 ### Modified Capabilities
 <!-- No existing spec requirements modified -->

@@ -13,7 +13,7 @@
 - [x] Rewrote `README.md` from the ground up to establish an authoritative, production-grade, beautifully formatted project homepage.
 - [x] Implemented all 14 exhaustive sections specified by Explorer 3 and the project orchestrator:
   1. Hero Header & Badges (PyPI, Python 3.8-3.12, License, uv, Black, MyPy, Downloads, PRs Welcome)
-  2. Project Overview & Key Feature Highlights (Album, Artist via retrieval, Track, geometry, concurrency, fallback handling)
+  2. Project Overview & Key Feature Highlights (Album, Artist via scraping, Track, geometry, concurrency, fallback handling)
   3. Visual Grid Previews & Geometric Reference (Grid sizes chart, 300x300 tile anatomy with 65px banner)
   4. System Architecture & Design Patterns (4-Layer Diagram: Facade -> Factory -> Builder -> Client Adapter, module responsibilities matrix)
   5. Installation Guide (uv, pip, pipx, Python 3.8+ requirements)

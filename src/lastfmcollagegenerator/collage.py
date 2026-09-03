@@ -732,7 +732,7 @@ class ArtistCollageBuilder(BaseCollageBuilder):
     def _get_artist_image(self, artist: Artist, title: str) -> bytes:
         """Last.fm API does not provide artist images.
 
-        So we fetch it from the website.
+        So we scrape it from the website.
         """
         try:
             artist_slug = urllib.parse.quote_plus(artist.name)

@@ -21,8 +21,8 @@ The system SHALL provide an offline mock mode that generates synthetic collages 
 - **WHEN** the debug runner is executed with the `--mock` flag
 - **THEN** synthetic tiles with distinct background colors and titles are rendered into a collage image and saved to disk within 1 second
 
-### Requirement: Live API and Retrieval Debugging Mode
-The system SHALL provide a live debugging mode that interacts with the Last.fm REST API and fetches artist imagery using configured user credentials.
+### Requirement: Live API and Scraping Debugging Mode
+The system SHALL provide a live debugging mode that interacts with the Last.fm REST API and scrapes artist imagery using configured user credentials.
 
 #### Scenario: Generating live album collage
 - **WHEN** the debug runner is executed with `--live` and entity `album`
@@ -30,7 +30,7 @@ The system SHALL provide a live debugging mode that interacts with the Last.fm R
 
 #### Scenario: Generating live artist collage
 - **WHEN** the debug runner is executed with `--live` and entity `artist`
-- **THEN** the system queries the user's top artists, fetches artist hero images from Last.fm web pages, and composites the collage
+- **THEN** the system queries the user's top artists, scrapes artist hero images from Last.fm web pages, and composites the collage
 
 ### Requirement: Visual Studio Code F5 Debug Profiles
 The system SHALL provide pre-configured VS Code launch profiles supporting 1-click execution and breakpoint inspection for both mock and live scenarios.

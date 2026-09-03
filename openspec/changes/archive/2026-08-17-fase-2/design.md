@@ -1,6 +1,6 @@
 ## Context
 
-The current `lastfm-collage-generator` implementation uses a character-by-character width measurement for text wrapping, which splits words abruptly. It limits grids to 5x5 natively (though some internal methods try to validate up to 20x20, the limit is inconsistently enforced and scaling logic is rigid). Artist image retrieval involves repeated HTTP requests for identical artists within a single session because there is no in-memory cache, causing performance bottlenecks. (See `proposal.md` for full motivation).
+The current `lastfm-collage-generator` implementation uses a character-by-character width measurement for text wrapping, which splits words abruptly. It limits grids to 5x5 natively (though some internal methods try to validate up to 20x20, the limit is inconsistently enforced and scaling logic is rigid). Artist image scraping involves repeated HTTP requests for identical artists within a single session because there is no in-memory cache, causing performance bottlenecks. (See `proposal.md` for full motivation).
 
 ## Goals / Non-Goals
 

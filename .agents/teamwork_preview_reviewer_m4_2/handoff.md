@@ -19,7 +19,7 @@ Direct file inspection of all deliverables within the workspace:
    - Mandates synthetic in-memory image generation via Pillow/`io.BytesIO` (no checked-in binary blobs).
    - Sets quality gates of 90% minimum line coverage and 85% branch coverage.
    - Outlines standardized `tests/` layout and geometric coordinate regression test requirements.
-4. **`.gemini/rules/lastfm-network-resilience.md`** (112 lines, 5,795 bytes):
+4. **`.gemini/rules/lastfm-scraping-resilience.md`** (112 lines, 5,795 bytes):
    - Mandates custom `DEFAULT_HEADERS` with an explicit `User-Agent` string to prevent Cloudflare/edge 403 blocks.
    - Requires explicit HTTP connect and read timeouts (`timeout=(3.05, 10.0)`).
    - Enforces URL percent-encoding via `urllib.parse.quote_plus()`.
@@ -31,8 +31,8 @@ Direct file inspection of all deliverables within the workspace:
    - `SKILL.md` (96 lines, 3,291 bytes): Valid YAML frontmatter (`name: poetry-test-runner`, lowercase, hyphenated). Contains clear workflow instructions for unit tests, coverage, linters (`flake8`, `black`, `mypy`), and failure debugging.
    - `scripts/run_tests.py` (203 lines, 6,261 bytes): Fully implemented executable orchestrating pytest, coverage thresholds, and linters with unified CLI flags (`--unit`, `--coverage`, `--lint`, `--all`, `--fail-under`, `-v`). Sets `cwd` to project root and handles missing tools with exit code 127.
 2. **`.gemini/skills/lastfm-mocking-fixtures/`**:
-   - `SKILL.md` (117 lines, 4,115 bytes): Valid YAML frontmatter (`name: lastfm-mocking-fixtures`). Documents mocking recipes for `pylast` entities, synthetic in-memory images, HTML fetcher responses, and fallbacks.
-   - `references/fixture_templates.py` (213 lines, 7,044 bytes): Reusable, production-grade test fixtures and factories (`SyntheticImageFactory`, `MockPylastEntityFactory`, `MockHtmlResponses`, `MockLastfmClient`, and pytest fixtures).
+   - `SKILL.md` (117 lines, 4,115 bytes): Valid YAML frontmatter (`name: lastfm-mocking-fixtures`). Documents mocking recipes for `pylast` entities, synthetic in-memory images, HTML scraper responses, and fallbacks.
+   - `references/fixture_templates.py` (213 lines, 7,044 bytes): Reusable, production-grade test fixtures and factories (`SyntheticImageFactory`, `MockPylastEntityFactory`, `MockHtmlScraperResponses`, `MockLastfmClient`, and pytest fixtures).
 3. **`.gemini/skills/collage-cli-workflow/`**:
    - `SKILL.md` (107 lines, 4,086 bytes): Valid YAML frontmatter (`name: collage-cli-workflow`). Step-by-step procedures for live generation and offline synthetic mock previews.
    - `scripts/generate_collage_cli.py` (363 lines, 11,482 bytes): Full CLI application supporting both offline mock rendering (with 15 synthetic palette tiles) and live Last.fm API generation. Accurately handles grid geometry, font resolution, text wrapping, and title banners.
@@ -46,7 +46,7 @@ Direct file inspection of all deliverables within the workspace:
    - Every skill has a valid `SKILL.md` with standard YAML frontmatter containing lowercase hyphenated `name` matching the folder name, and a clear third-person `description` defining purpose and trigger conditions.
    - Scripts and reference files are organized into standard `scripts/` and `references/` subdirectories, applying progressive disclosure principles.
 2. **Clarity, Precision, and Actionability of Rules**:
-   - The 4 rules in `.gemini/rules/` directly target the actual technical challenges of `lastfm-collage-generator`: Python 3.8 typing, PIL memory management, 4-layer architectural boundaries, network isolation during testing, and resilient web retrieval.
+   - The 4 rules in `.gemini/rules/` directly target the actual technical challenges of `lastfm-collage-generator`: Python 3.8 typing, PIL memory management, 4-layer architectural boundaries, network isolation during testing, and resilient web scraping.
    - The rules contain concrete code examples, explicit "Do" and "Don't" guidance, and measurable criteria (e.g., 90% coverage threshold, exact timeout tuples, exact coordinate math).
 3. **Code Quality & Python 3.8+ Compatibility**:
    - All scripts (`run_tests.py`, `fixture_templates.py`, `generate_collage_cli.py`) strictly adhere to Python 3.8 compatibility by importing type aliases from the standard `typing` module (`List`, `Tuple`, `Dict`, `Optional`, `Union`, `Any`).

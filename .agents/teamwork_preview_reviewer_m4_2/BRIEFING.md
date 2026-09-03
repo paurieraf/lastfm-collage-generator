@@ -23,7 +23,7 @@ Perform an objective, rigorous review of all created Rules (.gemini/rules/) and 
 
 ## Review Scope
 - **Files to review**:
-  - Rules: `.gemini/rules/python-standards.md`, `.gemini/rules/architecture-conventions.md`, `.gemini/rules/testing-standards.md`, `.gemini/rules/lastfm-network-resilience.md`
+  - Rules: `.gemini/rules/python-standards.md`, `.gemini/rules/architecture-conventions.md`, `.gemini/rules/testing-standards.md`, `.gemini/rules/lastfm-scraping-resilience.md`
   - Skills:
     - `.gemini/skills/poetry-test-runner/SKILL.md`, `scripts/run_tests.py`
     - `.gemini/skills/lastfm-mocking-fixtures/SKILL.md`, `references/fixture_templates.py`
@@ -34,7 +34,7 @@ Perform an objective, rigorous review of all created Rules (.gemini/rules/) and 
 ## Review Checklist
 - **Items reviewed**:
   - `agy-customizations` specification and guidelines
-  - 4 Rule files in `.gemini/rules/` (`python-standards.md`, `architecture-conventions.md`, `testing-standards.md`, `lastfm-network-resilience.md`)
+  - 4 Rule files in `.gemini/rules/` (`python-standards.md`, `architecture-conventions.md`, `testing-standards.md`, `lastfm-scraping-resilience.md`)
   - 3 Custom Skills in `.gemini/skills/` (`poetry-test-runner`, `lastfm-mocking-fixtures`, `collage-cli-workflow`)
   - 3 Helper script/reference implementations (`run_tests.py`, `fixture_templates.py`, `generate_collage_cli.py`)
   - Workspace `AGENTS.md` and `PROJECT_OVERVIEW.md` cross-references

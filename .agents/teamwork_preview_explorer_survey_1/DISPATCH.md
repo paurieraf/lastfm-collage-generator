@@ -42,7 +42,7 @@ Perform a deep architectural and codebase analysis of `lastfm-collage-generator`
    - 4-layer architecture data flow and boundaries.
    - Pillow image compositing pipeline: canvas allocation, tile pasting, alpha composite, banner overlay geometry & math, font loading and text wrapping.
    - Concurrency model: `ThreadPoolExecutor`, `as_completed`, future resolution, non-deterministic arrival, playcount sorting.
-   - Retrieval mechanics: HTML DOM parsing with `BeautifulSoup` + `html5lib`, Last.fm artist header retrieval, User-Agent, timeouts, error handling and fallback blank tiles.
+   - Scraping mechanics: HTML DOM parsing with `BeautifulSoup` + `html5lib`, Last.fm artist header scraping, User-Agent, timeouts, error handling and fallback blank tiles.
    - Extension points: How to add new entities, layouts, themes, caching layers.
 3. Write your exhaustive analysis report to `/Users/priera/.gemini/antigravity/worktrees/lastfm-collage-generator/analyze_roadmap_documentation_features/.agents/teamwork_preview_explorer_survey_1/handoff.md`.
 4. Update `progress.md` in your directory and send a message back with your findings.

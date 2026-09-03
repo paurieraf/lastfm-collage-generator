@@ -6,7 +6,7 @@ See `proposal.md` for motivation. The project is a pure Python library managed w
 
 **Goals:**
 - Provide instant in-repo execution and debugging against `src/lastfmcollagegenerator/` without packaging or installation steps.
-- Support both offline mock rendering (zero external network calls) and live API querying with web retrieval.
+- Support both offline mock rendering (zero external network calls) and live API querying with web scraping.
 - Enable 1-click F5 debugging in VS Code with breakpoints that stop inside library source files.
 - Enable automatic credential and user loading via `.env`.
 - Provide automated output management saving to `output/` with optional OS image opening.

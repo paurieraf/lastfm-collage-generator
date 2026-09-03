@@ -14,7 +14,7 @@ Last visited: 2026-08-16T15:47:00+02:00
   - [x] Verified title overlay coordinate bug (`collage.py:126-130`) and mathematical fix formula
   - [x] Verified README convenience method mismatch (`README.md:48` vs `collage_generator.py`)
   - [x] Verified parameter boundary validation gap (`cols <= 0`, `rows <= 0` in `collage_generator.py:69`)
-  - [x] Verified web retrieval resilience (missing timeouts, default User-Agent in `collage.py:234, 251, 308`)
+  - [x] Verified web scraping resilience (missing timeouts, default User-Agent in `collage.py:234, 251, 308`)
   - [x] Verified non-deterministic sorting on tied playcounts (`collage.py:189-191`)
   - [x] Verified packaging hygiene (trailing space in `pyproject.toml:3`, dead `CollageConfig` in `collage.py:45`)
 - [x] Adversarial Analysis & Integrity Audit:

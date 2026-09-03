@@ -8,7 +8,7 @@
 - [x] 2.1 Fix title overlay bounding box coordinate math in `BaseCollageBuilder._insert_tile_title` (`y_0` and `y_1` bounding)
 - [x] 2.2 Implement deterministic secondary sort key `(int(playcount), title)` in `BaseCollageBuilder._create_tiles_from_top_items`
 
-## 3. Network Resilience and Retrieval Error Handling
+## 3. Network Resilience and Scraping Error Handling
 
 - [x] 3.1 Configure `DEFAULT_HEADERS` with custom User-Agent and `DEFAULT_TIMEOUT` in `src/lastfmcollagegenerator/collage.py`
 - [x] 3.2 Wrap `AlbumCollageBuilder._get_album_cover` and `ArtistCollageBuilder._get_artist_image` with explicit timeouts and exception fallback to `_generate_blank_tile()`

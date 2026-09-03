@@ -107,7 +107,7 @@
 1. **Automated Unit Test Suite Coverage**:
    - As observed in Observation 2, `tests/` currently contains 0 test cases (`tests/__init__.py`), which is the legacy baseline for `v0.4.13`. The authoring of a full offline pytest test suite with >90% coverage is scheduled for implementation in Phase 1 (v0.5.0).
 2. **Live Network Execution**:
-   - Live Last.fm API queries and web retrieval require external credentials and internet access; adhering to the zero live network calls test policy, live queries were intentionally excluded from automated verification in favor of synthetic offline mock pipelines.
+   - Live Last.fm API queries and web scraping require external credentials and internet access; adhering to the zero live network calls test policy, live queries were intentionally excluded from automated verification in favor of synthetic offline mock pipelines.
 
 ---
 

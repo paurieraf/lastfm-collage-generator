@@ -117,7 +117,7 @@ class CollageBuilderConfig:
       - `InvalidEntityError`
       - `InvalidGridDimensionsError`
       - `InvalidPeriodError`
-    - `retrieve` (Base for HTML retrieval failures)
+    - `ScrapingError` (Base for HTML scraping failures)
       - `ArtistNotFound`
       - `ArtistImageNotFound`
     - `LastfmClientError` (Base for API client failures)
@@ -141,15 +141,15 @@ class InvalidGridDimensionsError(ValidationError):
     """Raised when columns or rows exceed allowed limits or are non-positive."""
     pass
 
-class retrieve(LastfmCollageGeneratorError):
-    """Base exception for web retrieval failures."""
+class ScrapingError(LastfmCollageGeneratorError):
+    """Base exception for web scraping failures."""
     pass
 
-class ArtistNotFound(retrieve):
+class ArtistNotFound(ScrapingError):
     """Raised when Last.fm returns HTTP 404 for an artist URL."""
     pass
 
-class ArtistImageNotFound(retrieve):
+class ArtistImageNotFound(ScrapingError):
     """Raised when no artist hero image is found in Last.fm HTML."""
     pass
 ```

@@ -34,16 +34,16 @@ Required Sections in PROJECT_OVERVIEW.md:
    - `CollageBuilderFactory` (Factory)
    - `CollageBuilder` (Abstract Base Builder)
    - `AlbumCollageBuilder` (Album artwork handling)
-   - `ArtistCollageBuilder` (HTML retrieval pipeline)
+   - `ArtistCollageBuilder` (HTML scraping pipeline)
    - `TrackCollageBuilder` (Track artwork fallback handling)
 5. End-to-End Execution Sequence & Data Flow (Step-by-step from input arguments to PIL Image rendering)
-6. Last.fm API Integration & Web Retrieval Mechanism
+6. Last.fm API Integration & Web Scraping Mechanism
 7. Image Processing, Grid Mathematics, and Typography Engine
 8. Critical Bugs, Deficiencies, and Technical Debt Identified:
    - Coordinate calculation bug in `_insert_tile_title` (`collage.py:127`)
    - `README.md` API mismatch (`generate_top_albums_collage`)
    - Missing input validation for `cols`/`rows` and period strings
-   - Unhandled network failures / timeouts in retrieval
+   - Unhandled network failures / timeouts in scraping
    - Zero test coverage (empty `tests/`)
 9. Quality Assurance Status & Testing Recommendations
 10. Modernization & Extensibility Roadmap

@@ -15,7 +15,7 @@ from lastfmcollagegenerator.constants import ENTITY_ALBUM
 from lastfmcollagegenerator.lastfm.client import LastfmClient
 from tests.conftest import (
     MockPylastEntityFactory,
-    MockHtmlResponses,
+    MockHtmlScraperResponses,
 )
 
 
@@ -124,7 +124,7 @@ async def test_artist_collage_builder_create_async(synthetic_png_bytes):
         response = MagicMock()
         response.status_code = 200
         if "last.fm/music" in url:
-            response.content = MockHtmlResponses.SUCCESS_HTML.encode("utf-8")
+            response.content = MockHtmlScraperResponses.SUCCESS_HTML.encode("utf-8")
         else:
             response.content = synthetic_png_bytes
         response.raise_for_status = MagicMock()
@@ -155,7 +155,7 @@ async def test_artist_collage_builder_async_fallbacks():
     # Missing image in html
     resp_missing = MagicMock()
     resp_missing.status_code = 200
-    resp_missing.content = MockHtmlResponses.MISSING_IMAGE_HTML.encode("utf-8")
+    resp_missing.content = MockHtmlScraperResponses.MISSING_IMAGE_HTML.encode("utf-8")
     resp_missing.raise_for_status = MagicMock()
     mock_http_client.get.return_value = resp_missing
 

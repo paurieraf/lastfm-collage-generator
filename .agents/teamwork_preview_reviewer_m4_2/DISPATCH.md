@@ -19,7 +19,7 @@ Deliverables to Review:
    - `python-standards.md`
    - `architecture-conventions.md`
    - `testing-standards.md`
-   - `lastfm-network-resilience.md`
+   - `lastfm-scraping-resilience.md`
 2. Custom Skills in `.gemini/skills/`:
    - `poetry-test-runner/SKILL.md` and `scripts/run_tests.py`
    - `lastfm-mocking-fixtures/SKILL.md` and `references/fixture_templates.py`

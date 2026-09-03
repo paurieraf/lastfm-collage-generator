@@ -22,7 +22,7 @@ Direct observations from source code analysis, dependency inspection, and the au
    - **`src/lastfmcollagegenerator/collage.py`**:
      - Dataclasses: `LastfmConfig`, `CollageBuilderConfig`, `CollageTile`, `CollageConfig`.
      - `BaseCollageBuilder`: Base class defining `TILE_WIDTH = 300`, `TILE_HEIGHT = 300`, `create()`, canvas construction `_create_image()`, title rendering `_insert_tile_title()`, line wrapping `_insert_newline_characters_to_text()`, blank tile generation `_generate_blank_tile()`, and `ThreadPoolExecutor` worker orchestration.
-     - `ArtistCollageBuilder`: Fetches `https://www.last.fm/music/<artist>` via `requests` and `bs4.BeautifulSoup` (`html5lib`), parsing `.header-new-background-image` content attribute, resizing thumbnail to 300x300.
+     - `ArtistCollageBuilder`: Scrapes `https://www.last.fm/music/<artist>` via `requests` and `bs4.BeautifulSoup` (`html5lib`), parsing `.header-new-background-image` content attribute, resizing thumbnail to 300x300.
      - `AlbumCollageBuilder`: Queries `item.get_cover_image()` from `pylast` and fetches binary stream via `requests.get()`.
      - `TrackCollageBuilder`: Subclasses `AlbumCollageBuilder` for user top tracks.
      - `CollageBuilderFactory`: Factory using `__new__` dispatching by entity key (`"album"`, `"artist"`, `"track"`).
@@ -67,7 +67,7 @@ Direct observations from source code analysis, dependency inspection, and the au
 
 ## 4. Conclusion
 
-Milestone 1 is **COMPLETE**. The comprehensive project overview document (`PROJECT_OVERVIEW.md`) has been authored at the repository root. It delivers an exhaustive, production-grade technical evaluation of the `lastfm-collage-generator` library, covering architecture, design patterns, component contracts, end-to-end data flows, web retrieval mechanics, typography mathematics, critical defects with exact fixes, QA testing strategies, and modernization roadmaps.
+Milestone 1 is **COMPLETE**. The comprehensive project overview document (`PROJECT_OVERVIEW.md`) has been authored at the repository root. It delivers an exhaustive, production-grade technical evaluation of the `lastfm-collage-generator` library, covering architecture, design patterns, component contracts, end-to-end data flows, web scraping mechanics, typography mathematics, critical defects with exact fixes, QA testing strategies, and modernization roadmaps.
 
 ---
 

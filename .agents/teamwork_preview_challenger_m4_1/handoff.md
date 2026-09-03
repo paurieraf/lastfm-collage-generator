@@ -70,9 +70,9 @@ To confirm `generate_collage_cli.py` does not exhibit Bug 1 (where multi-row ove
 - `Fixture_MockArtist`: Mock `pylast.Artist` verified (`name='Bjork'`, `repr="<pylast.Artist 'Bjork'>"`) -> `[PASS]`
 - `Fixture_MockTrack`: Mock `pylast.Track` verified (`artist='Aphex Twin'`, `title='Windowlicker'`, `get_cover_image()='http://cdn/wl.png'`, `repr="<pylast.Track 'Aphex Twin' - 'Windowlicker'>"`) -> `[PASS]`
 - `Fixture_MockTopItemsList`: Returned 9 items sorted descending by weight -> `[PASS]`
-- `Fixture_Htmlretrieve`: BeautifulSoup successfully parsed `.header-new-background-image` content attribute -> `[PASS]`
-- `Fixture_Htmlretrieve`: Gracefully handled present header with missing content attribute -> `[PASS]`
-- `Fixture_Htmlretrieve`: Gracefully handled absent header tag -> `[PASS]`
+- `Fixture_HtmlScraper_Success`: BeautifulSoup successfully parsed `.header-new-background-image` content attribute -> `[PASS]`
+- `Fixture_HtmlScraper_MissingImage`: Gracefully handled present header with missing content attribute -> `[PASS]`
+- `Fixture_HtmlScraper_NoHeader`: Gracefully handled absent header tag -> `[PASS]`
 - `Fixture_MockLastfmClient`: Methods (`get_user`, `get_top_albums`, `get_top_artists`, `get_top_tracks`) returned structured mock entities matching requested limits -> `[PASS]`
 
 #### E. Test Runner Verification (2/2 PASSED)

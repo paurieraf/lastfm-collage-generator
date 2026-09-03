@@ -42,11 +42,11 @@ Perform an objective, rigorous, and adversarial quality review of PROJECT_OVERVI
   - Tile coordinate drift across rows 0 to 4: Confirmed bug & verified fix formula.
   - Absence of convenience methods on CollageGenerator: Confirmed AttributeError.
   - Parameter boundary validation: Confirmed cols/rows <= 0 passes validation and crashes PIL.
-  - Web retrieval timeouts & default User-Agent: Confirmed absence of timeouts/headers in requests.get.
+  - Web scraping timeouts & default User-Agent: Confirmed absence of timeouts/headers in requests.get.
   - Non-deterministic sorting on tied playcounts: Confirmed Timsort stability over as_completed arrival order.
   - Integrity violation checks: No dummy facade implementations, no hardcoded cheating, no fake artifacts.
 - **Vulnerabilities found**: All 5 core defects in source code accurately cataloged in deliverables. Minor layout discrepancy in initial planning `PROJECT.md` noted and reconciled in `AGENTS.md` and `PROJECT_OVERVIEW.md`.
-- **Untested angles**: Retrieved image aspect ratio behavior (non-square images producing letterboxing when thumbnailed to 300x300) flagged for roadmap.
+- **Untested angles**: Scraped image aspect ratio behavior (non-square images producing letterboxing when thumbnailed to 300x300) flagged for roadmap.
 
 ## Key Decisions Made
 - Confirmed full architectural accuracy and depth across deliverables.

@@ -54,7 +54,7 @@ The library follows a strict 4-layer design pattern: **Facade → Factory → Bu
   - Instantiate `LastfmClient` and delegate builder construction to `CollageBuilderFactory`.
 - **Prohibitions**:
   - MUST NOT perform direct image drawing or PIL manipulation.
-  - MUST NOT make direct HTTP or web retrieval requests.
+  - MUST NOT make direct HTTP or web scraping requests.
 
 ### 2.2 Factory Layer (`CollageBuilderFactory` in `collage.py`)
 - **Responsibilities**:

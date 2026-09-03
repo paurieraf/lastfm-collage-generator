@@ -13,7 +13,7 @@
    - `README.md` previously contained 256 lines of high-level overview.
    - It lacked complete API parameter documentation, explicit exception hierarchies, visual architecture diagrams, grid geometry reference charts, font packaging mechanics, the full 4-pillar multi-phase feature roadmap, and the defect catalog.
 2. **Explorer Survey Handoffs**:
-   - Explorer 1 (`.agents/teamwork_preview_explorer_survey_1/handoff.md`): Provided the 4-layer architecture deep dive (Facade -> Factory -> Builder -> Client Adapter), Pillow compositing mechanics, concurrency analysis, retrieval mechanics, and identified the 5 critical defects (BUG-01 through BUG-05).
+   - Explorer 1 (`.agents/teamwork_preview_explorer_survey_1/handoff.md`): Provided the 4-layer architecture deep dive (Facade -> Factory -> Builder -> Client Adapter), Pillow compositing mechanics, concurrency analysis, scraping mechanics, and identified the 5 critical defects (BUG-01 through BUG-05).
    - Explorer 2 (`.agents/teamwork_preview_explorer_survey_2/handoff.md`): Provided the multi-phase feature roadmap across 4 strategic pillars (Visual Styling, Performance/Caching, Advanced Layouts, Ecosystem/CLI) across 5 release phases (Phase 1 v0.5.0 to Phase 5 v1.2.0).
    - Explorer 3 (`.agents/teamwork_preview_explorer_survey_3/handoff.md`): Defined the exact 14-section production README structure, code examples, debugging runner flags, and developer workflows.
 3. **Execution Verification**:
@@ -39,7 +39,7 @@
 
 1. **Step 1 (Scope & Structure)**: Drawing from Explorer 3's structure specification, we designed the updated `README.md` to feature 14 exhaustive sections:
    - Section 1: Hero Header & Badges (PyPI, Python 3.8-3.12, License, uv, Black, MyPy, Downloads, PRs Welcome)
-   - Section 2: Project Overview & Key Feature Highlights (Album, Artist via retrieval, Track, geometry, concurrency, fallback handling)
+   - Section 2: Project Overview & Key Feature Highlights (Album, Artist via scraping, Track, geometry, concurrency, fallback handling)
    - Section 3: Visual Grid Previews & Geometric Reference (Grid sizes chart, 300x300 tile anatomy with 65px banner)
    - Section 4: System Architecture & Design Patterns (4-Layer Diagram: Facade -> Factory -> Builder -> Client Adapter, module responsibilities matrix)
    - Section 5: Installation Guide (uv, pip, pipx, Python 3.8+ requirements)

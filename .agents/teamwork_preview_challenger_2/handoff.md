@@ -169,7 +169,7 @@
 
 ## 3. Caveats
 
-1. **Network-Isolated Environment**: Live Last.fm API queries and live artist web retrieval were tested up to the network boundary with mock/synthetic credentials; live outbound network requests to `last.fm` servers were not performed in adherence to zero-network testing guidelines.
+1. **Network-Isolated Environment**: Live Last.fm API queries and live artist web scraping were tested up to the network boundary with mock/synthetic credentials; live outbound network requests to `last.fm` servers were not performed in adherence to zero-network testing guidelines.
 2. **Review-Only Constraint**: In accordance with the Review-Only role constraint, no implementation code modifications were applied by this agent.
 
 ---

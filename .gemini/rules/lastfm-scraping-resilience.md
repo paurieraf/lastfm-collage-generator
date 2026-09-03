@@ -1,21 +1,21 @@
-# Last.fm Retrieval Resilience & Network Safety
+# Last.fm Scraping Resilience & Network Safety
 
-**Scope**: Web retrieval mechanisms, HTTP network requests, timeout policies, fallback strategies, and concurrency safety for `lastfm-collage-generator`.
+**Scope**: Web scraping mechanisms, HTTP network requests, timeout policies, fallback strategies, and concurrency safety for `lastfm-collage-generator`.
 
 ---
 
-## 1. Background & Retrieval Context
+## 1. Background & Scraping Context
 
-Due to changes in the Last.fm Audioscrobbler REST API v2.0, artist image URLs are no longer returned in API responses. To enable artist collages, `ArtistCollageBuilder` fetches the artist profile webpage (`https://www.last.fm/music/<artist>`) to extract the hero background image URL from the DOM.
+Due to changes in the Last.fm Audioscrobbler REST API v2.0, artist image URLs are no longer returned in API responses. To enable artist collages, `ArtistCollageBuilder` scrapes the artist profile webpage (`https://www.last.fm/music/<artist>`) to extract the hero background image URL from the DOM.
 
-Because web retrieval is inherently fragile and subject to CDN rate limiting, CAPTCHAs, and DOM layout changes, the following safety and resilience standards must be strictly enforced.
+Because web scraping is inherently fragile and subject to CDN rate limiting, CAPTCHAs, and DOM layout changes, the following safety and resilience standards must be strictly enforced.
 
 ---
 
 ## 2. User-Agent Header Requirements
 
 - **Prohibition of Default Python User-Agent**: Never issue requests using the default `python-requests/x.y.z` header. Cloudflare and Last.fm edge routers frequently block or challenge standard script user agents with HTTP 403 Forbidden.
-- **Compliant Custom Headers**: Every HTTP request (both for web page retrieval and for binary image downloads) must include a custom, descriptive User-Agent header:
+- **Compliant Custom Headers**: Every HTTP request (both for web page scraping and for binary image downloads) must include a custom, descriptive User-Agent header:
 
 ```python
 DEFAULT_HEADERS = {
@@ -55,7 +55,7 @@ def build_artist_url(artist_name: str) -> str:
 
 ## 5. Blank Tile Fallback Policies
 
-- **Zero Uncaught Exceptions**: Failures during retrieval or image downloading MUST NEVER crash the collage generation pipeline or abort sibling tile downloads.
+- **Zero Uncaught Exceptions**: Failures during scraping or image downloading MUST NEVER crash the collage generation pipeline or abort sibling tile downloads.
 - **Comprehensive Exception Catching**:
   - HTTP 404 (Artist not found) → catch `ArtistNotFound`, return blank tile.
   - DOM selector missing (Image not found) → catch `ArtistImageNotFound`, return blank tile.
@@ -65,7 +65,7 @@ def build_artist_url(artist_name: str) -> str:
   - Use `BaseCollageBuilder._generate_blank_tile()` to produce a uniform `300x300` solid black PNG byte array as the fallback tile.
 
 ```python
-# Resilient retrieval pattern
+# Resilient scraping pattern
 @classmethod
 def _get_artist_image(cls, artist: Artist) -> bytes:
     try:

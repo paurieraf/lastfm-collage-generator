@@ -15,7 +15,7 @@ Authoritative cross-referencing, reconciliation, and creation of root `AGENTS.md
 - Deliver authoritative `AGENTS.md` at workspace root.
 - Reconcile README vs Code vs Design discrepancies.
 - Reference `.gemini/rules/` and `.gemini/skills/` accurately.
-- Document critical defects (geometry bug in `_insert_tile_title`, README signature mismatch, retrieval risks).
+- Document critical defects (geometry bug in `_insert_tile_title`, README signature mismatch, scraping risks).
 - Produce 5-component handoff report.
 
 ## Current Parent

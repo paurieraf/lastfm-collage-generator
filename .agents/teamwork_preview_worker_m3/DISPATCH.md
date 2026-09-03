@@ -16,7 +16,7 @@ Created Rules:
 - /Users/priera/.gemini/antigravity/worktrees/lastfm-collage-generator/initialize_antigravity_architecture_analysis/.gemini/rules/python-standards.md
 - /Users/priera/.gemini/antigravity/worktrees/lastfm-collage-generator/initialize_antigravity_architecture_analysis/.gemini/rules/architecture-conventions.md
 - /Users/priera/.gemini/antigravity/worktrees/lastfm-collage-generator/initialize_antigravity_architecture_analysis/.gemini/rules/testing-standards.md
-- /Users/priera/.gemini/antigravity/worktrees/lastfm-collage-generator/initialize_antigravity_architecture_analysis/.gemini/rules/lastfm-network-resilience.md
+- /Users/priera/.gemini/antigravity/worktrees/lastfm-collage-generator/initialize_antigravity_architecture_analysis/.gemini/rules/lastfm-scraping-resilience.md
 
 Created Skills:
 - /Users/priera/.gemini/antigravity/worktrees/lastfm-collage-generator/initialize_antigravity_architecture_analysis/.gemini/skills/poetry-test-runner/SKILL.md
@@ -45,7 +45,7 @@ Your Mission:
    - Code Layout and File Responsibilities
    - Coding Standards & Conventions (pointing to `.gemini/rules/`)
    - Custom Skills Catalog & How to Run Them (pointing to `.gemini/skills/`)
-   - Critical Defects & Pitfalls (Geometry bug in `_insert_tile_title`, README mismatch on `generate_top_albums_collage`, network retrieval risks)
+   - Critical Defects & Pitfalls (Geometry bug in `_insert_tile_title`, README mismatch on `generate_top_albums_collage`, network scraping risks)
    - Testing & Verification Workflows (running tests without live API calls, mock fixtures)
    - Discrepancy Reconciliation Summary (README vs Code vs Design)
 4. Deliverable:

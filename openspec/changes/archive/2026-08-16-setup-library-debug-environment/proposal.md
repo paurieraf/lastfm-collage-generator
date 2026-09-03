@@ -8,7 +8,7 @@ This change establishes an in-repo developer experience and debugging environmen
 
 - **Debug Runner CLI (`scripts/debug_collage.py`)**: A unified, zero-build developer harness supporting:
   - `--mock`: Fast, offline synthetic rendering (0 network calls, ideal for Pillow/layout/math debugging).
-  - `--live`: Real Last.fm API queries and artist web retrieval using credentials and username loaded from `.env`.
+  - `--live`: Real Last.fm API queries and artist web scraping using credentials and username loaded from `.env`.
   - `--open`: Automatically opens generated collage images in the default system viewer.
   - Interactive REPL mode for dynamic object inspection.
 - **Local Environment Configuration (`.env.example` & `.gitignore`)**:

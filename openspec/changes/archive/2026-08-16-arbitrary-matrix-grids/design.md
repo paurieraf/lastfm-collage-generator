@@ -46,11 +46,11 @@ To support arbitrary matrix layouts up to $20 \times 20$ without exceeding host 
 
 ### Decision 4: In-Memory Resizing via Pillow Lanczos
 **Choice**: Use `tile_img.resize((tile_width, tile_height), Image.Resampling.LANCZOS)` when pasting into the master canvas.
-**Rationale**: High-quality downsampling ensuring album covers and retrieved artist images maintain visual clarity without pixelation artifacts.
+**Rationale**: High-quality downsampling ensuring album covers and scraped artist images maintain visual clarity without pixelation artifacts.
 
 ## Risks / Trade-offs
 
-- **[Risk] High-density grids making 400 network queries**: Fetching 400 artist images via web retrieval could take substantial time.
-  - *Mitigation*: Album and track covers use direct CDN URLs; artist retrieval uses `ThreadPoolExecutor` with timeouts and fallback blank tiles. Multi-tier disk caching in Phase 3 will further accelerate repeats.
+- **[Risk] High-density grids making 400 network queries**: Fetching 400 artist images via web scraping could take substantial time.
+  - *Mitigation*: Album and track covers use direct CDN URLs; artist scraping uses `ThreadPoolExecutor` with timeouts and fallback blank tiles. Multi-tier disk caching in Phase 3 will further accelerate repeats.
 - **[Risk] Small font legibility on 100px tiles**:
   - *Mitigation*: A minimum font size of 8pt is enforced, with line breaks wrapping at proportional pixel boundaries.

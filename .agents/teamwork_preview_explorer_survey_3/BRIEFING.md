@@ -30,7 +30,7 @@ Analyze requirements for an Exhaustive, Production-Grade `README.md` and develop
   - `.gemini/skills/`
 - **Key findings**:
   - Existing `README.md` is minimal and contains multiple API discrepancies (e.g. `generate_top_albums_collage` missing, wrong import paths, missing error handling).
-  - Codebase uses uv / hatchling for packaging, Pillow for image compositing, requests/bs4 for artist retrieval, pylast for API.
+  - Codebase uses uv / hatchling for packaging, Pillow for image compositing, requests/bs4 for artist scraping, pylast for API.
   - Multi-row overlay bug in `collage.py` needs explicit documentation and test cases.
   - No automated tests currently exist in `tests/` except `__init__.py`.
   - Comprehensive roadmap needed covering async, caching, layout customization, typography, export formats, packaging, and CLI integration.

@@ -24,7 +24,7 @@ from lastfmcollagegenerator.network import (
 from tests.conftest import (
     SyntheticImageFactory,
     MockPylastEntityFactory,
-    MockHtmlResponses,
+    MockHtmlScraperResponses,
 )
 
 
@@ -123,7 +123,7 @@ def test_artist_image_fallback_on_404(mock_get):
 def test_artist_image_fallback_on_missing_html_header(mock_get):
     mock_resp = MagicMock()
     mock_resp.status_code = 200
-    mock_resp.content = MockHtmlResponses.NO_HEADER_HTML.encode("utf-8")
+    mock_resp.content = MockHtmlScraperResponses.NO_HEADER_HTML.encode("utf-8")
     mock_get.return_value = mock_resp
 
     mock_artist = MockPylastEntityFactory.create_mock_artist("Artist No Header")
@@ -142,7 +142,7 @@ def test_artist_image_success(mock_get):
         resp = MagicMock()
         if "last.fm/music" in url:
             resp.status_code = 200
-            resp.content = MockHtmlResponses.SUCCESS_HTML.encode("utf-8")
+            resp.content = MockHtmlScraperResponses.SUCCESS_HTML.encode("utf-8")
         else:
             resp.status_code = 200
             resp.content = raw_img

@@ -34,7 +34,7 @@ Empirically execute and stress-test the created scripts (`generate_collage_cli.p
   - Tested negative boundaries (cols/rows <= 0 and > 5).
   - Tested invalid arguments and missing live API credentials.
   - Verified multi-row overlay pixel luminance to confirm absence of tile corruption.
-  - Tested fixture template classes (`SyntheticImageFactory`, `MockPylastEntityFactory`, `MockHtmlResponses`, `MockLastfmClient`).
+  - Tested fixture template classes (`SyntheticImageFactory`, `MockPylastEntityFactory`, `MockHtmlScraperResponses`, `MockLastfmClient`).
   - Tested `run_tests.py` CLI interface and argument parser.
 - **Vulnerabilities found**: None in the tested skills; all scripts demonstrated complete robustness and adherence to contracts.
 - **Untested angles**: Live Last.fm API endpoint responses (intentionally mocked as per offline zero-network policy).

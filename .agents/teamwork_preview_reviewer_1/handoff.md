@@ -136,7 +136,7 @@
    - Requirement: Multi-phase 4-pillar roadmap and defect catalog (BUG-01 to BUG-05).
    - Observation:
      - Roadmap covers Pillar 1 (Visual Styling), Pillar 2 (Performance & Caching), Pillar 3 (Advanced Layouts), Pillar 4 (Ecosystem & CLI) across Phases 1 through 5 with concrete version targets.
-     - Defect catalog accurately pinpoints BUG-01 (`collage.py:126-130` overlay math), BUG-02 (missing convenience methods in facade), BUG-03 (incomplete lower bound validation), BUG-04 (retrieval timeout and user-agent resilience), and BUG-05 (deterministic secondary sorting).
+     - Defect catalog accurately pinpoints BUG-01 (`collage.py:126-130` overlay math), BUG-02 (missing convenience methods in facade), BUG-03 (incomplete lower bound validation), BUG-04 (scraping timeout and user-agent resilience), and BUG-05 (deterministic secondary sorting).
 
 6. **Adversarial & Integrity Assessment**:
    - Integrity Check: Tested whether synthetic mock mode bypasses real logic. Confirmed that `scripts/debug_collage.py` imports and directly invokes `BaseCollageBuilder._create_image` and `_insert_tile_title` from the real codebase, genuinely testing Pillow canvas allocation, font loading, translucent banner compositing, and text wrapping without cheating or hardcoded outputs.

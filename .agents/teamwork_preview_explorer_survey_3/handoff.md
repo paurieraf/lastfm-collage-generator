@@ -22,7 +22,7 @@ A comprehensive audit was conducted across `README.md`, `PROJECT_OVERVIEW.md`, `
 | **Parameter Exposure (`show_playcount`)** | Mentions overlay banners with playcounts; CLI runner supports `--no-title` | `CollageBuilderConfig` supports `show_playcount: bool = True` (`collage.py:34`), but `CollageGenerator.generate()` does NOT accept `show_playcount`. | Parameter should be exposed through `CollageGenerator.generate(..., show_playcount=True)`. | **Medium**: Users cannot toggle playcount banners programmatically via Facade API. |
 | **Boundary Validation** | Documents "up to 5x5" grid size | `_validate_parameters` checks `cols > 5 or rows > 5` (`collage_generator.py:69`), but does NOT check `cols < 1` or `rows < 1`. Passing `cols=0` passes validation and crashes PIL canvas allocation. | Must validate `1 <= cols <= 5` and `1 <= rows <= 5`. | **Medium**: Silent crash with `ValueError: zero width or height` inside PIL. |
 | **Title Overlay Multi-Row Geometry** | Shows visual overlay sample | `_insert_tile_title` (`collage.py:126-130`) uses defective formula `y_1 = y * 2 + self.TILE_WIDTH`. On row 1, `y_1 = 900` (365px height), completely blanketing row 2. | Correct formula is `y_0 = y + (TILE_HEIGHT - 65)` and `y_1 = y + TILE_HEIGHT`. | **Critical**: Multi-row collages suffer severe dark rectangle corruption on all rows > 0. |
-| **Network & Retrieval Resilience** | No mention of network error handling or web retrieval limitations | `requests.get` invocations in `collage.py:234, 251, 308` lack `timeout=...`, custom `User-Agent`, and robust exception handling. | Mandatory `timeout=(3.05, 10.0)`, `User-Agent: lastfm-collage-generator/0.5.0`, and catch `requests.RequestException` with fallback to `_generate_blank_tile()`. | **Medium**: Hanging threads or crashes on CDN 502/503 / Last.fm rate limiting. |
+| **Network & Scraping Resilience** | No mention of network error handling or web scraping limitations | `requests.get` invocations in `collage.py:234, 251, 308` lack `timeout=...`, custom `User-Agent`, and robust exception handling. | Mandatory `timeout=(3.05, 10.0)`, `User-Agent: lastfm-collage-generator/0.5.0`, and catch `requests.RequestException` with fallback to `_generate_blank_tile()`. | **Medium**: Hanging threads or crashes on CDN 502/503 / Last.fm rate limiting. |
 | **Automated Test Coverage** | Lists testing commands (`uv run pytest tests/`) | `tests/` directory contains only an empty `__init__.py` (0% test coverage). | Comprehensive test suite required in `tests/` with >90% code coverage. | **High**: Zero regression testing protection for future refactors. |
 | **Package Versioning & Hygiene** | Lists PyPI package `0.4.13` | `pyproject.toml` version `0.4.13`; dead code `CollageConfig` (`collage.py:45`) and unused `logger` (`collage.py:20`). | Clean versioning without trailing whitespace; removal of dead code. | **Low**: Code hygiene and build warnings. |
 
@@ -60,7 +60,7 @@ A comprehensive audit was conducted across `README.md`, `PROJECT_OVERVIEW.md`, `
 
 1. **Premise 1**: Documentation is the primary user and AI interface for a software library. When documentation advertises non-existent methods (e.g. `generate_top_albums_collage`) or fails to document parameter constraints, users encounter unexpected runtime errors.
 2. **Premise 2**: A production-grade README must provide immediate time-to-value for new developers (Quickstart, Installation via `uv`/`pip`, Offline Mock CLI) while serving as an authoritative reference manual for advanced users (Architecture diagrams, Complete API signatures, PIL Image manipulation, Error handling).
-3. **Premise 3**: The library uses a 4-layer architecture (Facade → Factory → Builder → Client Adapter) and contains subtle mechanisms like concurrent image fetching and web retrieval for artist hero images. Without visual architecture and data flow diagrams, external contributors and AI agents will struggle with system comprehension.
+3. **Premise 3**: The library uses a 4-layer architecture (Facade → Factory → Builder → Client Adapter) and contains subtle mechanisms like concurrent image fetching and web scraping for artist hero images. Without visual architecture and data flow diagrams, external contributors and AI agents will struggle with system comprehension.
 4. **Premise 4**: Developers debugging Pillow rendering or writing unit tests require an offline development workflow. Highlighting both `scripts/debug_collage.py` and `.gemini/skills/` ensures developers can test visual layouts and run tests without live Last.fm API keys.
 5. **Premise 5**: Structuring the feature roadmap into 4 strategic pillars (Visual Styling, Performance/Caching, Advanced Layouts, CLI/Ecosystem) with concrete version milestones (v0.5.0, v0.6.0, v0.7.0, v1.0.0+) establishes a clear technical vision for the repository.
 6. **Conclusion**: The `README.md` must be redesigned from the ground up to incorporate these elements in an enterprise-grade, beautifully formatted structure.
@@ -71,7 +71,7 @@ A comprehensive audit was conducted across `README.md`, `PROJECT_OVERVIEW.md`, `
 
 1. **Current Codebase Constraints**: As of version 0.4.13, `generate_top_albums_collage`, `generate_top_artists_collage`, and `generate_top_tracks_collage` are not yet implemented in `src/lastfmcollagegenerator/collage_generator.py`. The documentation should clearly document `generate()` as the primary method while defining the convenience methods for the v0.5.0 milestone.
 2. **Read-Only Scope**: This report defines the specification and recommendations. Implementation of source code modifications (such as bug fixes or adding convenience methods) is reserved for implementation phases.
-3. **Last.fm Web Retrieval Brittleness**: Because Last.fm does not supply artist images in its REST API, artist image retrieval relies on `.header-new-background-image`. The documentation must explicitly describe this mechanism, its blank-tile fallback policy, and retrieval resilience best practices.
+3. **Last.fm Web Scraping Brittleness**: Because Last.fm does not supply artist images in its REST API, artist image scraping relies on `.header-new-background-image`. The documentation must explicitly describe this mechanism, its blank-tile fallback policy, and scraping resilience best practices.
 
 ---
 
@@ -146,7 +146,7 @@ The new production-grade `README.md` is structured into 14 distinct, highly deta
 
 - **Multi-Entity Composite Grids**:
   - 💿 **Top Albums (`album`)**: Queries user scrobbles, downloads cover artwork via the Last.fm Audioscrobbler REST API, and composites them into an aligned grid.
-  - 🎤 **Top Artists (`artist`)**: Queries top artists via the API, fetches artist hero images directly from `last.fm/music/<artist>` (overcoming Last.fm API artist image deprecation), thumbnails to 300x300px, and composites the grid.
+  - 🎤 **Top Artists (`artist`)**: Queries top artists via the API, scrapes artist hero images directly from `last.fm/music/<artist>` (overcoming Last.fm API artist image deprecation), thumbnails to 300x300px, and composites the grid.
   - 🎵 **Top Tracks (`track`)**: Queries top tracks, extracts associated album artwork or applies solid black fallbacks, and renders the composite.
 - **Configurable Grid Geometry**: Supports square or rectangular grids from `1x1` up to `5x5` (e.g. `3x3` standard, `5x5` high-density, or asymmetric `3x5`). Standard tile resolution is `300 x 300` px.
 - **Full Time Horizon Support**: All standard Last.fm aggregation horizons supported: `7day`, `1month`, `3month`, `6month`, `12month`, and `overall`.
@@ -178,7 +178,7 @@ Every collage is dynamically assembled from individual `300 x 300` pixel raster 
 │                                              │
 │                                              │
 │              Album Cover Art                 │
-│             or Retrieved Artist                │
+│             or Scraped Artist                │
 │                 Hero Image                   │
 │               (300 x 300 px)                 │
 │                                              │
@@ -222,7 +222,7 @@ The library adheres to a strict 4-layer object-oriented design: **Facade → Fac
         ▼                            ▼                            ▼
 ┌───────────────────────┐  ┌───────────────────────┐  ┌───────────────────────┐
 │  AlbumCollageBuilder  │  │  ArtistCollageBuilder │  │  TrackCollageBuilder  │
-│  - pylast cover art   │  │  - Last.fm web fetch │  │  - Track album art    │
+│  - pylast cover art   │  │  - Last.fm web scrape │  │  - Track album art    │
 └───────────┬───────────┘  └───────────┬───────────┘  └───────────┬───────────┘
             │                          │                          │
             └──────────────────────────┼──────────────────────────┘
@@ -252,7 +252,7 @@ The library adheres to a strict 4-layer object-oriented design: **Facade → Fac
 | `collage.py` | `CollageBuilderFactory` | **Factory** | Dispatches concrete builders (`album`, `artist`, `track`). |
 | `collage.py` | `BaseCollageBuilder` | **Template / Base Builder** | Canvas lifecycle, parallel worker pool, coordinate math, banner overlays. |
 | `collage.py` | `AlbumCollageBuilder` | **Concrete Builder** | Fetches top albums via `pylast`, downloads cover images. |
-| `collage.py` | `ArtistCollageBuilder` | **Concrete Builder** | Fetches `last.fm/music/<artist>` DOM for `.header-new-background-image`. |
+| `collage.py` | `ArtistCollageBuilder` | **Concrete Builder** | Scrapes `last.fm/music/<artist>` DOM for `.header-new-background-image`. |
 | `collage.py` | `TrackCollageBuilder` | **Concrete Builder** | Fetches top tracks, resolves album cover artwork. |
 | `lastfm/client.py` | `LastfmClient` | **Client Adapter** | Wraps `pylast.LastFMNetwork` calls. |
 | `constants.py` | `ENTITIES`, `PERIODS` | **Domain Constants** | Supported entity strings and Last.fm aggregation periods. |
@@ -346,7 +346,7 @@ Generates a composite image collage for the specified entity and time horizon.
 **Parameters**:
 - **`entity`** (`str`): Target musical entity. Must be one of:
   - `"album"`: Top albums with cover art.
-  - `"artist"`: Top artists with web-retrieved hero images.
+  - `"artist"`: Top artists with web-scraped hero images.
   - `"track"`: Top tracks with associated album cover art.
 - **`username`** (`str`): Last.fm user account username.
 - **`cols`** (`int`): Number of grid columns (integer between `1` and `5`).
@@ -497,7 +497,7 @@ uv run python scripts/debug_collage.py --live -e artist -g 4x4 -p 1month --open
 | Flag | Short | Type | Default | Description |
 |---|---|---|---|---|
 | `--mock` | | flag | `False` | Run offline with synthetic colored tiles (0 network calls) |
-| `--live` | | flag | `False` | Run live Last.fm API queries and web retrieval |
+| `--live` | | flag | `False` | Run live Last.fm API queries and web scraping |
 | `--username` | `-u` | `str` | `.env` / `testuser` | Target Last.fm username |
 | `--entity` | `-e` | `str` | `album` | Musical entity: `album`, `artist`, `track` |
 | `--grid` | `-g` | `str` | `3x3` | Shorthand grid dimension (e.g. `3x3`, `5x5`, `4x3`) |
@@ -512,7 +512,7 @@ The repository includes `.vscode/launch.json` debug profiles:
 - `🎨 Debug: Mock Album Collage (3x3)`: Step through Pillow rendering offline.
 - `🎨 Debug: Mock Artist Collage (5x5)`: Step through 5x5 multi-row rendering.
 - `🌐 Debug: Live Album Collage (.env)`: Step through live Last.fm API calls.
-- `🌐 Debug: Live Artist Collage (.env)`: Step through web retrieval pipeline.
+- `🌐 Debug: Live Artist Collage (.env)`: Step through web scraping pipeline.
 - `🧪 Debug: Current Test File (Pytest)`: Step through active test cases.
 
 ### 5. Local Editable Installation for Consumer Apps
@@ -608,10 +608,10 @@ Our development roadmap is organized across 4 strategic pillars and versioned mi
   - [ ] **Custom Font Support**: Allow users to pass custom `.ttf`/`.otf` font filepaths and configure font size.
   - [ ] **Tile Spacing & Borders**: Optional padding/margins between tiles (e.g. 5px border with configurable background color).
 
-### ⚡ Pillar 2: Performance, Caching & Retrieval Resilience
+### ⚡ Pillar 2: Performance, Caching & Scraping Resilience
 - **Phase 2 (v0.6.0 - v0.7.0)**:
-  - [ ] **Retrieval Resilience Engine**: Custom `User-Agent` headers, mandatory request timeouts (`timeout=(3.05, 10.0)`), and fallback DOM selectors for Last.fm artist pages.
-  - [ ] **In-Memory & Disk Artwork Caching**: LRU caching (`cachetools` / SQLite) for downloaded cover art and retrieved artist images to eliminate duplicate downloads across runs.
+  - [ ] **Scraping Resilience Engine**: Custom `User-Agent` headers, mandatory request timeouts (`timeout=(3.05, 10.0)`), and fallback DOM selectors for Last.fm artist pages.
+  - [ ] **In-Memory & Disk Artwork Caching**: LRU caching (`cachetools` / SQLite) for downloaded cover art and scraped artist images to eliminate duplicate downloads across runs.
   - [ ] **Secondary Sort Key Determinism**: Sort equal playcounts by secondary entity title key to ensure byte-for-byte deterministic rendering.
 - **Phase 3 (v0.8.0 - v0.9.0 - Async Architecture)**:
   - [ ] **Asynchronous I/O Engine**: Optional `async`/`await` pipeline using `httpx` or `aiohttp` for non-blocking concurrent fetching in async web frameworks (FastAPI, Discord.py).

@@ -1,7 +1,7 @@
 # BRIEFING — 2026-08-16T16:43:15Z
 
 ## Mission
-Perform deep architectural and codebase analysis of lastfm-collage-generator, examining 4-layer architecture, data models, Pillow pipeline, concurrency model, retrieval mechanics, defects, and extension points.
+Perform deep architectural and codebase analysis of lastfm-collage-generator, examining 4-layer architecture, data models, Pillow pipeline, concurrency model, scraping mechanics, defects, and extension points.
 
 ## 🔒 My Identity
 - Archetype: explorer
@@ -34,7 +34,7 @@ Perform deep architectural and codebase analysis of lastfm-collage-generator, ex
   - Pillow compositing pipeline: 300x300 tile canvas, RGBA banner overlay, Truetype font rendering, character-based line wrapping.
   - Geometry bug: `y_1 = y * 2 + self.TILE_WIDTH` causes exponential coordinate drift in multi-row collages.
   - Concurrency: ThreadPoolExecutor + as_completed, non-deterministic arrival requiring secondary sort key.
-  - Web retrieval: BeautifulSoup + html5lib retrieval `last.fm/music/<artist>` for header image; lacks timeouts, custom User-Agent, and robust exception handling.
+  - Web scraping: BeautifulSoup + html5lib scraping `last.fm/music/<artist>` for header image; lacks timeouts, custom User-Agent, and robust exception handling.
   - Extensibility: Clean protocols for adding new entities, custom layouts (Hero/asymmetric), styling themes, and caching layers.
 - **Unexplored areas**: None (Full codebase and architecture surveyed).
 

@@ -204,7 +204,7 @@ class CollageConfig:
 - **`ArtistCollageBuilder`** (lines 202–269):
   - `ENTITY = ENTITY_ARTIST ("artist")`.
   - `_get_tiles_from_top_items`: queries `lastfm_client.get_top_artists(user, limit, period)`.
-  - Web retrieval in `_get_artist_image(artist)`:
+  - Web scraping in `_get_artist_image(artist)`:
     - Requests `https://www.last.fm/music/{urllib.parse.quote_plus(artist.name)}`.
     - Parses HTML DOM with `BeautifulSoup(resp.content, 'html5lib')`.
     - Locates class `.header-new-background-image`, reads `content` URL attribute.
@@ -327,7 +327,7 @@ This section details the step-by-step reasoning from direct observations to tech
    - Cleanly maps entity strings to specialized builders.
 3. **Builder Layer (`BaseCollageBuilder` & Subclasses)**:
    - Employs the **Template Method Pattern**: `create()` enforces the three-stage lifecycle (fetch data -> construct canvas -> composite text/overlays), while subclasses implement entity-specific data extraction.
-   - Subclass specialization is minimal and cleanly separated: `AlbumCollageBuilder` uses REST API cover images, `ArtistCollageBuilder` fetches HTML DOM, and `TrackCollageBuilder` inherits album cover fallback behavior.
+   - Subclass specialization is minimal and cleanly separated: `AlbumCollageBuilder` uses REST API cover images, `ArtistCollageBuilder` scrapes HTML DOM, and `TrackCollageBuilder` inherits album cover fallback behavior.
 4. **Client Adapter Layer (`LastfmClient`)**:
    - Isolates direct dependency on `pylast.LastFMNetwork`.
    - Prevents `pylast` types from leaking into higher rendering layers.
@@ -380,9 +380,9 @@ This section details the step-by-step reasoning from direct observations to tech
 
 ---
 
-### 2.4 Web Retrieval Mechanics & Network Resilience
+### 2.4 Web Scraping Mechanics & Network Resilience
 
-1. **Retrieval Pipeline**:
+1. **Scraping Pipeline**:
    - Resolves artist names via URL encoding: `urllib.parse.quote_plus(artist.name)`.
    - Fetches HTML DOM from `https://www.last.fm/music/<artist>`.
    - Parses DOM via `bs4.BeautifulSoup(resp.content, 'html5lib')`.
@@ -405,7 +405,7 @@ This section details the step-by-step reasoning from direct observations to tech
 | **New Entity Types** (e.g. `tag`, `recent_tracks`, `user_friends`) | `constants.py`, `BaseCollageBuilder`, `CollageBuilderFactory` | 1. Add `ENTITY_TAG = "tag"` to `constants.py`.<br>2. Subclass `BaseCollageBuilder` as `TagCollageBuilder`.<br>3. Implement `_get_tiles_from_top_items` and `_create_tile_from_top_item`.<br>4. Register in `CollageBuilderFactory.entity_collage_builders`. |
 | **Custom Layout Strategies** (e.g. Hero Tile, Leaderboard, Billboard) | `BaseCollageBuilder._create_image` | Extract canvas layout logic into a **Strategy Pattern** (`GridLayoutStrategy`, `HeroLayoutStrategy`, `LeaderboardLayoutStrategy`). Pass strategy into builder configuration. |
 | **Visual Styling & Themes** (e.g. Dark, Light, Neon, Minimalist, No-Banner) | `CollageBuilderConfig`, `_insert_tile_title` | Introduce `StyleConfig` dataclass (banner color, alpha, font family, font size, border width, text color) into `CollageBuilderConfig`. Expose via `CollageGenerator.generate(..., style=...)`. |
-| **Caching Layers** (Artwork & Retrieved DOM) | `AlbumCollageBuilder`, `ArtistCollageBuilder` | Introduce an HTTP caching session (`requests_cache` or custom disk/memory LRU cache) to avoid redundant network queries for recurring artists/albums across generation runs. |
+| **Caching Layers** (Artwork & Scraped DOM) | `AlbumCollageBuilder`, `ArtistCollageBuilder` | Introduce an HTTP caching session (`requests_cache` or custom disk/memory LRU cache) to avoid redundant network queries for recurring artists/albums across generation runs. |
 | **Export Formats & Optimizations** | `BaseCollageBuilder.create` | Add format selection (`PNG`, `JPEG`, `WEBP`) with configurable compression quality settings. |
 
 ---
@@ -414,7 +414,7 @@ This section details the step-by-step reasoning from direct observations to tech
 
 1. **No Live Network Execution in Automated Testing**: Investigation was conducted offline using static code analysis, AST inspection, and offline synthetic mock execution (`scripts/debug_collage.py --mock`). Live Last.fm API queries require external network access and user credentials.
 2. **Current Test Suite Inactive**: The existing repository test directory `tests/` contains only `__init__.py` with 0 tests. Test execution assertions rely on the newly added development test tools in `.gemini/skills/`.
-3. **Retrieval DOM Coupling**: Last.fm web DOM structure may change without notice. Fallback blank tiles mitigate hard crashes, but fallback rate will rise if Last.fm alters CSS classes.
+3. **Scraping DOM Coupling**: Last.fm web DOM structure may change without notice. Fallback blank tiles mitigate hard crashes, but fallback rate will rise if Last.fm alters CSS classes.
 
 ---
 

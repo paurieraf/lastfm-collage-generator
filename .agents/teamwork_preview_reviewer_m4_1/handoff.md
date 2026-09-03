@@ -48,7 +48,7 @@ Direct observations from source code cross-examination and file inspections:
    - `collage_generator.py` contains only `generate()`. Calling `generate_top_albums_collage` raises `AttributeError`.
 3. **Parameter Validation Boundary Gap (`collage_generator.py:69-73`)**:
    - `_validate_parameters` checks `cols > self.MAX_COLS or rows > self.MAX_ROWS`, omitting `cols < 1 or rows < 1`. Passing `cols=0` or negative values bypasses validation.
-4. **Web Retrieval Fragility & Missing Timeouts (`collage.py:234, 251, 308`)**:
+4. **Web Scraping Fragility & Missing Timeouts (`collage.py:234, 251, 308`)**:
    - `requests.get()` is invoked with default User-Agent and no `timeout=` parameter. `_get_album_cover` lacks exception handling around `requests.get()`.
 5. **Non-Deterministic Sorting (`collage.py:189-191`)**:
    - `as_completed(futures)` yields in arrival order; `sort(key=lambda x: int(x.playcount), reverse=True)` preserves arrival order for identical playcounts.
@@ -58,7 +58,7 @@ Direct observations from source code cross-examination and file inspections:
    - `python-standards.md`: Explicit typing, Pillow resource lifecycle management, exception hierarchy.
    - `architecture-conventions.md`: Strict 4-layer isolation, font resolution relative to package, entity extension protocol.
    - `testing-standards.md`: Zero network calls, synthetic in-memory image fixtures, >90% coverage threshold.
-   - `lastfm-network-resilience.md`: Mandatory custom User-Agent, explicit connect/read timeouts `(3.05, 10.0)`, solid black blank tile fallback.
+   - `lastfm-scraping-resilience.md`: Mandatory custom User-Agent, explicit connect/read timeouts `(3.05, 10.0)`, solid black blank tile fallback.
 2. **Skills (`.gemini/skills/`)**:
    - `poetry-test-runner`: Contains valid `SKILL.md` frontmatter, executable `scripts/run_tests.py`.
    - `lastfm-mocking-fixtures`: Contains valid `SKILL.md` frontmatter, complete fixture templates in `references/fixture_templates.py`.
@@ -92,7 +92,7 @@ Direct observations from source code cross-examination and file inspections:
 - **Analysis**: `getlength()` was introduced in Pillow 8.0.0. `pyproject.toml` pins Pillow `== 10.4.0` and `python-standards.md` specifies `Pillow >= 8.2.0`, guaranteeing support. In addition, `generate_collage_cli.py:98-102` provides a defensive `AttributeError` fallback.
 - **Risk**: **LOW** / **PASSED**.
 
-### 3.2 Edge Case Mining: Non-Square Retrieved Artist Images
+### 3.2 Edge Case Mining: Non-Square Scraped Artist Images
 - **Challenged Scenario**: Last.fm artist header images with non-square aspect ratios (e.g. 600x400).
 - **Analysis**: In `ArtistCollageBuilder._get_artist_image`, `img.thumbnail((300, 300))` scales the image proportionally (e.g. to 300x200). When pasted at `cursor`, the lower 100px of the 300x300 tile remains the canvas background (black).
 - **Mitigation Recommendation**: In Phase 2 modernization, upgrade thumbnailing to smart center-cropping (`ImageOps.fit`) to ensure full 300x300 tile coverage.
@@ -101,7 +101,7 @@ Direct observations from source code cross-examination and file inspections:
 ### 3.3 Concurrency & Ordering Flaw on Tied Playcounts
 - **Challenged Scenario**: Two or more artists/albums having identical playcount values.
 - **Analysis**: Because worker threads complete in arbitrary order, `as_completed()` produces non-deterministic tile lists. Using Python's stable Timsort `tiles.sort(key=lambda x: int(x.playcount))` leaves tied items in non-deterministic order across runs.
-- **Mitigation**: `AGENTS.md` Section 7.5 and `.gemini/rules/lastfm-network-resilience.md` mandate a deterministic secondary key: `tiles.sort(key=lambda x: (int(x.playcount), x.title), reverse=True)`.
+- **Mitigation**: `AGENTS.md` Section 7.5 and `.gemini/rules/lastfm-scraping-resilience.md` mandate a deterministic secondary key: `tiles.sort(key=lambda x: (int(x.playcount), x.title), reverse=True)`.
 - **Risk**: **LOW** / **PASSED**.
 
 ### 3.4 Planning Document Reconciliation (`PROJECT.md` vs `AGENTS.md`)

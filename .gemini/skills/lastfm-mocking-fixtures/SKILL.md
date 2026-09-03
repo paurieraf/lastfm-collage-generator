@@ -1,7 +1,7 @@
 ---
 name: lastfm-mocking-fixtures
 description: >-
-  Provides mocking patterns, pytest fixtures, synthetic image generators, and mock builders for pylast entities (User, Album, Artist, Track) and Last.fm web retrieval. Use when authoring or updating unit and integration tests for lastfm-collage-generator.
+  Provides mocking patterns, pytest fixtures, synthetic image generators, and mock builders for pylast entities (User, Album, Artist, Track) and Last.fm web scraping. Use when authoring or updating unit and integration tests for lastfm-collage-generator.
 ---
 
 # Last.fm Mocking Fixtures & Patterns Skill
@@ -18,7 +18,7 @@ Key helper classes provided in the reference:
 - **`SyntheticImageFactory`**: Creates in-memory PNG/JPEG byte streams of custom dimensions and colors without writing files to disk.
 - **`MockPylastEntityFactory`**: Factory generating mock `Album`, `Artist`, `Track`, and `TopItem` objects with configurable playcounts and image URLs.
 - **`MockLastfmNetwork` & `MockLastfmClient`**: Drop-in mock replacement for `pylast.LastFMNetwork` and `LastfmClient`.
-- **`MockHtmlResponses`**: HTML strings simulating valid artist pages, pages without background images, and 404 responses.
+- **`MockHtmlScraperResponses`**: HTML strings simulating valid artist pages, pages without background images, and 404 responses.
 
 ---
 
@@ -62,7 +62,7 @@ def mock_top_albums():
     return items
 ```
 
-### 2.3 Mocking Artist HTML Web Retrieval
+### 2.3 Mocking Artist HTML Web Scraping
 
 ```python
 import pytest
@@ -78,7 +78,7 @@ SAMPLE_ARTIST_HTML = """
 """
 
 @pytest.fixture
-def patch_artist_retrieve(monkeypatch, synthetic_png_bytes):
+def patch_artist_scraping(monkeypatch, synthetic_png_bytes):
     """Mocks both the HTML page request and the image download request."""
     def mock_requests_get(url, *args, **kwargs):
         response = MagicMock()
@@ -93,7 +93,7 @@ def patch_artist_retrieve(monkeypatch, synthetic_png_bytes):
     monkeypatch.setattr("requests.get", mock_requests_get)
 ```
 
-### 2.4 Testing Retrieval Fallback (HTTP 404 or Missing Image)
+### 2.4 Testing Scraping Fallback (HTTP 404 or Missing Image)
 
 ```python
 def test_artist_not_found_fallback(monkeypatch):

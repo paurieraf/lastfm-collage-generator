@@ -23,9 +23,9 @@ Direct examination of the current repository structure, source code, tests, and 
   - Title overlay math in `_insert_tile_title` (lines 126-130) contains a critical coordinate calculation defect: `y_1 = y * 2 + self.TILE_WIDTH` causes exponential banner height drift on all rows below the first.
   - Typography rendering in `_insert_newline_characters_to_text` (lines 143-157) measures cumulative character width with `font.getlength() >= 275` but splits text mid-word without word-boundary awareness.
   - Solid black 300x300 PNG bytes are generated as the sole fallback via `_generate_blank_tile()` (lines 160-165).
-- **Client Adapter & Retrieval (`src/lastfmcollagegenerator/lastfm/client.py` & `collage.py:228-261`)**:
+- **Client Adapter & Scraping (`src/lastfmcollagegenerator/lastfm/client.py` & `collage.py:228-261`)**:
   - `LastfmClient` wraps `pylast.LastFMNetwork` for `get_top_albums`, `get_top_artists`, and `get_top_tracks`.
-  - `ArtistCollageBuilder._get_artist_image` fetches `https://www.last.fm/music/<artist>` using `requests.get` and `bs4.BeautifulSoup(..., 'html5lib')` looking for `.header-new-background-image`.
+  - `ArtistCollageBuilder._get_artist_image` scrapes `https://www.last.fm/music/<artist>` using `requests.get` and `bs4.BeautifulSoup(..., 'html5lib')` looking for `.header-new-background-image`.
   - HTTP requests lack explicit timeouts, custom `User-Agent` headers, caching, rate limiting, and network exception resilience.
 - **Packaging & Testing (`pyproject.toml` & `tests/`)**:
   - `pyproject.toml` uses `hatchling` backend with pinned dependencies (`pylast==5.3.0`, `Pillow==10.4.0`, `requests==2.32.3`, `beautifulsoup4==4.12.3`, `html5lib==1.1`).
@@ -176,7 +176,7 @@ From these observations, we trace the rationale for a modern, multi-phase evolut
   - **Tier 2 (L2 Persistent On-Disk Cache)**: SQLite-backed or filesystem-backed cache storing raw image binary payloads, HTTP ETag/Last-Modified metadata, and query responses.
   - **Configurable TTL Policies**:
     - Album cover art & release assets: 30-day TTL (virtually immutable).
-    - Retrieved artist hero headers: 7-day TTL.
+    - Scraped artist hero headers: 7-day TTL.
     - User top scrobble query results: 1-hour to 24-hour TTL (configurable).
   - **Cache Management API**: Methods to clear cache, inspect hit/miss statistics, prune expired records, or set cache directory (`~/.cache/lastfm-collage/`).
 - **Architectural Impact**:
@@ -203,14 +203,14 @@ From these observations, we trace the rationale for a modern, multi-phase evolut
 - **Dependencies / Prerequisites**: Python 3.8+ `asyncio`, `httpx`.
 
 #### 2.3 Advanced Rate Limiting, Exponential Backoff & Circuit Breaker
-- **Description**: Enterprise-grade network resilience layer for API calls and web retrieval.
+- **Description**: Enterprise-grade network resilience layer for API calls and web scraping.
   - **Token Bucket Rate Limiting**: Enforces Last.fm's policy of maximum 5 requests per second across all threads/coroutines.
   - **Exponential Backoff with Full Jitter**: Automatically retries transient failures (HTTP 429 Too Many Requests, HTTP 500/502/503/504, connection timeouts) with randomized exponential delays:
     $$T_{\text{sleep}} = \text{random}(0, \min(T_{\text{max}}, T_{\text{base}} \times 2^{\text{attempt}}))$$
-  - **Circuit Breaker**: Tracks consecutive retrieval failures. If Last.fm web portal blocks requests or changes DOM structure (e.g. 5 consecutive retrieval failures), the circuit trips to `OPEN`, immediately falling back to synthetic placeholder generation for remaining artists without blocking execution.
+  - **Circuit Breaker**: Tracks consecutive scraping failures. If Last.fm web portal blocks requests or changes DOM structure (e.g. 5 consecutive scraping failures), the circuit trips to `OPEN`, immediately falling back to synthetic placeholder generation for remaining artists without blocking execution.
 - **Architectural Impact**:
   - New module: `src/lastfmcollagegenerator/resilience/` (`rate_limiter.py`, `retry.py`, `circuit_breaker.py`).
-  - Injected as middleware into HTTP transport in `LastfmClient` and retrieval routines.
+  - Injected as middleware into HTTP transport in `LastfmClient` and scraping routines.
 - **Target Version**: `v0.7.0` (Phase 3)
 - **Complexity Rating**: `Medium`
 - **Dependencies / Prerequisites**: Python stdlib `time`, `random`, `threading`.
@@ -413,7 +413,7 @@ The complete prioritized release schedule is mapped across 5 structured phases:
 │ Phase 3 │ v0.7.0 - v0.8.0      │ Performance, Caching & Social Presets:     │
 │         │                      │ - Multi-tier Cache (In-memory + SQLite L2) │
 │         │                      │ - Token-bucket rate limiting & retries     │
-│         │                      │ - Circuit breaker for web fetcher          │
+│         │                      │ - Circuit breaker for web scraper          │
 │         │                      │ - Social Presets (Story 9:16, Banner 3:1)  │
 │         │                      │ - Acrylic blur background decorator        │
 │         │                      │ - GitHub Action (`action.yml`) automation  │
@@ -453,7 +453,7 @@ src/lastfmcollagegenerator/
 │   └── builders/                        # Concrete builders
 │       ├── base.py                      # BaseCollageBuilder
 │       ├── album.py                     # AlbumCollageBuilder
-│       ├── artist.py                    # ArtistCollageBuilder (with retrieval resilience)
+│       ├── artist.py                    # ArtistCollageBuilder (with scraping resilience)
 │       └── track.py                     # TrackCollageBuilder
 │
 ├── styling/                             # Visual Styling & Custom Themes (Pillar 1)
@@ -474,7 +474,7 @@ src/lastfmcollagegenerator/
 │   ├── __init__.py
 │   ├── rate_limiter.py                  # Token-bucket rate limiter
 │   ├── retry.py                         # Exponential backoff with jitter
-│   └── circuit_breaker.py               # Circuit breaker for fetcher
+│   └── circuit_breaker.py               # Circuit breaker for scraper
 │
 ├── layouts/                             # Layout Strategies (Pillar 3)
 │   ├── __init__.py
@@ -516,8 +516,8 @@ src/lastfmcollagegenerator/
 
 ## 6. Caveats
 
-1. **Third-Party API & Retrieval Vulnerabilities**:
-   - Artist hero image acquisition depends on web retrieval `https://www.last.fm/music/<artist>` because Last.fm's API deprecated artist images. Frontend DOM updates by Last.fm may necessitate updating CSS selectors in `ArtistCollageBuilder`.
+1. **Third-Party API & Scraping Vulnerabilities**:
+   - Artist hero image acquisition depends on web scraping `https://www.last.fm/music/<artist>` because Last.fm's API deprecated artist images. Frontend DOM updates by Last.fm may necessitate updating CSS selectors in `ArtistCollageBuilder`.
    - Rate limiting on Last.fm's web servers requires strict token bucket enforcement (5 req/sec) and persistent disk caching to avoid IP throttling.
 2. **Backward Compatibility**:
    - All enhancements to `CollageGenerator.generate()` must maintain full backward compatibility with the signature `generate(entity, username, cols, rows, period)` returning a `PIL.Image.Image`. New styling, layout, and theme options must default to classical values (`theme="dark"`, `layout="uniform"`).

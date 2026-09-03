@@ -20,7 +20,7 @@ Direct empirical observations made across the workspace, deliverables, and under
   - `python-standards.md` (164 lines, 7,000 bytes)
   - `architecture-conventions.md` (160 lines, 7,380 bytes)
   - `testing-standards.md` (136 lines, 5,803 bytes)
-  - `lastfm-network-resilience.md` (112 lines, 5,795 bytes)
+  - `lastfm-scraping-resilience.md` (112 lines, 5,795 bytes)
 - **`.gemini/skills/`** contains 3 modular skills:
   - `poetry-test-runner/`: `SKILL.md` (96 lines) and `scripts/run_tests.py` (203 lines).
   - `lastfm-mocking-fixtures/`: `SKILL.md` (117 lines) and `references/fixture_templates.py` (213 lines).
@@ -73,7 +73,7 @@ Verifying technical citations in `PROJECT_OVERVIEW.md` and `AGENTS.md` directly 
 3. **Incomplete Boundary Validation (Bug 3)**:
    - Citation: `src/lastfmcollagegenerator/collage_generator.py:69-73`.
    - Verified Code: Checks `cols > self.MAX_COLS or rows > self.MAX_ROWS` but omits checking `cols < 1` or `rows < 1`. Confirmed exact match.
-4. **Missing Timeouts & Web Retrieval Fragility (Bug 4)**:
+4. **Missing Timeouts & Web Scraping Fragility (Bug 4)**:
    - Citation: `src/lastfmcollagegenerator/collage.py:234, 251, 308`.
    - Verified Code: `requests.get()` is invoked with default User-Agent, without `timeout=...`, and without wrapping `requests.RequestException` in `_get_album_cover`. Confirmed exact match.
 5. **Non-Deterministic Ordering on Tied Playcounts (Bug 5)**:

@@ -117,8 +117,8 @@ class MockPylastEntityFactory:
         return items
 
 
-class MockHtmlResponses:
-    """Simulated HTML responses for Last.fm artist web retrieval."""
+class MockHtmlScraperResponses:
+    """Simulated HTML responses for Last.fm artist web scraping."""
 
     SUCCESS_HTML = """
     <!DOCTYPE html>

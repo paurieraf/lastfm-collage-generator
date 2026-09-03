@@ -6,8 +6,8 @@ The library is visually complete (v0.7.0) but still re-downloads every artwork o
 
 ## What Changes
 
-- **Multi-Tier Caching Subsystem**: Tier-1 in-memory LRU cache (`maxsize=256`) + Tier-2 SQLite persistent disk cache at `~/.cache/lastfm-collage/` with 30-day TTL for album covers and 7-day TTL for retrieved artist hero images.
-- **Network Resilience Middleware**: Token-bucket rate limiter (5 req/sec), exponential backoff with full jitter for transient HTTP errors, and a circuit breaker that fast-fails retrieval to blank-tile fallbacks.
+- **Multi-Tier Caching Subsystem**: Tier-1 in-memory LRU cache (`maxsize=256`) + Tier-2 SQLite persistent disk cache at `~/.cache/lastfm-collage/` with 30-day TTL for album covers and 7-day TTL for scraped artist hero images.
+- **Network Resilience Middleware**: Token-bucket rate limiter (5 req/sec), exponential backoff with full jitter for transient HTTP errors, and a circuit breaker that fast-fails scraping to blank-tile fallbacks.
 - **Social Media Dimension Presets**: One-click presets for Instagram Story (9:16, 1080x1920), Instagram Post (1:1, 1080x1080), Twitter Header (3:1, 1500x500), and Desktop Wallpaper (16:9, 1920x1080 / 4K).
 - **Acrylic Backdrop Blur**: Letterboxed non-square canvas areas are filled with a Gaussian-blurred, darkened backdrop derived from the #1 top artwork instead of flat black.
 - **Tile Geometry & Rounded Corners**: Rounded squircle corner masking (`radius=12`), configurable border stroke widths/colors, and inter-tile spacing margins.

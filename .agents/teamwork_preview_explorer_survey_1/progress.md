@@ -14,7 +14,7 @@ Last visited: 2026-08-16T16:44:50Z
   - [x] 4-layer architecture data flow and boundaries
   - [x] Pillow compositing pipeline: canvas allocation, tile placement, alpha banner geometry & coordinate drift math, font loading, line wrapping
   - [x] Concurrency model: `ThreadPoolExecutor`, `as_completed`, future resolution, non-deterministic arrival, playcount sorting
-  - [x] Web retrieval: `BeautifulSoup` + `html5lib`, artist header image extraction, User-Agent, timeouts, error handling & fallbacks
+  - [x] Web scraping: `BeautifulSoup` + `html5lib`, artist header image extraction, User-Agent, timeouts, error handling & fallbacks
   - [x] Extensibility: New entities, layout strategies, visual themes, caching layers
 - [x] Author comprehensive 5-component handoff report (`handoff.md`)
 - [x] Send completion message to parent agent

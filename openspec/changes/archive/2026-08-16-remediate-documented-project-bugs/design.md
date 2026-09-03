@@ -13,7 +13,7 @@ We need to fix defects across the Facade, Builder, and Exceptions layers while m
 - Correct overlay geometry across all grid rows (`0` to `rows - 1`).
 - Provide public convenience methods on `CollageGenerator` matching documentation.
 - Implement robust parameter validation protecting downstream Pillow canvas allocations.
-- Guarantee non-crashing network and retrieval fallbacks with custom headers and explicit timeouts.
+- Guarantee non-crashing network and scraping fallbacks with custom headers and explicit timeouts.
 - Guarantee deterministic collage layout on tied playcounts.
 - Establish an extensible exception base class.
 - Achieve >90% test coverage using offline pytest suites with synthetic fixtures.
@@ -59,7 +59,7 @@ def generate_top_albums_collage(self, username: str, cols: int = 5, rows: int = 
 
 ## Risks / Trade-offs
 
-- **[Risk] Retrieved image structure changes on Last.fm website**: Web retrieval HTML is inherently prone to DOM changes.
+- **[Risk] Scraped image structure changes on Last.fm website**: Web scraping HTML is inherently prone to DOM changes.
   - *Mitigation*: The resilient fallback to `_generate_blank_tile()` ensures collage generation never fails even if CSS class names change.
 - **[Risk] Slower downloads due to timeouts**:
   - *Mitigation*: Explicit connect timeout (3.05s) prevents worker threads from hanging indefinitely on stalled CDN hosts.

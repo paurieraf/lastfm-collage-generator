@@ -14,7 +14,7 @@
 3. [High-Level Architecture & Design Patterns](#3-high-level-architecture--design-patterns)
 4. [Deep-Dive Component Architecture & Class Responsibilities](#4-deep-dive-component-architecture--class-responsibilities)
 5. [End-to-End Execution Sequence & Data Flow](#5-end-to-end-execution-sequence--data-flow)
-6. [Last.fm API Integration & Web Retrieval Mechanism](#6-lastfm-api-integration--web-retrieval-mechanism)
+6. [Last.fm API Integration & Web Scraping Mechanism](#6-lastfm-api-integration--web-scraping-mechanism)
 7. [Image Processing, Grid Mathematics, and Typography Engine](#7-image-processing-grid-mathematics-and-typography-engine)
 8. [Critical Bugs, Deficiencies, and Technical Debt Identified](#8-critical-bugs-deficiencies-and-technical-debt-identified)
 9. [Quality Assurance Status & Testing Recommendations](#9-quality-assurance-status--testing-recommendations)
@@ -29,7 +29,7 @@
 ### Core Capabilities
 - **Multi-Entity Visualization**: Generates composite collages from three distinct Last.fm musical entities:
   - **Top Albums**: Queries user scrobbles, downloads album cover art via the Last.fm Audioscrobbler API, and composites them into an aligned grid.
-  - **Top Artists**: Queries top artists via the API, fetches artist hero images directly from the Last.fm web portal (since the Last.fm API does not supply artist images), scales thumbnails, and builds the grid.
+  - **Top Artists**: Queries top artists via the API, scrapes artist hero images directly from the Last.fm web portal (since the Last.fm API does not supply artist images), scales thumbnails, and builds the grid.
   - **Top Tracks**: Queries top tracks via the API, extracts associated album artwork or applies fallbacks, and renders the composite.
 - **Customizable Matrix Dimensions**: Supports dynamic grid configurations up to `5x5` (e.g., `3x3`, `4x4`, `5x5`, or asymmetric `3x5`).
 - **Configurable Time Horizons**: Supports all standard Last.fm aggregation windows: 7 days (`7day`), 1 month (`1month`), 3 months (`3month`), 6 months (`6month`), 12 months (`12month`), and all-time (`overall`).
@@ -45,7 +45,7 @@ The codebase exhibits a clean design pattern foundation (Facade, Factory, Builde
 1. **Critical Geometric Bug in Title Overlays**: Multi-row collages suffer from broken coordinate math that corrupts rendering on rows below the first.
 2. **Documentation & API Drift**: The `README.md` advertises non-existent convenience methods (`generate_top_albums_collage`).
 3. **Zero Automated Testing**: The `tests/` directory contains only an empty `__init__.py` (0% coverage).
-4. **Brittle Retrieval & Network Fragility**: HTTP calls lack timeouts, custom headers, and exception resilience against CDN failures.
+4. **Brittle Scraping & Network Fragility**: HTTP calls lack timeouts, custom headers, and exception resilience against CDN failures.
 5. **Incomplete Boundary Validation**: Non-positive integers (`cols <= 0`, `rows <= 0`) pass validation and crash downstream rendering.
 
 ---
@@ -64,8 +64,8 @@ The codebase exhibits a clean design pattern foundation (Facade, Factory, Builde
 |---|---|---|
 | `pylast` | `5.3.0` | Official-standard Python client wrapper for the Last.fm Audioscrobbler REST API v2.0. Handles network authentication, user entity resolution, and top-item queries. |
 | `Pillow` | `10.4.0` | Core 2D raster image processing library. Handles canvas allocation, RGB/RGBA buffer manipulation, tile pasting, alpha blending, and TrueType font rendering. |
-| `requests` | `2.32.3` | Synchronous HTTP client for binary asset downloads (album covers, artist images) and HTML page fetching for retrieval. |
-| `beautifulsoup4` | `4.12.3` | HTML DOM tree parser utilized during artist image web retrieval. |
+| `requests` | `2.32.3` | Synchronous HTTP client for binary asset downloads (album covers, artist images) and HTML page fetching for scraping. |
+| `beautifulsoup4` | `4.12.3` | HTML DOM tree parser utilized during artist image web scraping. |
 | `html5lib` | `1.1` | Standards-compliant HTML5 parsing engine used as the backend parser for `BeautifulSoup`. |
 
 ### Bundled Assets
@@ -105,7 +105,7 @@ The library is structured around classical object-oriented design patterns from 
        v                                                         v
 +-------------------------------+  Inherits  +-------------------------------+
 |     ArtistCollageBuilder      | ---------> |      BaseCollageBuilder       |
-|  - Fetches Last.fm Web DOM    |            |  - Template Method: create()  |
+|  - Scrapes Last.fm Web DOM    |            |  - Template Method: create()  |
 |  - Extracts Header Image      |            |  - Concurrent Fetch Worker    |
 +-------------------------------+            |  - PIL Canvas & Grid Math     |
                                              |  - Typography & Text Wrap     |
@@ -123,7 +123,7 @@ The library is structured around classical object-oriented design patterns from 
 +--------------------------------------------------------------------+----+
 |                  Infrastructure & Client Layer                         |
 |  - LastfmClient (wraps pylast.LastFMNetwork)                           |
-|  - Web Fetcher (requests + BeautifulSoup + html5lib)                   |
+|  - Web Scraper (requests + BeautifulSoup + html5lib)                   |
 |  - ThreadPoolExecutor (concurrent image download worker pool)          |
 +-------------------------------------------------------------------------+
 ```
@@ -295,8 +295,8 @@ class BaseCollageBuilder:
 - **Entity**: `ENTITY_ARTIST = "artist"`
 - **Data Query**: Calls `lastfm_client.get_top_artists(user, limit, period)`.
 - **Title Format**: `"{item.name}"`.
-- **Image Acquisition (Web Retrieval Pipeline)**:
-  - Fetches `https://www.last.fm/music/{urllib.parse.quote_plus(artist.name)}`.
+- **Image Acquisition (Web Scraping Pipeline)**:
+  - Scrapes `https://www.last.fm/music/{urllib.parse.quote_plus(artist.name)}`.
   - Parses response HTML with `BeautifulSoup(resp.content, 'html5lib')`.
   - Searches for CSS class `.header-new-background-image` and extracts the `content` URL.
   - Fetches the image, loads into PIL, generates a 300x300 thumbnail (`img.thumbnail((300, 300))`), and converts to PNG bytes.
@@ -356,8 +356,8 @@ Consumer            CollageGenerator         Factory & Builder           LastfmC
    |                        |                        |                             |<-- 7. TopItem list -----|
    |                        |                        |                                                       |
    |                        |                        |-- 8. ThreadPoolExecutor.submit(workers) ------------->|
-   |                        |                        |      (concurrent image fetch / fetch)                |
-   |                        |                        |                                                       |-- 9. HTTP GET / Fetch
+   |                        |                        |      (concurrent image fetch / scrape)                |
+   |                        |                        |                                                       |-- 9. HTTP GET / Scrape
    |                        |                        |                                                       |-- 10. PIL Thumbnail
    |                        |                        |<-- 11. List[CollageTile] (sorted by playcount) -------|
    |                        |                        |                                                       |
@@ -377,7 +377,7 @@ Consumer            CollageGenerator         Factory & Builder           LastfmC
    - `_create_tiles_from_top_items()` initializes a `ThreadPoolExecutor`.
    - Submits worker jobs running `_create_tile_from_top_item(top_item)`.
    - **For Albums/Tracks**: Reads `item.get_cover_image()`. If present, executes `requests.get(url).content`; if missing/failing, returns `_generate_blank_tile()`.
-   - **For Artists**: Calls `_get_artist_image()`, retrieval `https://www.last.fm/music/<artist>`, parsing HTML via `BeautifulSoup` + `html5lib`, extracting `.header-new-background-image`, downloading the image, and thumbnailing to 300x300.
+   - **For Artists**: Calls `_get_artist_image()`, scraping `https://www.last.fm/music/<artist>`, parsing HTML via `BeautifulSoup` + `html5lib`, extracting `.header-new-background-image`, downloading the image, and thumbnailing to 300x300.
 6. **Result Gathering & Playcount Sorting**: Completed futures are retrieved via `concurrent.futures.as_completed(futures)`. Tiles are sorted descending: `tiles.sort(key=lambda x: int(x.playcount), reverse=True)`.
 7. **Canvas Allocation & Tile Assembly**:
    - `_create_image()` creates an RGB canvas of dimensions `(cols * 300, rows * 300)`.
@@ -394,7 +394,7 @@ Consumer            CollageGenerator         Factory & Builder           LastfmC
 
 ---
 
-## 6. Last.fm API Integration & Web Retrieval Mechanism
+## 6. Last.fm API Integration & Web Scraping Mechanism
 
 ### 6.1 Last.fm REST API via `pylast`
 - **Authentication**: Authenticated via API key and secret passed to `pylast.LastFMNetwork`.
@@ -410,12 +410,12 @@ Consumer            CollageGenerator         Factory & Builder           LastfmC
   - `"12month"`: Scrobble history over the past 365 days.
   - `"overall"`: All-time scrobble history.
 
-### 6.2 Artist Image Web Retrieval Pipeline
+### 6.2 Artist Image Web Scraping Pipeline
 
-Due to licensing and API changes, Last.fm removed artist image URLs from their public Audioscrobbler REST API. To provide artist collages, the library implements an HTML web retrieval pipeline in `ArtistCollageBuilder._get_artist_image`:
+Due to licensing and API changes, Last.fm removed artist image URLs from their public Audioscrobbler REST API. To provide artist collages, the library implements an HTML web scraping pipeline in `ArtistCollageBuilder._get_artist_image`:
 
 ```python
-# Retrieval workflow in ArtistCollageBuilder
+# Scraping workflow in ArtistCollageBuilder
 url_artist = urllib.parse.quote_plus(artist.name)
 target_url = f"https://www.last.fm/music/{url_artist}"
 resp = requests.get(target_url)
@@ -431,11 +431,11 @@ img_url = header_elem.get("content")
 img_data = requests.get(img_url).content
 ```
 
-#### Retrieval Vulnerabilities & Technical Debt:
+#### Scraping Vulnerabilities & Technical Debt:
 1. **Missing User-Agent Header**: Requests use the default `python-requests/2.x` User-Agent. Last.fm and Cloudflare CDN frequently throttle, challenge with CAPTCHAs, or return HTTP 403 Forbidden to default script user agents.
 2. **DOM Selector Brittleness**: Relies exclusively on the class name `header-new-background-image`. Any minor frontend redesign by Last.fm breaks image extraction entirely, causing all artist tiles to fallback to blank black squares.
 3. **No Connection Timeouts**: `requests.get()` is invoked with no timeout parameters. If Last.fm hangs, the worker threads block indefinitely.
-4. **Lack of Rate Limiting / Caching**: A `5x5` artist collage issues 25 concurrent retrieval requests to `last.fm/music/<artist>` simultaneously, creating burst traffic that can trigger IP-based rate limiting.
+4. **Lack of Rate Limiting / Caching**: A `5x5` artist collage issues 25 concurrent scraping requests to `last.fm/music/<artist>` simultaneously, creating burst traffic that can trigger IP-based rate limiting.
 
 ---
 
@@ -620,7 +620,7 @@ tests/
 - [x] Implement `generate_top_albums_collage`, `generate_top_artists_collage`, and `generate_top_tracks_collage` convenience methods on `CollageGenerator` to reconcile documentation.
 - [x] Implement strict parameter boundary validation (`1 <= cols <= 5`, `1 <= rows <= 5`, type validation, non-empty username).
 - [x] Add `timeout=(3.05, 10.0)` and `requests.RequestException` handling across all HTTP queries with fallback to `_generate_blank_tile()`.
-- [x] Add custom `User-Agent` headers (`User-Agent: lastfm-collage-generator/0.5.0`) for web retrieval and downloads.
+- [x] Add custom `User-Agent` headers (`User-Agent: lastfm-collage-generator/0.5.0`) for web scraping and downloads.
 - [x] Clean up dead code (`CollageConfig` dataclass, unused logger) and establish `LastfmCollageGeneratorError` base exception.
 - [x] Author comprehensive offline `pytest` test suite achieving 100% code coverage.
 
@@ -629,7 +629,7 @@ tests/
 - [x] Expose `show_playcount: bool` and `font_bold: bool` parameters through `CollageGenerator.generate()`.
 - [x] Support customizable tile dimensions (e.g., 150px, 300px, 600px).
 - [x] Lift arbitrary `5x5` dimension cap to support larger grids (e.g., `10x10`).
-- [x] Introduce in-memory LRU caching (`functools.lru_cache` or `cachetools`) for retrieved artist images.
+- [x] Introduce in-memory LRU caching (`functools.lru_cache` or `cachetools`) for scraped artist images.
 
 ### Phase 3: Modern Concurrency & Multi-Platform Support (v1.0.0+)
 - [x] Modernize I/O pipeline using `asyncio` and `httpx` / `aiohttp` for non-blocking asynchronous downloading.
@@ -647,7 +647,7 @@ tests/
 | `src/lastfmcollagegenerator/collage.py` | `CollageBuilderFactory` | **Factory**: Dispatches builder instances | `constants.ENTITIES` |
 | `src/lastfmcollagegenerator/collage.py` | `BaseCollageBuilder` | **Base Builder / Template**: Grid layout & rendering | `Pillow`, `ThreadPoolExecutor`, `DejaVuSansMono.ttf` |
 | `src/lastfmcollagegenerator/collage.py` | `AlbumCollageBuilder` | **Concrete Builder**: Top albums & cover art | `pylast`, `requests` |
-| `src/lastfmcollagegenerator/collage.py` | `ArtistCollageBuilder` | **Concrete Builder**: Top artists & web retrieval | `requests`, `bs4`, `html5lib` |
+| `src/lastfmcollagegenerator/collage.py` | `ArtistCollageBuilder` | **Concrete Builder**: Top artists & web scraping | `requests`, `bs4`, `html5lib` |
 | `src/lastfmcollagegenerator/collage.py` | `TrackCollageBuilder` | **Concrete Builder**: Top tracks & cover fallback | `pylast`, `requests` |
 | `src/lastfmcollagegenerator/lastfm/client.py` | `LastfmClient` | **Client Adapter**: Wrapper for Last.fm API | `pylast.LastFMNetwork` |
 | `src/lastfmcollagegenerator/constants.py` | `ENTITIES`, `PERIODS` | **Constants**: Domain definitions | `pylast` period constants |

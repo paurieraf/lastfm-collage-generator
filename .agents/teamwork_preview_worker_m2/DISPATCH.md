@@ -45,7 +45,7 @@ Update `README.md` to serve as an exhaustive, production-grade, beautifully styl
 10. Font Handling & Asset Packaging (`DejaVuSansMono.ttf`, `MANIFEST.in`)
 11. Comprehensive Multi-Phase Feature Roadmap across 4 Strategic Pillars:
     - Pillar 1: Visual Styling & Custom Themes (Phase 1 immediate v0.5.0 fixes, Phase 2 v0.6.0 dynamic themes, typography engine, rounded tiles, overlay styles)
-    - Pillar 2: Performance, Caching & Retrieval Resilience (Phase 2/3 multi-tier cache, async acquisition httpx, rate limiter/backoff, generative fallbacks)
+    - Pillar 2: Performance, Caching & Scraping Resilience (Phase 2/3 multi-tier cache, async acquisition httpx, rate limiter/backoff, generative fallbacks)
     - Pillar 3: Advanced Layouts & Modern Formats (Phase 3/4 hero grids, bento layouts, honeycomb, high-density NxM, WebP/SVG/PDF exports, social presets)
     - Pillar 4: Ecosystem & CLI Integrations (Phase 2 CLI tool, Phase 5 FastAPI microservice, chat bots, GitHub Actions)
 12. Known Bugs & Defect Catalog (BUG-01 through BUG-05 with root causes and remediation)

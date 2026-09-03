@@ -31,7 +31,7 @@
    - For row 1 (`y=300`), `y_1 = 900` (365px banner height, obscuring row 2).
    - For row 2 (`y=600`), `y_1 = 1500` (665px banner height, bleeding over rows 3 and 4).
 5. **Project Rules and Custom Skills Established**:
-   - Rules: `.gemini/rules/python-standards.md`, `.gemini/rules/architecture-conventions.md`, `.gemini/rules/testing-standards.md`, `.gemini/rules/lastfm-network-resilience.md`.
+   - Rules: `.gemini/rules/python-standards.md`, `.gemini/rules/architecture-conventions.md`, `.gemini/rules/testing-standards.md`, `.gemini/rules/lastfm-scraping-resilience.md`.
    - Skills: `.gemini/skills/poetry-test-runner/SKILL.md`, `.gemini/skills/lastfm-mocking-fixtures/SKILL.md`, `.gemini/skills/collage-cli-workflow/SKILL.md`.
 
 ---
@@ -45,13 +45,13 @@
    - Concurrency is implemented via `concurrent.futures.ThreadPoolExecutor` in `BaseCollageBuilder._create_tiles_from_top_items`.
    - `AGENTS.md` explicitly documents this architecture and defines layer boundaries and extension protocols.
 3. **Integration of Antigravity Rules & Skills**:
-   - Directly linked each of the 4 project rules (`python-standards.md`, `architecture-conventions.md`, `testing-standards.md`, `lastfm-network-resilience.md`) and 3 custom skills (`poetry-test-runner`, `lastfm-mocking-fixtures`, `collage-cli-workflow`) with execution examples, command flags, and reference paths.
+   - Directly linked each of the 4 project rules (`python-standards.md`, `architecture-conventions.md`, `testing-standards.md`, `lastfm-scraping-resilience.md`) and 3 custom skills (`poetry-test-runner`, `lastfm-mocking-fixtures`, `collage-cli-workflow`) with execution examples, command flags, and reference paths.
 4. **Reconciliation of Discrepancies**:
    - Created a comprehensive reconciliation matrix in `AGENTS.md` addressing:
      - Missing convenience methods in `CollageGenerator` vs `README.md`.
      - Boundary validation omission for `cols <= 0` / `rows <= 0`.
      - Title overlay geometry bug and exact mathematical resolution.
-     - Retrieval resilience requirements (custom User-Agent, connect/read timeouts `(3.05, 10.0)`, and blank tile fallbacks).
+     - Scraping resilience requirements (custom User-Agent, connect/read timeouts `(3.05, 10.0)`, and blank tile fallbacks).
      - Test coverage absence (0% test coverage) and mock fixture patterns.
      - Trailing whitespace in `pyproject.toml:3`.
 5. **Actionable Checklist for Future Agents**:
@@ -76,7 +76,7 @@
   4. Code Layout & File Directory Mapping
   5. Coding Standards & Conventions (pointing to `.gemini/rules/`)
   6. Custom Skills Catalog & Agent Workflows (pointing to `.gemini/skills/`)
-  7. Critical Defects, Pitfalls & Defect Catalog (geometry bug, README drift, retrieval risks, boundary flaws)
+  7. Critical Defects, Pitfalls & Defect Catalog (geometry bug, README drift, scraping risks, boundary flaws)
   8. Discrepancy Reconciliation Summary (README vs Code vs Design)
   9. Testing & Verification Workflows (zero live network policy, mock fixtures, geometric assertions)
   10. Agent Checklist for Pull Requests & Code Changes
@@ -98,7 +98,7 @@ To independently verify the deliverables of Milestone 3:
      - `.gemini/rules/python-standards.md`
      - `.gemini/rules/architecture-conventions.md`
      - `.gemini/rules/testing-standards.md`
-     - `.gemini/rules/lastfm-network-resilience.md`
+     - `.gemini/rules/lastfm-scraping-resilience.md`
    - Verify that all referenced skills exist:
      - `.gemini/skills/poetry-test-runner/SKILL.md`
      - `.gemini/skills/lastfm-mocking-fixtures/SKILL.md`

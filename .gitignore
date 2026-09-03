@@ -89,6 +89,7 @@ output/
 *.gif
 # Keep bundled package font assets tracked
 !src/lastfmcollagegenerator/fonts/*.ttf
+!assets/*.png
 
 # Installer logs & runtime logs
 pip-log.txt

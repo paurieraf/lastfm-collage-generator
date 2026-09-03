@@ -49,10 +49,10 @@ The system SHALL strictly validate all grid dimensions, maximum tile limits, cus
 - **THEN** the system raises a `ValueError` listing the allowed options
 
 ### Requirement: Resilient Image Acquisition and Network Timeouts
-The system SHALL configure descriptive `User-Agent` HTTP headers, enforce connection and read timeouts on all outbound HTTP requests, and catch network failures, HTTP errors, or retrieval exceptions to cleanly produce a deterministic algorithmic fallback tile without aborting collage assembly.
+The system SHALL configure descriptive `User-Agent` HTTP headers, enforce connection and read timeouts on all outbound HTTP requests, and catch network failures, HTTP errors, or scraping exceptions to cleanly produce a deterministic algorithmic fallback tile without aborting collage assembly.
 
 #### Scenario: Handling CDN or network error during image download
-- **WHEN** an HTTP request for album cover art or artist retrieval fails due to network drop, timeout, or HTTP 4xx/5xx status
+- **WHEN** an HTTP request for album cover art or artist scraping fails due to network drop, timeout, or HTTP 4xx/5xx status
 - **THEN** the system catches the exception and returns a 300x300 deterministic algorithmic fallback tile derived from the entity title, allowing collage generation to complete successfully
 
 #### Scenario: Deterministic fallback artwork
@@ -64,7 +64,7 @@ The system SHALL configure descriptive `User-Agent` HTTP headers, enforce connec
 - **THEN** a 300x300 solid black blank tile is produced as before
 
 #### Scenario: Custom User-Agent header transmission
-- **WHEN** web retrieval or image download requests are executed
+- **WHEN** web scraping or image download requests are executed
 - **THEN** the HTTP client includes a custom `User-Agent` identifying `lastfm-collage-generator`
 
 ### Requirement: Deterministic Tile Ordering

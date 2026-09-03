@@ -18,7 +18,7 @@ Last visited: 2026-08-16T13:46:00Z
    - Check if any deliverable has TODOs, truncation markers, or missing files.
 5. [ ] Forensic Check 2: Technical Accuracy & Citation Verification
    - Verify code citations in `PROJECT_OVERVIEW.md` and `AGENTS.md` against actual repository code in `src/lastfmcollagegenerator/` and `pyproject.toml`.
-   - Specifically verify: line numbers, class definitions, method signatures, defects (Bug 1: Multi-row overlay geometry, Bug 2: README convenience methods, Bug 3: parameter validation, Bug 4: retrieval timeouts, Bug 5: sorting tie-breakers).
+   - Specifically verify: line numbers, class definitions, method signatures, defects (Bug 1: Multi-row overlay geometry, Bug 2: README convenience methods, Bug 3: parameter validation, Bug 4: scraping timeouts, Bug 5: sorting tie-breakers).
 6. [ ] Forensic Check 3: Antigravity Customizations Compliance
    - Check `.gemini/rules/` Markdown structure and guidelines.
    - Check `.gemini/skills/` YAML frontmatter (`name`, `description`), directory structure (`scripts/`, `references/`), progressive disclosure, relative links.

@@ -17,7 +17,7 @@
 ### Core Capabilities
 - **Multi-Entity Collages**:
   - **Top Albums (`album`)**: Fetches top albums via the Last.fm REST API (`pylast`), downloads cover artwork, and composites them into a grid.
-  - **Top Artists (`artist`)**: Fetches top artists via `pylast`, fetches artist hero images directly from `https://www.last.fm/music/<artist>` (as artist images were deprecated in the Last.fm API), thumbnails images to 300x300px, and composites the grid.
+  - **Top Artists (`artist`)**: Fetches top artists via `pylast`, scrapes artist hero images directly from `https://www.last.fm/music/<artist>` (as artist images were deprecated in the Last.fm API), thumbnails images to 300x300px, and composites the grid.
   - **Top Tracks (`track`)**: Fetches top tracks via `pylast`, resolves associated album cover art (or applies blank tile fallback), and renders the collage.
 - **Configurable Grid Geometry**: Generates rectangular or square grids up to `5x5` (e.g., `3x3`, `5x5`, asymmetric `3x5`). Standard tile size is `300 x 300` pixels.
 - **Aggregation Horizons**: Supports all standard Last.fm periods: `7day`, `1month`, `3month`, `6month`, `12month`, `overall`.
@@ -34,8 +34,8 @@
 | `python` | `^3.8` | 3.8 - 3.12 | Base execution runtime |
 | `pylast` | `==5.3.0` | 5.3.0 | Last.fm Audioscrobbler REST API v2.0 wrapper |
 | `Pillow` | `==10.4.0` | 10.4.0 | 2D raster image allocation, alpha compositing, font rendering |
-| `requests` | `==2.32.3` | 2.32.3 | HTTP client for image downloads and artist HTML retrieval |
-| `beautifulsoup4` | `==4.12.3` | 4.12.3 | HTML DOM parsing for artist web retrieval |
+| `requests` | `==2.32.3` | 2.32.3 | HTTP client for image downloads and artist HTML scraping |
+| `beautifulsoup4` | `==4.12.3` | 4.12.3 | HTML DOM parsing for artist web scraping |
 | `html5lib` | `1.1` | 1.1 | Standards-compliant HTML5 parser backend |
 
 ### 2.2 Bundled Distribution Assets
@@ -114,8 +114,8 @@ The library strictly adheres to a 4-layer object-oriented design: **Facade → F
    - Downloads album cover art via `requests.get(item.get_cover_image())`.
 5. **`ArtistCollageBuilder`** (`collage.py`):
    - Queries `lastfm_client.get_top_artists`.
-   - Fetches `https://www.last.fm/music/<artist>` for `.header-new-background-image`.
-   - Thumbnails retrieved image to 300x300px.
+   - Scrapes `https://www.last.fm/music/<artist>` for `.header-new-background-image`.
+   - Thumbnails scraped image to 300x300px.
 6. **`TrackCollageBuilder`** (`collage.py`):
    - Inherits from `AlbumCollageBuilder`. Queries `lastfm_client.get_top_tracks`.
 7. **`LastfmClient`** (`lastfm/client.py`):
@@ -164,7 +164,7 @@ lastfm-collage-generator/
 │   │   ├── python-standards.md            # Typing, PIL memory safety, exception hierarchy
 │   │   ├── architecture-conventions.md    # 4-layer boundaries, font paths, entity extension
 │   │   ├── testing-standards.md           # Zero network calls, synthetic fixtures, quality gates
-│   │   └── lastfm-network-resilience.md  # User-Agent headers, timeouts, fallback policies
+│   │   └── lastfm-scraping-resilience.md  # User-Agent headers, timeouts, fallback policies
 │   └── skills/                            # Executable AI agent skills
 │       ├── poetry-test-runner/            # Automated test runner & linting suite
 │       │   ├── SKILL.md
@@ -205,7 +205,7 @@ All agent contributions must comply with the rules established in `.gemini/rules
 - **Visual & Geometric Verification**: Write assertions verifying canvas dimensions `(cols * 300, rows * 300)` and checking pixel bounds.
 - **Quality Gate**: Target >90% line coverage and 85% branch coverage.
 
-### 5.4 Last.fm Retrieval Resilience ([`.gemini/rules/lastfm-network-resilience.md`](./.gemini/rules/lastfm-network-resilience.md))
+### 5.4 Last.fm Scraping Resilience ([`.gemini/rules/lastfm-scraping-resilience.md`](./.gemini/rules/lastfm-scraping-resilience.md))
 - **Custom User-Agent Required**: Never use default `python-requests` User-Agent. Supply `User-Agent: lastfm-collage-generator/0.5.0 (+https://github.com/paurieraf/lastfm-collage-generator)`.
 - **Mandatory Timeouts**: All `requests.get()` calls must provide explicit connect/read timeouts: `timeout=(3.05, 10.0)`.
 - **URL Encoding**: Encode artist names via `urllib.parse.quote_plus()`.
@@ -239,7 +239,7 @@ Provides drop-in fixtures and factories in `references/fixture_templates.py`:
 - `SyntheticImageFactory`: Generates raw PNG bytes in memory.
 - `MockPylastEntityFactory`: Creates mock `Album`, `Artist`, `Track`, and `TopItem` objects.
 - `MockLastfmNetwork` / `MockLastfmClient`: Intercepts `pylast` network instantiation.
-- `MockHtmlResponses`: Pre-canned HTML fixtures for testing artist web retrieval.
+- `MockHtmlScraperResponses`: Pre-canned HTML fixtures for testing artist web scraping.
 
 ### 6.3 `collage-cli-workflow` ([`.gemini/skills/collage-cli-workflow/SKILL.md`](./.gemini/skills/collage-cli-workflow/SKILL.md))
 Provides a CLI runner (`scripts/generate_collage_cli.py`) for generating live or offline mock collages:
@@ -294,7 +294,7 @@ Agents modifying the codebase must be aware of the following confirmed bugs and 
 - **Issue**: `_validate_parameters` checks `cols > 5 or rows > 5`, but does not check `cols < 1 or rows < 1`. Passing `cols=0` or `rows=-1` passes validation and crashes PIL canvas allocation.
 - **Required Fix**: Enforce `1 <= cols <= self.MAX_COLS` and `1 <= rows <= self.MAX_ROWS`.
 
-### 7.4 Bug 4: Web Retrieval Fragility & Missing Timeouts (`MEDIUM`)
+### 7.4 Bug 4: Web Scraping Fragility & Missing Timeouts (`MEDIUM`)
 - **Location**: `src/lastfmcollagegenerator/collage.py:234, 251, 308`
 - **Issue**: `requests.get()` is invoked with default User-Agent and no `timeout=...` parameter. Unhandled `requests.RequestException` or CDN 502/503 errors crash worker threads and abort generation.
 - **Required Fix**: Supply `DEFAULT_HEADERS`, pass `timeout=(3.05, 10.0)`, and catch all network exceptions to fallback to `_generate_blank_tile()`.
@@ -320,8 +320,8 @@ The table below reconciles all contradictions between existing `README.md`, the 
 | **Convenience Methods** | Mentions `generate_top_albums_collage()` | Only `generate()` exists; method raises `AttributeError` | Convenience methods should exist on Facade | Implement `generate_top_albums_collage()`, `generate_top_artists_collage()`, `generate_top_tracks_collage()` on `CollageGenerator` delegating to `generate()`. |
 | **Grid Boundary Validation** | Mentions "up to 5" rows/cols | Validates `cols > 5`, but permits `0` or negative numbers | Must validate `1 <= cols <= 5` and `1 <= rows <= 5` | Update `_validate_parameters` to check `1 <= cols <= MAX_COLS` and `1 <= rows <= MAX_ROWS`. |
 | **Title Overlay Geometry** | Shows visual overlay sample | Math `y * 2 + TILE_WIDTH` corrupts multi-row rendering | Banner must span `y + 235` to `y + 300` on every row | Correct `y_1` calculation to `y + self.TILE_HEIGHT`. |
-| **Network Error Handling** | No mention of network failures | Unhandled HTTP exceptions crash collage creation | Resilient fallback to black blank tile | Wrap all HTTP and retrieval calls in `try...except` and return `_generate_blank_tile()`. |
-| **Automated Test Coverage** | No mention of tests | `tests/` directory has 0 tests (empty `__init__.py`) | Full offline unit and integration test suite with >90% coverage | Author unit tests covering validation, builders, retrieval, geometry, and mock integration. |
+| **Network Error Handling** | No mention of network failures | Unhandled HTTP exceptions crash collage creation | Resilient fallback to black blank tile | Wrap all HTTP and scraping calls in `try...except` and return `_generate_blank_tile()`. |
+| **Automated Test Coverage** | No mention of tests | `tests/` directory has 0 tests (empty `__init__.py`) | Full offline unit and integration test suite with >90% coverage | Author unit tests covering validation, builders, scraping, geometry, and mock integration. |
 | **Version String** | Lists PyPI package `0.4.13` | `version = "0.4.13 "` in `pyproject.toml` has trailing whitespace | Semantic versioning without whitespace (`0.4.13` or `0.5.0`) | Strip trailing whitespace in `pyproject.toml`. |
 
 ---
