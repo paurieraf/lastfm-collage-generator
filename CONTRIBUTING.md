@@ -1,12 +1,12 @@
 # Contributing to lastfm-collage-generator
 
-Thank you for your interest in contributing! Whether you are fixing a bug, adding support for a new feature, or improving documentation, your help is welcome.
+Thank you for your interest in contributing to `lastfm-collage-generator`! Whether you are fixing a bug, adding support for a new feature, or improving documentation, your help is welcome.
 
 ---
 
 ## 🛠️ Development Setup
 
-The project uses [uv](https://docs.astral-sh/uv/) for fast, deterministic Python environment and dependency management.
+We use [uv](https://docs.astral-sh/uv/) for fast, reproducible dependency management and virtual environments.
 
 ### 1. Clone the Repository
 

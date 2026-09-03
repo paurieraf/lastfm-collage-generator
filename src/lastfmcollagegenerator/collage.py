@@ -61,7 +61,7 @@ ImageFile.LOAD_TRUNCATED_IMAGES = True
 
 DEFAULT_HEADERS = {
     "User-Agent": (
-        "lastfm-collage-generator/1.3.0 "
+        "lastfm-collage-generator/1.3.2 "
         "(+https://github.com/paurieraf/lastfm-collage-generator)"
     )
 }

@@ -238,7 +238,6 @@ uv run python .gemini/skills/poetry-test-runner/scripts/run_tests.py --all
 Provides drop-in fixtures and factories in `references/fixture_templates.py`:
 - `SyntheticImageFactory`: Generates raw PNG bytes in memory.
 - `MockPylastEntityFactory`: Creates mock `Album`, `Artist`, `Track`, and `TopItem` objects.
-- `MockLastfmNetwork` / `MockLastfmClient`: Intercepts `pylast` network instantiation.
 - `MockHtmlScraperResponses`: Pre-canned HTML fixtures for testing artist web scraping.
 
 ### 6.3 `collage-cli-workflow` ([`.gemini/skills/collage-cli-workflow/SKILL.md`](./.gemini/skills/collage-cli-workflow/SKILL.md))

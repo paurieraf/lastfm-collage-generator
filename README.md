@@ -111,7 +111,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Generate Collage
-        uses: paurieraf/lastfm-collage-generator@v0.8.0
+        uses: paurieraf/lastfm-collage-generator@v1.3.2
         with:
           username: ${{ secrets.LASTFM_USERNAME }}
           entity: album
