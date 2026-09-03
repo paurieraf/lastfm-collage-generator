@@ -33,7 +33,7 @@ pip install lastfmcollagegenerator
 uv add lastfmcollagegenerator
 ```
 
-*Requirements: Python 3.8+ (fully compatible with 3.8, 3.9, 3.10, 3.11, and 3.12).*
+*Requirements: Python 3.10+ (fully compatible with 3.10, 3.11, and 3.12).*
 
 ---
 
@@ -111,7 +111,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Generate Collage
-        uses: paurieraf/lastfm-collage-generator@v1.3.2
+        uses: paurieraf/lastfm-collage-generator@v1.4.0
         with:
           username: ${{ secrets.LASTFM_USERNAME }}
           entity: album

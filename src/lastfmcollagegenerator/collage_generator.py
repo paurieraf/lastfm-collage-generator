@@ -78,7 +78,9 @@ class CollageGenerator:
         border_width: int = 0,
         border_color: Optional[Union[str, tuple]] = None,
         spacing: int = 0,
-        filters: Optional[Union[List[ImageFilter], VisualEffectPipeline, ImageFilter]] = None,
+        filters: Optional[
+            Union[List[ImageFilter], VisualEffectPipeline, ImageFilter]
+        ] = None,
     ) -> Image.Image:
         """Generate a composite collage image from a Last.fm user's top items.
 
@@ -92,8 +94,8 @@ class CollageGenerator:
             tile_size: Optional explicit tile width and height in pixels (50–600).
                        If None, automatically computed based on grid density.
             theme: Theme preset string ("dark", "light", "glassmorphic",
-                   "sunset", "neon", "adaptive"), Theme instance, or dictionary configuration.
-                   Default is "dark".
+                   "sunset", "neon", "adaptive"), Theme instance, or
+                   dictionary configuration. Default is "dark".
             overlay_style: Overlay rendering mode ("banner", "full_tint",
                            "gradient", "pill", "clean"). Default is "banner".
             show_text: If False, disables all text and overlay backgrounds.
@@ -120,7 +122,8 @@ class CollageGenerator:
             border_width: Tile border stroke width in pixels (default 0).
             border_color: Tile border color as hex string or RGB(A) tuple.
             spacing: Inter-tile spacing margin in pixels (default 0).
-            filters: Optional image filter, list of image filters, or VisualEffectPipeline.
+            filters: Optional image filter, list of image filters, or
+                     VisualEffectPipeline.
 
         Returns:
             PIL.Image.Image: RGB composite canvas. Without a preset, the
@@ -213,7 +216,9 @@ class CollageGenerator:
         border_width: int = 0,
         border_color: Optional[Union[str, tuple]] = None,
         spacing: int = 0,
-        filters: Optional[Union[List[ImageFilter], VisualEffectPipeline, ImageFilter]] = None,
+        filters: Optional[
+            Union[List[ImageFilter], VisualEffectPipeline, ImageFilter]
+        ] = None,
     ) -> Image.Image:
         """Convenience method to generate an album collage."""
         return self.generate(
@@ -263,7 +268,9 @@ class CollageGenerator:
         border_width: int = 0,
         border_color: Optional[Union[str, tuple]] = None,
         spacing: int = 0,
-        filters: Optional[Union[List[ImageFilter], VisualEffectPipeline, ImageFilter]] = None,
+        filters: Optional[
+            Union[List[ImageFilter], VisualEffectPipeline, ImageFilter]
+        ] = None,
     ) -> Image.Image:
         """Convenience method to generate an artist collage."""
         return self.generate(
@@ -313,7 +320,9 @@ class CollageGenerator:
         border_width: int = 0,
         border_color: Optional[Union[str, tuple]] = None,
         spacing: int = 0,
-        filters: Optional[Union[List[ImageFilter], VisualEffectPipeline, ImageFilter]] = None,
+        filters: Optional[
+            Union[List[ImageFilter], VisualEffectPipeline, ImageFilter]
+        ] = None,
     ) -> Image.Image:
         """Convenience method to generate a track collage."""
         return self.generate(
@@ -364,7 +373,9 @@ class CollageGenerator:
         border_width: int = 0,
         border_color: Optional[Union[str, tuple]] = None,
         spacing: int = 0,
-        filters: Optional[Union[List[ImageFilter], VisualEffectPipeline, ImageFilter]] = None,
+        filters: Optional[
+            Union[List[ImageFilter], VisualEffectPipeline, ImageFilter]
+        ] = None,
         max_concurrency: int = 20,
     ) -> Image.Image:
         """Asynchronously generate a composite collage image."""
@@ -452,7 +463,9 @@ class CollageGenerator:
         border_width: int = 0,
         border_color: Optional[Union[str, tuple]] = None,
         spacing: int = 0,
-        filters: Optional[Union[List[ImageFilter], VisualEffectPipeline, ImageFilter]] = None,
+        filters: Optional[
+            Union[List[ImageFilter], VisualEffectPipeline, ImageFilter]
+        ] = None,
         max_concurrency: int = 20,
     ) -> Image.Image:
         """Convenience method to asynchronously generate an album collage."""
@@ -504,7 +517,9 @@ class CollageGenerator:
         border_width: int = 0,
         border_color: Optional[Union[str, tuple]] = None,
         spacing: int = 0,
-        filters: Optional[Union[List[ImageFilter], VisualEffectPipeline, ImageFilter]] = None,
+        filters: Optional[
+            Union[List[ImageFilter], VisualEffectPipeline, ImageFilter]
+        ] = None,
         max_concurrency: int = 20,
     ) -> Image.Image:
         """Convenience method to asynchronously generate an artist collage."""
@@ -556,7 +571,9 @@ class CollageGenerator:
         border_width: int = 0,
         border_color: Optional[Union[str, tuple]] = None,
         spacing: int = 0,
-        filters: Optional[Union[List[ImageFilter], VisualEffectPipeline, ImageFilter]] = None,
+        filters: Optional[
+            Union[List[ImageFilter], VisualEffectPipeline, ImageFilter]
+        ] = None,
         max_concurrency: int = 20,
     ) -> Image.Image:
         """Convenience method to asynchronously generate a track collage."""
@@ -659,7 +676,9 @@ class CollageGenerator:
         border_width: int = 0,
         border_color: Optional[Union[str, tuple]] = None,
         spacing: int = 0,
-        filters: Optional[Union[List[ImageFilter], VisualEffectPipeline, ImageFilter]] = None,
+        filters: Optional[
+            Union[List[ImageFilter], VisualEffectPipeline, ImageFilter]
+        ] = None,
     ) -> BaseCollageBuilder:
         normalized_filters: Optional[Union[List[ImageFilter], VisualEffectPipeline]]
         if filters is None:
@@ -736,7 +755,9 @@ class CollageGenerator:
         border_width: int = 0,
         border_color: Optional[Union[str, tuple]] = None,
         spacing: int = 0,
-        filters: Optional[Union[List[ImageFilter], VisualEffectPipeline, ImageFilter]] = None,
+        filters: Optional[
+            Union[List[ImageFilter], VisualEffectPipeline, ImageFilter]
+        ] = None,
         resolved_tile_size: Optional[int] = None,
     ) -> Theme:
         if not isinstance(username, str) or not username.strip():
@@ -849,9 +870,12 @@ class CollageGenerator:
             parse_color(border_color)
 
         if filters is not None:
-            if not isinstance(filters, (list, tuple, VisualEffectPipeline)) and not hasattr(filters, "apply"):
+            if not isinstance(
+                filters, (list, tuple, VisualEffectPipeline)
+            ) and not hasattr(filters, "apply"):
                 raise TypeError(
-                    f"filters must be an ImageFilter, list of ImageFilters, or VisualEffectPipeline, got {type(filters).__name__}."
+                    "filters must be an ImageFilter, list of ImageFilters, "
+                    f"or VisualEffectPipeline, got {type(filters).__name__}."
                 )
 
         resolved_theme = resolve_theme(theme)

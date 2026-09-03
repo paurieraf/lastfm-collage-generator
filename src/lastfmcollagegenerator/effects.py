@@ -1,4 +1,5 @@
-from typing import Any, List, Optional, Tuple, Union
+from typing import List, Optional, Tuple, Union
+
 try:
     from typing import Protocol
 except ImportError:  # pragma: no cover
@@ -71,9 +72,7 @@ class DuotoneFilter:
             rgb_image = image.convert("RGB")
 
         grayscale = ImageOps.grayscale(rgb_image)
-        colorized = ImageOps.colorize(
-            grayscale, black=self.black, white=self.white
-        )
+        colorized = ImageOps.colorize(grayscale, black=self.black, white=self.white)
 
         if alpha is not None:
             colorized = colorized.convert("RGBA")
@@ -117,7 +116,9 @@ class ColorExtractor:
         """Extract a list of top distinct RGB colors from an image."""
         thumb = image.copy().convert("RGB")
         thumb.thumbnail((50, 50))
-        quantized = thumb.quantize(colors=max(16, count), method=Image.Quantize.MEDIANCUT)
+        quantized = thumb.quantize(
+            colors=max(16, count), method=Image.Quantize.MEDIANCUT
+        )
         palette = quantized.getpalette()
         if not palette:
             stat = ImageStat.Stat(thumb)

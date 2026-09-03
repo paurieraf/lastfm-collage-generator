@@ -35,6 +35,26 @@ class SyntheticImageFactory:
         return Image.new("RGB", (width, height), color=color)
 
 
+class MockAlbum(MagicMock):
+    def __repr__(self) -> str:
+        artist = getattr(self, "artist", "")
+        title = getattr(self, "title", "")
+        return f"<pylast.Album '{artist}' - '{title}'>"
+
+
+class MockArtist(MagicMock):
+    def __repr__(self) -> str:
+        name = getattr(self, "name", "")
+        return f"<pylast.Artist '{name}'>"
+
+
+class MockTrack(MagicMock):
+    def __repr__(self) -> str:
+        artist = getattr(self, "artist", "")
+        title = getattr(self, "title", "")
+        return f"<pylast.Track '{artist}' - '{title}'>"
+
+
 class MockPylastEntityFactory:
     """Generates mock pylast entities (User, TopItem, Album, Artist, Track)."""
 
@@ -44,20 +64,18 @@ class MockPylastEntityFactory:
         title: str = "OK Computer",
         cover_url: str = "https://mock.cdn/ok_computer.png",
     ) -> MagicMock:
-        mock_album = MagicMock()
+        mock_album = MockAlbum()
         mock_album.artist = artist
         mock_album.title = title
         mock_album.get_cover_image.return_value = cover_url
-        mock_album.__repr__ = lambda s: f"<pylast.Album '{artist}' - '{title}'>"
         return mock_album
 
     @staticmethod
     def create_mock_artist(
         name: str = "David Bowie",
     ) -> MagicMock:
-        mock_artist = MagicMock()
+        mock_artist = MockArtist()
         mock_artist.name = name
-        mock_artist.__repr__ = lambda s: f"<pylast.Artist '{name}'>"
         return mock_artist
 
     @staticmethod
@@ -66,11 +84,10 @@ class MockPylastEntityFactory:
         title: str = "Harder, Better, Faster, Stronger",
         cover_url: str = "https://mock.cdn/discovery.png",
     ) -> MagicMock:
-        mock_track = MagicMock()
+        mock_track = MockTrack()
         mock_track.artist = artist
         mock_track.title = title
         mock_track.get_cover_image.return_value = cover_url
-        mock_track.__repr__ = lambda s: f"<pylast.Track '{artist}' - '{title}'>"
         return mock_track
 
     @classmethod

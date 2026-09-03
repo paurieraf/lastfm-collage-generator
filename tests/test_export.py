@@ -7,7 +7,6 @@ from lastfmcollagegenerator import (
     CollageGenerator,
     export_image,
     infer_format,
-    SUPPORTED_EXPORT_FORMATS,
 )
 
 
@@ -127,11 +126,17 @@ def test_export_image_validation_errors():
         export_image(img, None)  # type: ignore
 
     # Invalid quality
-    with pytest.raises(ValueError, match="quality must be an integer between 1 and 100"):
+    with pytest.raises(
+        ValueError, match="quality must be an integer between 1 and 100"
+    ):
         export_image(img, "out.jpg", quality=0)
-    with pytest.raises(ValueError, match="quality must be an integer between 1 and 100"):
+    with pytest.raises(
+        ValueError, match="quality must be an integer between 1 and 100"
+    ):
         export_image(img, "out.jpg", quality=101)
-    with pytest.raises(ValueError, match="quality must be an integer between 1 and 100"):
+    with pytest.raises(
+        ValueError, match="quality must be an integer between 1 and 100"
+    ):
         export_image(img, "out.jpg", quality="high")  # type: ignore
 
     # Invalid format type
